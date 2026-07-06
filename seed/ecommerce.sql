@@ -132,19 +132,41 @@ SELECT
 FROM generate_series(1, 5000) AS g;
 
 -- Order lines: 1-3 lines per order, amount derived from the chosen product's price.
+--
+-- NOTE on a subtle Postgres pitfall: a `CROSS JOIN LATERAL (subquery)` whose
+-- subquery does NOT reference any outer column is not actually correlated,
+-- and Postgres is free to evaluate it once for the whole query rather than
+-- once per outer row — silently giving every row the same "random" value.
+-- (Confirmed empirically while building this script: every ord_line row came
+-- out with an identical prod_id/qty/disc_pct.) Random-per-row values must
+-- come from a plain SELECT list over real rows, never from an uncorrelated
+-- LATERAL subquery — hence the two-step CTE below.
+WITH line_counts AS (
+  SELECT ord_id, (floor(random() * 3) + 1)::int AS n_lines
+  FROM ord_hdr
+),
+lines AS (
+  SELECT lc.ord_id
+  FROM line_counts lc
+  CROSS JOIN LATERAL generate_series(1, lc.n_lines) AS gs(line_num)
+),
+lines_randomized AS (
+  SELECT
+    ord_id,
+    (floor(random() * 200) + 1)::int AS prod_id,
+    (floor(random() * 4) + 1)::int AS qty,
+    (ARRAY[0, 5, 10, 15, 20])[floor(random() * 5 + 1)] AS disc_pct
+  FROM lines
+)
 INSERT INTO ord_line (ord_id, prod_id, qty, line_amt_inr, disc_pct)
 SELECT
-  o.ord_id,
+  lr.ord_id,
   p.prod_id,
-  q.qty,
-  round((p.unit_price_inr * q.qty * (1 - d.disc_pct / 100.0))::numeric, 2),
-  d.disc_pct
-FROM ord_hdr o
-CROSS JOIN LATERAL generate_series(1, (floor(random() * 3) + 1)::int) AS line_num
-CROSS JOIN LATERAL (SELECT (floor(random() * 200) + 1)::int AS prod_id) pid
-JOIN products p ON p.prod_id = pid.prod_id
-CROSS JOIN LATERAL (SELECT (floor(random() * 4) + 1)::int AS qty) q
-CROSS JOIN LATERAL (SELECT (ARRAY[0, 5, 10, 15, 20])[floor(random() * 5 + 1)] AS disc_pct) d;
+  lr.qty,
+  round((p.unit_price_inr * lr.qty * (1 - lr.disc_pct / 100.0))::numeric, 2),
+  lr.disc_pct
+FROM lines_randomized lr
+JOIN products p ON p.prod_id = lr.prod_id;
 
 -- Payment transactions: one per order (amount reconciled to its line items,
 -- status derived from the order's own status so cancelled/refunded orders
@@ -172,6 +194,16 @@ JOIN pay_txn t ON t.ord_id = o.ord_id
 WHERE random() < 0.08;
 
 -- Support tickets: a subset of users, ~25% still open (closed_dt/resolution_nm NULL).
+-- Same pitfall as ord_line above: `ts` must be a plain (non-LATERAL) subquery
+-- so its random() columns are computed once per row of generate_series,
+-- not once for the whole query.
+WITH ts AS (
+  SELECT
+    g,
+    CURRENT_TIMESTAMP - (INTERVAL '18 months') * random() AS opened,
+    random() < 0.25 AS is_open
+  FROM generate_series(1, 600) AS g
+)
 INSERT INTO support_tix (usr_id, opened_dt, closed_dt, tix_cat, resolution_nm)
 SELECT
   (floor(random() * 800) + 1)::int,
@@ -181,12 +213,7 @@ SELECT
   CASE WHEN ts.is_open THEN NULL
        ELSE (ARRAY['Resolved - replaced', 'Resolved - refunded', 'Resolved - explained', 'Closed - no response'])[floor(random() * 4 + 1)]
   END
-FROM generate_series(1, 600) AS g
-CROSS JOIN LATERAL (
-  SELECT
-    CURRENT_TIMESTAMP - (INTERVAL '18 months') * random() AS opened,
-    random() < 0.25 AS is_open
-) ts;
+FROM ts;
 
 -- Inventory snapshots: monthly, per product, for the last 18 months.
 INSERT INTO inventory_snap (prod_id, snap_dt, on_hand_qty)
