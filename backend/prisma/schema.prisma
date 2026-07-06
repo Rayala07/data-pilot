@@ -1,0 +1,67 @@
+// DataPilot app DB schema — Prisma only ever touches this database.
+// The user's target database is never modeled here; see backend/src/userdb.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  createdAt    DateTime     @default(now())
+  connections  Connection[]
+  queryLogs    QueryLog[]
+}
+
+model Connection {
+  id                      String         @id @default(uuid())
+  userId                  String
+  user                    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                    String
+  // AES-256-GCM: ciphertext, IV, and auth tag stored separately, never logged or returned to the client.
+  connectionStringCipher  String
+  connectionStringIv      String
+  connectionStringTag     String
+  createdAt               DateTime       @default(now())
+  lastScannedAt           DateTime?
+  schemaProfile           SchemaProfile?
+  queryLogs               QueryLog[]
+
+  @@index([userId])
+}
+
+model SchemaProfile {
+  id           String     @id @default(uuid())
+  connectionId String     @unique
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  scannedAt    DateTime   @default(now())
+  // TableProfile[] as defined in engine/types.ts, stored whole — introspection re-scans replace it entirely.
+  tables       Json
+}
+
+model QueryLog {
+  id               String     @id @default(uuid())
+  userId           String
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectionId     String
+  connection       Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  question         String
+  retrievedTables  Json?
+  sql              String?
+  validationResult Json?
+  executionResult  Json?
+  errorText        String?
+  attemptNumber    Int
+  latencyMs        Int
+  createdAt        DateTime   @default(now())
+
+  @@index([userId])
+  @@index([connectionId])
+}
