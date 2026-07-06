@@ -41,31 +41,47 @@ export const COLUMNS_QUERY = `
   ORDER BY c.table_schema, c.table_name, c.ordinal_position;
 `;
 
+// PK/FK deliberately read from pg_catalog, not information_schema.
+// information_schema.table_constraints hides rows from a role that only has
+// SELECT (its visibility predicate requires INSERT/UPDATE/REFERENCES-type
+// privileges) — and DataPilot ALWAYS connects as a read-only, SELECT-only
+// role by design (hard rule 1). Confirmed empirically against a real
+// read-only role: table_constraints returned zero rows while pg_constraint
+// returned all of them. pg_catalog tables have no such privilege gating.
 export const PRIMARY_KEY_QUERY = `
-  SELECT tc.table_schema, tc.table_name, kcu.column_name, kcu.ordinal_position
-  FROM information_schema.table_constraints tc
-  JOIN information_schema.key_column_usage kcu
-    ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-  WHERE tc.constraint_type = 'PRIMARY KEY'
-    AND tc.table_schema NOT IN (${EXCLUDED_SCHEMAS_SQL})
-  ORDER BY tc.table_schema, tc.table_name, kcu.ordinal_position;
+  SELECT
+    n.nspname AS table_schema,
+    c.relname AS table_name,
+    a.attname AS column_name,
+    ord.ordinality AS ordinal_position
+  FROM pg_constraint con
+  JOIN pg_class c ON c.oid = con.conrelid
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  JOIN LATERAL unnest(con.conkey) WITH ORDINALITY AS ord(attnum, ordinality) ON true
+  JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum = ord.attnum
+  WHERE con.contype = 'p'
+    AND n.nspname NOT IN (${EXCLUDED_SCHEMAS_SQL})
+  ORDER BY n.nspname, c.relname, ord.ordinality;
 `;
 
 export const FOREIGN_KEY_QUERY = `
   SELECT
-    tc.table_schema,
-    tc.table_name,
-    kcu.column_name,
-    ccu.table_schema AS ref_schema,
-    ccu.table_name AS ref_table,
-    ccu.column_name AS ref_column
-  FROM information_schema.table_constraints tc
-  JOIN information_schema.key_column_usage kcu
-    ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-  JOIN information_schema.constraint_column_usage ccu
-    ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema
-  WHERE tc.constraint_type = 'FOREIGN KEY'
-    AND tc.table_schema NOT IN (${EXCLUDED_SCHEMAS_SQL});
+    n.nspname AS table_schema,
+    c.relname AS table_name,
+    a.attname AS column_name,
+    rn.nspname AS ref_schema,
+    rc.relname AS ref_table,
+    ra.attname AS ref_column
+  FROM pg_constraint con
+  JOIN pg_class c ON c.oid = con.conrelid
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  JOIN pg_class rc ON rc.oid = con.confrelid
+  JOIN pg_namespace rn ON rn.oid = rc.relnamespace
+  JOIN LATERAL unnest(con.conkey, con.confkey) WITH ORDINALITY AS ord(attnum, refattnum, ordinality) ON true
+  JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum = ord.attnum
+  JOIN pg_attribute ra ON ra.attrelid = rc.oid AND ra.attnum = ord.refattnum
+  WHERE con.contype = 'f'
+    AND n.nspname NOT IN (${EXCLUDED_SCHEMAS_SQL});
 `;
 
 export const ROW_ESTIMATE_QUERY = `
