@@ -43,13 +43,21 @@ export default function ConnectionSchemaPage() {
     <div className="mx-auto w-full max-w-4xl space-y-6 p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Schema summary</h1>
-        <button
-          onClick={handleRescan}
-          disabled={rescanning}
-          className="rounded border px-4 py-2 text-sm disabled:opacity-50"
-        >
-          {rescanning ? "Rescanning..." : "Rescan"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => router.push(`/connections/${params.id}/retrieve`)}
+            className="rounded border px-4 py-2 text-sm"
+          >
+            Retrieval debug
+          </button>
+          <button
+            onClick={handleRescan}
+            disabled={rescanning}
+            className="rounded border px-4 py-2 text-sm disabled:opacity-50"
+          >
+            {rescanning ? "Rescanning..." : "Rescan"}
+          </button>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -69,6 +77,7 @@ export default function ConnectionSchemaPage() {
               </h2>
               <span className="text-sm text-zinc-500">~{table.rowEstimate.toLocaleString()} rows</span>
             </div>
+            {table.description && <p className="mt-1 text-sm text-zinc-600">{table.description}</p>}
             {table.foreignKeys.length > 0 && (
               <p className="mt-1 text-sm text-zinc-500">
                 FKs:{" "}

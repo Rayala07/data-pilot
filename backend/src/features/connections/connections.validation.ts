@@ -8,3 +8,11 @@ export function validateCreateConnection(body: unknown): ValidationResult<Create
   }
   return { ok: true, value: { name, connectionString } };
 }
+
+export function validateQuestion(body: unknown): ValidationResult<{ question: string }> {
+  const { question } = (body ?? {}) as Record<string, unknown>;
+  if (typeof question !== "string" || !question.trim()) {
+    return { ok: false, error: "question is required" };
+  }
+  return { ok: true, value: { question: question.trim() } };
+}

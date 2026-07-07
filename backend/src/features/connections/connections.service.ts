@@ -5,21 +5,34 @@
 import type { Connection } from "@prisma/client";
 import type { Pool } from "pg";
 import { introspectSchema } from "../../engine/introspect";
-import type { Result, SchemaProfile } from "../../engine/types";
+import { getEmbeddingProvider, getLLMProvider } from "../../engine/providers/openaiCompatible";
+import { enrichSchemaProfile, retrieveTables } from "../../engine/retrieval";
+import type { Result, RetrievedTable, SchemaProfile, TableProfile } from "../../engine/types";
 import { decrypt, encrypt } from "../../shared/crypto";
 import { connectAndValidate } from "../../userdb/pool";
 import * as repo from "./connections.repository";
 import type { CreateConnectionInput, CreateConnectionResult } from "./connections.types";
 
-// Introspects on an already-validated pool and persists the result. Always
-// closes the pool — Day 1 scans once at connect/rescan time, no long-lived
-// pool is kept between requests yet.
+// Introspects on an already-validated pool, enriches for retrieval, and
+// persists the result. Always closes the pool — Day 1/2 scan once at
+// connect/rescan time; no long-lived pool is kept between requests yet.
 async function introspectAndPersist(pool: Pool, connectionId: string): Promise<Result<SchemaProfile>> {
   try {
     const introspectResult = await introspectSchema(pool, connectionId);
     if (!introspectResult.ok) return introspectResult;
 
     const profile = introspectResult.value;
+
+    // Enrich with LLM descriptions + embeddings for retrieval (Day 2). Non-fatal:
+    // if the provider is misconfigured or fails, we still persist the introspected
+    // profile so the schema view works — retrieval just has no vectors until a
+    // successful rescan.
+    try {
+      await enrichSchemaProfile(profile, getLLMProvider(), getEmbeddingProvider());
+    } catch {
+      // swallow — enrichment is best-effort at ingest
+    }
+
     await repo.saveSchemaProfile(connectionId, profile.scannedAt, profile.tables as object);
     return introspectResult;
   } finally {
@@ -51,4 +64,21 @@ export async function rescan(connection: Connection): Promise<Result<SchemaProfi
   if (!validation.ok) return validation;
 
   return introspectAndPersist(validation.value, connection.id);
+}
+
+// Day 2 debug: which tables does retrieval pick for a question, and with what
+// scores. Reads the stored (already-embedded) profile — no user-DB access.
+export async function retrieveForQuestion(
+  connectionId: string,
+  question: string
+): Promise<Result<RetrievedTable[], "embedding_error" | "not_scanned">> {
+  const stored = await repo.getSchemaProfile(connectionId);
+  if (!stored) return { ok: false, reason: "not_scanned", detail: "This connection has not been scanned yet" };
+
+  const profile: SchemaProfile = {
+    connectionId,
+    scannedAt: stored.scannedAt.toISOString(),
+    tables: stored.tables as unknown as TableProfile[],
+  };
+  return retrieveTables(question, profile, getEmbeddingProvider());
 }
