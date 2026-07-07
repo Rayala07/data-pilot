@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { verifyToken } from "../lib/jwt";
+import { verifyToken } from "./auth.jwt";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

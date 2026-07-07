@@ -1,4 +1,4 @@
-import type { FailureReason } from "../engine/types";
+import type { FailureReason } from "../../engine/types";
 
 const MESSAGES: Record<FailureReason, string> = {
   unreachable: "Couldn't reach that database. Check the host, port, and that it accepts connections from the internet (SSL included).",

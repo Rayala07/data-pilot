@@ -36,12 +36,22 @@ This is a portfolio project built to be **defended in engineering interviews**. 
 
 ## Repository layout
 
+The backend is **feature-based**: the app layer is grouped by domain feature
+(`features/auth`, `features/connections`), each owning its own routes,
+service, repository, validation, and types. The `engine/` stays a separate,
+framework-free system that features call into — it is NOT a feature.
+
 ```
 datapilot/
 ├── frontend/                 # Next.js app (UI only — no engine logic ever)
 ├── backend/                  # Express app
 │   ├── src/
-│   │   ├── engine/           # ALL core logic lives here, framework-free
+│   │   ├── index.ts          # entrypoint: load env + listen
+│   │   ├── app.ts            # Express app assembly (createApp), mounts feature routers
+│   │   ├── features/         # app layer, grouped by domain feature
+│   │   │   ├── auth/         # auth.routes/.service/.repository/.validation/.types/.middleware/.jwt
+│   │   │   └── connections/  # connections.routes/.service/.repository/.validation/.types/.errors
+│   │   ├── engine/           # ALL core logic lives here, framework-free (NOT a feature)
 │   │   │   ├── introspect/   # schema scanning of user DB
 │   │   │   ├── retrieval/    # embeddings + cosine similarity
 │   │   │   ├── generate/     # prompt building + LLM call
@@ -50,9 +60,9 @@ datapilot/
 │   │   │   ├── loop/         # the retry/self-correction orchestrator
 │   │   │   ├── present/      # chart-type selection + NL explanation
 │   │   │   └── providers/    # LLMProvider / EmbeddingProvider implementations
-│   │   ├── routes/           # thin Express routes calling into engine/
 │   │   ├── db/               # Prisma client (app DB only)
-│   │   └── userdb/           # pg Pool management for user target DBs
+│   │   ├── userdb/           # pg Pool management for user target DBs
+│   │   └── shared/           # cross-cutting primitives (crypto, validation-result type)
 │   └── prisma/               # schema.prisma + migrations (app DB)
 ├── seed/                     # messy e-commerce seed DB (SQL script) + benchmark questions
 └── docs/                     # these documents
@@ -60,7 +70,9 @@ datapilot/
 
 Frontend and backend are fully independent: separate `package.json`, separate `tsconfig.json`, separate dev servers, communicating over HTTP only. The frontend never imports backend code. Prisma lives inside `backend/` since only the backend touches the app database.
 
-Rule: `engine/` modules must not import Express. Routes are thin adapters. This keeps the engine testable and lets the developer explain it as an isolated system in interviews.
+Within a feature: `routes` are thin Express adapters; `service` holds orchestration; `repository` is the only place that touches Prisma (and centralizes the `userId` tenancy filter); `validation` and `types` are co-located. `db/` and `userdb/` stay top-level and MUST NOT cross-import — that separation makes the read-only guarantee auditable.
+
+Rule: `engine/` modules must not import Express (or a feature, or Prisma). Feature routes/services are the adapters that call into the engine. This keeps the engine testable and lets the developer explain it as an isolated system in interviews.
 
 ## Coding conventions
 
