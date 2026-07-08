@@ -45,6 +45,12 @@ export default function ConnectionSchemaPage() {
         <h1 className="text-2xl font-semibold">Schema summary</h1>
         <div className="flex gap-2">
           <button
+            onClick={() => router.push(`/connections/${params.id}/query`)}
+            className="rounded bg-black px-4 py-2 text-sm text-white"
+          >
+            Ask a question
+          </button>
+          <button
             onClick={() => router.push(`/connections/${params.id}/retrieve`)}
             className="rounded border px-4 py-2 text-sm"
           >
