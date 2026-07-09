@@ -23,6 +23,7 @@ import type {
 } from "../../engine/types";
 import { decrypt, encrypt } from "../../shared/crypto";
 import { connectAndValidate } from "../../userdb/pool";
+import { probeWriteAccess } from "../../userdb/privileges";
 import * as repo from "./connections.repository";
 import type { CreateConnectionInput, CreateConnectionResult } from "./connections.types";
 
@@ -31,6 +32,11 @@ import type { CreateConnectionInput, CreateConnectionResult } from "./connection
 // connect/rescan time; no long-lived pool is kept between requests yet.
 async function introspectAndPersist(pool: Pool, connectionId: string): Promise<Result<SchemaProfile>> {
   try {
+    // Verify hard rule 1 rather than merely asking for it: does this credential
+    // actually lack write access? Informational, and never fatal — a probe that
+    // can't answer records null and the UI simply says nothing.
+    await repo.setCredentialWriteAccess(connectionId, await probeWriteAccess(pool));
+
     const introspectResult = await introspectSchema(pool, connectionId);
     if (!introspectResult.ok) return introspectResult;
 

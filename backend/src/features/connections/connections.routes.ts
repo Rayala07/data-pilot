@@ -36,6 +36,7 @@ connectionsRouter.get("/", async (req, res) => {
     name: c.name,
     tableCount: Array.isArray(c.schemaProfile?.tables) ? (c.schemaProfile!.tables as unknown[]).length : 0,
     scannedAt: c.lastScannedAt,
+    canWrite: c.credentialCanWrite,
   }));
   res.json(summaries);
 });

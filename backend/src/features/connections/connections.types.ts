@@ -10,6 +10,8 @@ export interface ConnectionListItem {
   name: string;
   tableCount: number;
   scannedAt: Date | null;
+  /** true = the credential can modify data; false = verified read-only; null = not probed. */
+  canWrite: boolean | null;
 }
 
 // On scan failure the Connection row already exists, so the id is carried back

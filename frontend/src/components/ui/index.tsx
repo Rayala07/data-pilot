@@ -2,7 +2,9 @@
 // (bg-surface, text-fg-muted, border-line) — never raw colours — so a theme
 // change is a token edit, not a sweep through feature code.
 
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
+"use client";
+
+import { useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
 
 export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
@@ -198,5 +200,27 @@ export function CodeBlock({ children }: { children: string }) {
     <pre className="overflow-x-auto rounded-lg bg-surface-2 p-3 font-mono text-xs leading-relaxed text-fg">
       {children}
     </pre>
+  );
+}
+
+/** Copies text to the clipboard and confirms it, so a snippet can't be half-selected. */
+export function CopyButton({ value, label = "Copy" }: { value: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard blocked (insecure origin, denied permission). The text is
+      // still selectable, so fail quietly rather than alarm the user.
+    }
+  }
+
+  return (
+    <Button type="button" variant="secondary" size="sm" onClick={copy}>
+      {copied ? "Copied" : label}
+    </Button>
   );
 }

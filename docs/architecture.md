@@ -148,6 +148,7 @@ Naming the available columns on hallucination failures is what makes retries act
 | POST | /auth/login | `{ email, password }` | `{ token }` |
 | GET | /auth/me | — | `{ id, email, createdAt, connectionCount, queryCount }` (never `passwordHash`) |
 | POST | /connections | `{ name, connectionString }` | `{ id, name, tableCount }` or structured error |
+| GET | /connections | — | list (id, name, tableCount, scannedAt, canWrite) — `canWrite` is probed at connect/rescan: true = credential can modify data, false = verified read-only, null = not probed |
 | GET | /connections | — | list (id, name, tableCount, scannedAt) |
 | GET | /connections/:id/schema | — | SchemaProfile (without connection string) |
 | GET | /connections/:id/summary | — | `{ headline, entities[], dateRange, suggestedQuestions[] }` — business-language overview, cached; regenerated only on rescan |
@@ -165,7 +166,7 @@ All routes except the two `/auth` endpoints require `Authorization: Bearer <jwt>
 
 ## Security layers (defense in depth — interview answer, verbatim)
 
-1. **DB-level:** read-only role + `default_transaction_read_only = on`. Even a validation bypass cannot write.
+1. **DB-level:** read-only role + `default_transaction_read_only = on`. Even a validation bypass cannot write. The supplied credential is also *probed* at connect time (`has_table_privilege` / `has_schema_privilege` — pure catalog reads, no writes); if it can write, the UI warns without blocking, so layer 1 is verified rather than merely requested.
 2. **App-level:** AST parse; only a single pure SELECT survives. Regex is explicitly forbidden (trivially bypassable: comments, casing, nesting).
 3. **Execution-level:** `statement_timeout` 15s, row limit 1000, per-connection pool caps so one user DB can't exhaust the server.
 4. **LLM-level:** result values re-entering prompts are truncated and fenced as data (prompt-injection mitigation).

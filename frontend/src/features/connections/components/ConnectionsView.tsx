@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Alert, Button, Card, EmptyState, Field, Input, PageHeader, Skeleton } from "@/components/ui";
+import type { ConnectionListItem } from "@/lib/types";
+import { Alert, Badge, Button, Card, EmptyState, Field, Input, PageHeader, Skeleton } from "@/components/ui";
 import { isLoading } from "@/store/asyncState";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearCreateError } from "../connections.slice";
 import { createConnection, fetchConnections } from "../connections.thunks";
+import { ReadOnlyGuide } from "./ReadOnlyGuide";
 
 function AddConnectionForm() {
   const dispatch = useAppDispatch();
@@ -54,6 +56,8 @@ function AddConnectionForm() {
           </Field>
         </div>
 
+        <ReadOnlyGuide />
+
         <div className="flex items-center gap-3">
           <Button type="submit" loading={submitting} disabled={!name || !connectionString}>
             {submitting ? "Connecting & scanning…" : "Connect"}
@@ -67,24 +71,19 @@ function AddConnectionForm() {
   );
 }
 
-function ConnectionCard({
-  id,
-  name,
-  tableCount,
-  scannedAt,
-}: {
-  id: string;
-  name: string;
-  tableCount: number;
-  scannedAt: string | null;
-}) {
+function ConnectionCard({ id, name, tableCount, scannedAt, canWrite }: ConnectionListItem) {
   return (
     <Link
       href={`/connections/${id}`}
       className="block rounded-card border border-line bg-surface p-4 transition-colors hover:border-line-strong hover:bg-surface-2"
     >
       <div className="flex items-center justify-between gap-4">
-        <span className="truncate text-sm font-medium text-fg">{name}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate text-sm font-medium text-fg">{name}</span>
+          {/* Verified, not assumed. null = never probed, so we say nothing. */}
+          {canWrite === true && <Badge tone="warning">Can write</Badge>}
+          {canWrite === false && <Badge tone="success">Read-only</Badge>}
+        </span>
         <span className="shrink-0 text-xs text-fg-muted">
           {tableCount} table{tableCount === 1 ? "" : "s"}
         </span>

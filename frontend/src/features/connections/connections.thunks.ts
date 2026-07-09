@@ -20,7 +20,8 @@ export const createConnection = createApiThunk<ConnectionListItem, NewConnection
     });
     // Refresh the list so scannedAt and counts come from the server, not guesses.
     api.dispatch(fetchConnections());
-    return { ...created, scannedAt: null };
+    // The list refetch above supplies the real scannedAt/canWrite; these are placeholders.
+    return { ...created, scannedAt: null, canWrite: null };
   }
 );
 

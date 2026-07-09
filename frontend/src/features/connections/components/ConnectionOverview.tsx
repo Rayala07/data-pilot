@@ -107,6 +107,15 @@ export function ConnectionOverview({ connectionId }: { connectionId: string }) {
         }
       />
 
+      {/* Verified at connect time, not assumed. Non-blocking: DataPilot still
+          only ever runs validated SELECTs on a read-only session. */}
+      {connection?.canWrite === true && (
+        <Alert tone="warning" title="This credential can modify your data">
+          DataPilot only ever runs read-only queries, but the credential you gave it is stronger than it needs to be.
+          Consider swapping it for a read-only role — the connect screen shows how.
+        </Alert>
+      )}
+
       {summaryRequest.error && <Alert title="Couldn't build the overview">{summaryRequest.error}</Alert>}
       {rescan.error && <Alert title="Rescan failed">{rescan.error}</Alert>}
 

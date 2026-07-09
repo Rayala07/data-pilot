@@ -31,6 +31,11 @@ model Connection {
   connectionStringTag     String
   createdAt               DateTime       @default(now())
   lastScannedAt           DateTime?
+  // Whether the supplied credential can actually modify data, probed at
+  // connect/rescan. null = never probed (row predates the check, or the probe
+  // failed). Informational only — the read-only session flag and AST validation
+  // still apply regardless.
+  credentialCanWrite      Boolean?
   schemaProfile           SchemaProfile?
   queryLogs               QueryLog[]
 

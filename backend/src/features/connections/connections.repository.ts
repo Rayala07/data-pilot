@@ -62,3 +62,11 @@ export async function saveSummary(connectionId: string, summary: object): Promis
 export function countConnections(userId: string): Promise<number> {
   return prisma.connection.count({ where: { userId } });
 }
+
+/** Records whether the stored credential can modify the user's data (null = unknown). */
+export async function setCredentialWriteAccess(connectionId: string, canWrite: boolean | null): Promise<void> {
+  await prisma.connection.update({
+    where: { id: connectionId },
+    data: { credentialCanWrite: canWrite },
+  });
+}

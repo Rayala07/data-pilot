@@ -6,6 +6,8 @@ export interface ConnectionListItem {
   name: string;
   tableCount: number;
   scannedAt: string | null;
+  /** true = credential can modify data; false = verified read-only; null = not probed. */
+  canWrite: boolean | null;
 }
 
 export interface ColumnProfile {
