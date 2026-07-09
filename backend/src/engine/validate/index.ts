@@ -33,25 +33,51 @@ interface LooseStmt {
   columns?: LooseColumn[] | string;
 }
 
+/**
+ * Collects every alias defined anywhere in a SELECT list.
+ *
+ * A shallow read of `column.as` is not enough: for `date_trunc('month', c)::date
+ * AS month` node-sql-parser leaves `column.as = null` and hangs the alias off the
+ * cast node (`column.expr.as`). Missing it made `GROUP BY month` look like a
+ * reference to a nonexistent column, wrongly failing valid SQL as a
+ * hallucination. Walking the expression tree is robust to that and to nesting.
+ *
+ * Over-collecting is the safe direction: aliases only ever *permit* an
+ * unqualified name. Table-qualified columns are still checked strictly, so a
+ * real hallucination on a known table is still caught.
+ */
+function collectAliases(node: unknown, out: Set<string>, depth = 0): void {
+  if (!node || typeof node !== "object" || depth > 8) return;
+  if (Array.isArray(node)) {
+    for (const child of node) collectAliases(child, out, depth + 1);
+    return;
+  }
+  const rec = node as Record<string, unknown>;
+  if (typeof rec.as === "string" && rec.as) out.add(rec.as.toLowerCase());
+  for (const key of Object.keys(rec)) {
+    if (key !== "as") collectAliases(rec[key], out, depth + 1);
+  }
+}
+
 // Names produced by a CTE (its output columns) are valid to reference in the
 // outer query even though they aren't base-table columns — collect them so the
 // column-existence check doesn't flag them as hallucinated.
 function collectCteOutputs(cte: LooseCte): string[] {
-  const names: string[] = [];
+  const names = new Set<string>();
   if (Array.isArray(cte.columns)) {
     for (const c of cte.columns) {
       const n = typeof c === "string" ? c : c?.value;
-      if (n) names.push(n.toLowerCase());
+      if (n) names.add(n.toLowerCase());
     }
   }
   const stmtCols = cte.stmt?.ast?.columns ?? cte.stmt?.columns;
   if (Array.isArray(stmtCols)) {
+    collectAliases(stmtCols, names);
     for (const c of stmtCols) {
-      if (typeof c?.as === "string") names.push(c.as.toLowerCase());
-      if (typeof c?.expr?.column === "string") names.push(c.expr.column.toLowerCase());
+      if (typeof c?.expr?.column === "string") names.add(c.expr.column.toLowerCase());
     }
   }
-  return names;
+  return Array.from(names);
 }
 
 export function validateSql(sql: string, profile: SchemaProfile): ValidateOutcome {
@@ -134,9 +160,7 @@ export function validateSql(sql: string, profile: SchemaProfile): ValidateOutcom
   }
 
   const aliases = new Set<string>(cteOutputs);
-  if (Array.isArray(stmt.columns)) {
-    for (const c of stmt.columns) if (typeof c?.as === "string") aliases.add(c.as.toLowerCase());
-  }
+  if (Array.isArray(stmt.columns)) collectAliases(stmt.columns, aliases);
 
   const missingCols: string[] = [];
   for (const entry of safeColumnList(sql)) {

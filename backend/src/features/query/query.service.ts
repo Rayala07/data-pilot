@@ -7,6 +7,7 @@ import type { Connection } from "@prisma/client";
 import type { Pool } from "pg";
 import { executeSelect, type ExecuteOutcome } from "../../engine/execute";
 import { runLoop } from "../../engine/loop";
+import { present } from "../../engine/present";
 import { getEmbeddingProvider, getLLMProvider } from "../../engine/providers/openaiCompatible";
 import { retrieveTables } from "../../engine/retrieval";
 import type { SchemaProfile, TableProfile } from "../../engine/types";
@@ -44,7 +45,12 @@ function applyPoison(tables: TableProfile[]): TableProfile[] {
   );
 }
 
-export async function runQuery(userId: string, connection: Connection, question: string): Promise<QueryOutcome> {
+export async function runQuery(
+  userId: string,
+  connection: Connection,
+  question: string,
+  opts: { explain?: boolean } = {}
+): Promise<QueryOutcome> {
   const stored = await getSchemaProfile(connection.id);
   if (!stored) {
     return { ok: false, failureType: "not_scanned", detail: "This connection hasn't been scanned yet.", attempts: [] };
@@ -90,13 +96,15 @@ export async function runQuery(userId: string, connection: Connection, question:
     return executeSelect(pool, sql);
   };
 
+  const llm = getLLMProvider();
+
   try {
     const result = await runLoop({
       question,
       profile,
       focusedTables,
       retrievedTableNames: retrievedNames,
-      llm: getLLMProvider(),
+      llm,
       execute,
       onAttempt: (record) =>
         writeQueryLog({
@@ -114,12 +122,24 @@ export async function runQuery(userId: string, connection: Connection, question:
     });
 
     if (result.ok) {
+      // Chart selection is pure and always succeeds; the explanation is
+      // best-effort, so a provider hiccup degrades the prose, never the answer.
+      const presentation = await present(
+        { question, sql: result.sql, fields: result.fields, rows: result.rows },
+        llm,
+        { explain: opts.explain }
+      );
       return {
         ok: true,
-        sql: result.sql,
-        rows: result.rows,
-        fields: result.fields,
-        rowCount: result.rowCount,
+        answer: {
+          explanation: presentation.explanation,
+          sqlDescription: presentation.sqlDescription,
+          chart: presentation.chart,
+          rows: result.rows,
+          fields: result.fields,
+          rowCount: result.rowCount,
+          sql: result.sql,
+        },
         attempts: result.attempts,
       };
     }

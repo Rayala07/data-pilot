@@ -20,7 +20,7 @@
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import { generateSql, type RetryFeedback } from "../generate";
 import type { ExecuteOutcome } from "../execute";
-import type { AttemptFailureType, LLMProvider, QueryAttempt, SchemaProfile, TableProfile } from "../types";
+import type { AttemptFailureType, FieldMeta, LLMProvider, QueryAttempt, SchemaProfile, TableProfile } from "../types";
 import { validateSql } from "../validate";
 
 const MAX_ATTEMPTS = 3;
@@ -56,7 +56,7 @@ export type LoopOutcome =
       ok: true;
       sql: string;
       rows: Record<string, unknown>[];
-      fields: string[];
+      fields: FieldMeta[];
       rowCount: number;
       attempts: QueryAttempt[];
     }
@@ -75,7 +75,7 @@ interface Failure {
 interface Success {
   sql: string;
   rows: Record<string, unknown>[];
-  fields: string[];
+  fields: FieldMeta[];
   rowCount: number;
 }
 

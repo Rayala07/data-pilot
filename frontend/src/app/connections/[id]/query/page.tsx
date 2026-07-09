@@ -2,48 +2,36 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ResultChart } from "@/components/ResultChart";
 import { apiFetch, getToken } from "@/lib/api";
+import type { Attempt, FieldMeta, QueryResponse } from "@/lib/types";
 
-interface Attempt {
-  attemptNumber: number;
-  sql: string | null;
-  retrievedTables: string[];
-  failureType?: string;
-  errorText?: string;
-  latencyMs: number;
-}
-interface QuerySuccess {
-  ok: true;
-  sql: string;
-  rows: Record<string, unknown>[];
-  fields: string[];
-  rowCount: number;
-  attempts: Attempt[];
-}
-interface QueryFailure {
-  ok: false;
-  failureType: string;
-  detail: string;
-  sql?: string;
-  attempts: Attempt[];
-}
-type QueryResponse = QuerySuccess | QueryFailure;
+const EXAMPLES = [
+  "monthly revenue for the last 6 months",
+  "how many users signed up in 2025?",
+  "top 5 products by revenue",
+];
 
-function cell(v: unknown): string {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "object") return JSON.stringify(v);
-  return String(v);
+function formatCell(value: unknown, kind: FieldMeta["kind"]): string {
+  if (value === null || value === undefined) return "—";
+  if (kind === "date") {
+    const d = new Date(String(value));
+    if (!Number.isNaN(d.getTime())) return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+  if (kind === "numeric") {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n.toLocaleString();
+  }
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
 }
 
-// The attempt trail is the visible proof of the self-correction loop: which
-// attempt failed, why, and what the model tried next.
+// The attempt trail is the visible proof of the self-correction loop.
 function AttemptTrail({ attempts }: { attempts: Attempt[] }) {
   if (attempts.length <= 1) return null;
   return (
-    <details className="rounded border p-3">
-      <summary className="cursor-pointer text-sm font-medium">
-        Attempt history ({attempts.length} attempts)
-      </summary>
+    <details className="rounded-lg border p-3" style={{ borderColor: "var(--hairline)" }}>
+      <summary className="cursor-pointer text-sm font-medium">Attempt history ({attempts.length} attempts)</summary>
       <div className="mt-3 space-y-3">
         {attempts.map((a) => (
           <div key={a.attemptNumber} className="space-y-1">
@@ -54,9 +42,11 @@ function AttemptTrail({ attempts }: { attempts: Attempt[] }) {
               ) : (
                 <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-700">succeeded</span>
               )}
-              <span className="text-xs text-zinc-400">{a.latencyMs} ms</span>
+              <span className="text-xs" style={{ color: "var(--ink-muted)" }}>{a.latencyMs} ms</span>
             </div>
-            {a.sql && <pre className="overflow-x-auto rounded bg-zinc-50 p-2 text-xs">{a.sql}</pre>}
+            {a.sql && (
+              <pre className="overflow-x-auto rounded p-2 text-xs" style={{ background: "var(--surface)" }}>{a.sql}</pre>
+            )}
             {a.errorText && <p className="text-xs text-red-600">{a.errorText}</p>}
           </div>
         ))}
@@ -65,8 +55,57 @@ function AttemptTrail({ attempts }: { attempts: Attempt[] }) {
   );
 }
 
-// Day 3 minimal query page: question -> executed SQL + raw rows + attempt info.
-// Charts and NL explanation come in Day 5.
+function ResultTable({ fields, rows }: { fields: FieldMeta[]; rows: Record<string, unknown>[] }) {
+  const shown = rows.slice(0, 200);
+  return (
+    <div className="space-y-1">
+      <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--hairline)" }}>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b" style={{ borderColor: "var(--hairline)", background: "var(--surface)" }}>
+              {fields.map((f) => (
+                <th
+                  key={f.name}
+                  className={`px-3 py-2 font-mono text-xs font-medium ${f.kind === "numeric" ? "text-right" : ""}`}
+                  style={{ color: "var(--ink-secondary)" }}
+                >
+                  {f.name}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {shown.map((row, i) => (
+              <tr key={i} className="border-b last:border-0" style={{ borderColor: "var(--hairline)" }}>
+                {fields.map((f) => (
+                  <td
+                    key={f.name}
+                    className={`px-3 py-1.5 ${f.kind === "numeric" ? "text-right tabular-nums" : ""}`}
+                  >
+                    {formatCell(row[f.name], f.kind)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {shown.length === 0 && (
+              <tr>
+                <td colSpan={fields.length} className="px-3 py-6 text-center text-sm" style={{ color: "var(--ink-muted)" }}>
+                  No rows matched.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > shown.length && (
+        <p className="text-xs" style={{ color: "var(--ink-muted)" }}>
+          Showing first {shown.length} of {rows.length} rows.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function QueryPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -79,15 +118,15 @@ export default function QueryPage() {
     if (!getToken()) router.push("/login");
   }, [router]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function run(q: string) {
+    if (!q.trim()) return;
     setError(null);
     setResult(null);
     setLoading(true);
     try {
       const res = await apiFetch<QueryResponse>("/query", {
         method: "POST",
-        body: JSON.stringify({ connectionId: params.id, question }),
+        body: JSON.stringify({ connectionId: params.id, question: q }),
       });
       setResult(res);
     } catch (err) {
@@ -106,85 +145,109 @@ export default function QueryPage() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="how many users signed up in 2025?"
-          className="flex-1 rounded border px-3 py-2"
-        />
-        <button
-          type="submit"
-          disabled={loading || !question.trim()}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
-          {loading ? "Running..." : "Run"}
-        </button>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          run(question);
+        }}
+        className="space-y-2"
+      >
+        <div className="flex gap-2">
+          <input
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="monthly revenue for the last 6 months"
+            className="flex-1 rounded-lg border px-3 py-2"
+            style={{ borderColor: "var(--hairline)", background: "var(--surface)" }}
+          />
+          <button
+            type="submit"
+            disabled={loading || !question.trim()}
+            className="rounded-lg bg-black px-5 py-2 text-white disabled:opacity-40 dark:bg-white dark:text-black"
+          >
+            {loading ? "Running…" : "Run"}
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex}
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setQuestion(ex);
+                run(ex);
+              }}
+              className="rounded-full border px-3 py-1 text-xs disabled:opacity-40"
+              style={{ borderColor: "var(--hairline)", color: "var(--ink-secondary)" }}
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
       </form>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {loading && (
+        <div className="space-y-3" aria-busy="true">
+          <div className="h-4 w-2/3 animate-pulse rounded" style={{ background: "var(--viz-grid)" }} />
+          <div className="h-[300px] animate-pulse rounded-lg" style={{ background: "var(--viz-grid)" }} />
+          <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
+            Retrieving tables, generating SQL, validating, executing…
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+      )}
 
       {result && !result.ok && (
         <div className="space-y-3">
-          <div className="space-y-2 rounded border border-red-200 bg-red-50 p-4">
-            <p className="text-sm font-medium text-red-700">
+          <div className="space-y-2 rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-800">
               {result.failureType} failure
               {result.attempts.length > 1 && ` after ${result.attempts.length} attempts`}
             </p>
             <p className="text-sm text-red-700">{result.detail}</p>
-            {result.sql && (
-              <pre className="overflow-x-auto rounded bg-white p-2 text-xs">{result.sql}</pre>
-            )}
+            {result.sql && <pre className="overflow-x-auto rounded bg-white p-2 text-xs text-zinc-800">{result.sql}</pre>}
           </div>
           <AttemptTrail attempts={result.attempts} />
         </div>
       )}
 
       {result && result.ok && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {result.attempts.length > 1 && (
-            <div className="rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
-              ✓ Self-corrected after {result.attempts.length - 1} retr
-              {result.attempts.length - 1 === 1 ? "y" : "ies"}
+            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
+              ✓ Self-corrected after {result.attempts.length - 1} retr{result.attempts.length - 1 === 1 ? "y" : "ies"}
             </div>
           )}
 
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Executed SQL</p>
-            <pre className="overflow-x-auto rounded bg-zinc-900 p-3 text-xs text-zinc-100">{result.sql}</pre>
-          </div>
+          {result.answer.explanation && (
+            <p className="text-base leading-relaxed" style={{ color: "var(--ink-primary)" }}>
+              {result.answer.explanation}
+            </p>
+          )}
+
+          <ResultChart chart={result.answer.chart} rows={result.answer.rows} />
+
+          {/* The raw table is always present — it is also the relief for the
+              chart slots that fall below 3:1 contrast on the light surface. */}
+          <ResultTable fields={result.answer.fields} rows={result.answer.rows} />
+
+          <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
+            {result.answer.rowCount} row{result.answer.rowCount === 1 ? "" : "s"}
+            {result.attempts[0] && ` · ${result.attempts[0].latencyMs} ms · retrieved: ${result.attempts[0].retrievedTables.join(", ")}`}
+          </p>
+
+          <details className="rounded-lg border p-3" style={{ borderColor: "var(--hairline)" }}>
+            <summary className="cursor-pointer text-sm font-medium">
+              SQL{result.answer.sqlDescription ? ` — ${result.answer.sqlDescription}` : ""}
+            </summary>
+            <pre className="mt-2 overflow-x-auto rounded bg-zinc-900 p-3 text-xs text-zinc-100">{result.answer.sql}</pre>
+          </details>
 
           <AttemptTrail attempts={result.attempts} />
-
-          <div className="space-y-1">
-            <p className="text-sm text-zinc-500">
-              {result.rowCount} row{result.rowCount === 1 ? "" : "s"}
-              {result.attempts[0] && ` · ${result.attempts[0].latencyMs} ms · retrieved: ${result.attempts[0].retrievedTables.join(", ")}`}
-            </p>
-            <div className="overflow-x-auto rounded border">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b bg-zinc-50">
-                    {result.fields.map((f) => (
-                      <th key={f} className="px-3 py-1.5 font-mono text-xs">{f}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.rows.slice(0, 200).map((row, i) => (
-                    <tr key={i} className="border-b last:border-0">
-                      {result.fields.map((f) => (
-                        <td key={f} className="px-3 py-1.5 tabular-nums">{cell(row[f])}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {result.rows.length > 200 && (
-              <p className="text-xs text-zinc-400">Showing first 200 of {result.rows.length} rows.</p>
-            )}
-          </div>
         </div>
       )}
     </div>

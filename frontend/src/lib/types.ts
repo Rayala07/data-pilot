@@ -36,3 +36,42 @@ export interface SchemaProfile {
   scannedAt: string;
   tables: TableProfile[];
 }
+
+// --- Query / presentation (Day 5) -------------------------------------------
+
+export type FieldKind = "numeric" | "date" | "boolean" | "text";
+
+export interface FieldMeta {
+  name: string;
+  kind: FieldKind;
+}
+
+export type ChartSpec =
+  | { type: "stat"; label: string; value: string }
+  | { type: "line"; xField: string; yFields: string[] }
+  | { type: "bar"; xField: string; yField: string }
+  | { type: "scatter"; xField: string; yField: string }
+  | { type: "table" };
+
+export interface Attempt {
+  attemptNumber: number;
+  sql: string | null;
+  retrievedTables: string[];
+  failureType?: string;
+  errorText?: string;
+  latencyMs: number;
+}
+
+export interface QueryAnswer {
+  explanation: string;
+  sqlDescription: string;
+  chart: ChartSpec;
+  rows: Record<string, unknown>[];
+  fields: FieldMeta[];
+  rowCount: number;
+  sql: string;
+}
+
+export type QueryResponse =
+  | { ok: true; answer: QueryAnswer; attempts: Attempt[] }
+  | { ok: false; failureType: string; detail: string; sql?: string; attempts: Attempt[] };

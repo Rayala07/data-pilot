@@ -57,6 +57,7 @@ export interface LLMProvider {
 }
 
 export interface EmbeddingProvider {
+  /** Embeds a batch of texts, returning one vector per input in order. */
   embed(texts: string[]): Promise<Result<number[][], "embedding_error">>;
 }
 
@@ -85,5 +86,42 @@ export interface QueryAttempt {
 
 export interface QueryResult {
   rows: Record<string, unknown>[];
-  fields: string[];
+  fields: FieldMeta[];
+}
+
+// --- Presentation types (Day 5) --------------------------------------------
+
+/**
+ * Semantic kind of a result column, derived from the Postgres type OID rather
+ * than from the value. This matters: node-pg returns `numeric` and `int8`
+ * (e.g. COUNT(*), SUM(...)) as JavaScript STRINGS, so inferring the kind from
+ * the value would classify every revenue and count column as text — and no
+ * chart would ever be selected.
+ */
+export type FieldKind = "numeric" | "date" | "boolean" | "text";
+
+export interface FieldMeta {
+  name: string;
+  kind: FieldKind;
+}
+
+/**
+ * Chart choice is a function of result shape, not a judgement call — so it's a
+ * deterministic lookup, never an LLM decision (D9). The frontend renders
+ * exactly these shapes and nothing else, so a chart type it can't draw can't
+ * be hallucinated into existence.
+ */
+export type ChartSpec =
+  | { type: "stat"; label: string; value: string }
+  | { type: "line"; xField: string; yFields: string[] }
+  | { type: "bar"; xField: string; yField: string }
+  | { type: "scatter"; xField: string; yField: string }
+  | { type: "table" };
+
+export interface Presentation {
+  chart: ChartSpec;
+  /** 2–4 sentences. Empty string if the explanation call failed — never fatal. */
+  explanation: string;
+  /** One line describing what the SQL does. Empty string on failure. */
+  sqlDescription: string;
 }

@@ -21,6 +21,13 @@ const SYSTEM_PROMPT = [
   "- Use PostgreSQL syntax: EXTRACT(YEAR FROM col) not YEAR(col); ILIKE for case-insensitive matching; :: for casts.",
   "- The schema uses abbreviated column names — map the question's business terms onto them.",
   "- Prefer explicit JOINs using the foreign keys provided.",
+  // Chart selection keys off a real date-typed column. Splitting a period into
+  // separate year/month integers yields three numeric columns and no time axis,
+  // so a time series would silently degrade to a plain table.
+  "- When grouping by time, return the period as ONE date column, e.g. date_trunc('month', ord_dt)::date AS month — never separate year and month integer columns. Order time series ascending by that column.",
+  // A surrogate id is a numeric column that isn't a measure; selecting it turns
+  // a "label + measure" result into two numerics and suppresses the bar chart.
+  "- Select only the columns needed to answer the question. Do not include surrogate id / primary-key columns unless the question asks for them — prefer the human-readable name column.",
 ].join("\n");
 
 function buildSchemaContext(tables: TableProfile[]): string {

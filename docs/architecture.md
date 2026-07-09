@@ -150,12 +150,16 @@ Naming the available columns on hallucination failures is what makes retries act
 | GET | /connections | — | list (id, name, tableCount, scannedAt) |
 | GET | /connections/:id/schema | — | SchemaProfile (without connection string) |
 | POST | /connections/:id/rescan | — | refreshed SchemaProfile |
-| POST | /query | `{ connectionId, question }` | `{ answer: { explanation, chart, rows, fields, sql }, attempts: QueryAttempt[] }` |
+| POST | /query | `{ connectionId, question, explain? }` | `{ ok, answer: { explanation, sqlDescription, chart, rows, fields, rowCount, sql }, attempts: QueryAttempt[] }` |
 | GET | /logs?connectionId= | — | query logs (for the benchmark page) |
 
 All routes except the two `/auth` endpoints require `Authorization: Bearer <jwt>` and are scoped to the authenticated user's data; requesting another user's connection returns 404.
 
 `attempts` is returned to the frontend on purpose: the UI can show "self-corrected after 1 retry", which demos the loop visibly.
+
+`explain` defaults to `true`. Setting it `false` skips the NL-explanation LLM call and returns the chart + rows only — the Day 6 benchmark uses this so 35 questions × 2 runs don't pay for prose nobody reads. A failed query returns `{ ok: false, failureType, detail, sql?, attempts }`.
+
+`fields` are `{ name, kind }` where `kind` is derived from the Postgres type OID, not from the value: node-pg returns `numeric` and `int8` (`COUNT(*)`, `SUM(...)`) as JavaScript **strings**, so value-based inference would label every measure as text and no chart would ever be chosen.
 
 ## Security layers (defense in depth — interview answer, verbatim)
 
