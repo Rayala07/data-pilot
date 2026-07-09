@@ -1,21 +1,30 @@
-// The self-correction loop — the centerpiece of the engine.
+// The self-correction loop — the centerpiece of the engine — modelled as an
+// explicit LangGraph state machine:
 //
-// Runs generate -> validate -> execute, and on any failure feeds a STRUCTURED
-// description of what went wrong back into the next generation attempt, up to
-// 3 attempts total (decision D7). What makes retries converge instead of flail
-// is that validation checks against the real SchemaProfile, so a hallucinated
-// identifier comes back with the actual available columns named (D6).
+//        START ──▶ generate ──▶ validate ──▶ execute ──▶ END (success)
+//                     │            │            │
+//                     │            │ security   │
+//                     │            └──▶ END     │
+//                     └──────◀── retry ─────────┘
+//                          (structured feedback)
 //
-// Framework-free by construction: it never imports pg, Express, or Prisma.
-// Execution is injected as a function, and per-attempt persistence is an
-// optional callback, so the caller owns the pool and the database writes.
+// Up to 3 attempts (D7). Retries converge because validation runs against the
+// real SchemaProfile, so a hallucinated identifier comes back with the actual
+// available columns named (D6). A `security` failure is terminal: it routes
+// straight to END and the execute node is never entered (D7a).
+//
+// Framework-free of the app: this module never imports pg, Express, or Prisma.
+// Execution is injected as a function and per-attempt persistence is a
+// callback, so the caller owns the pool and the database writes.
 
+import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
 import { generateSql, type RetryFeedback } from "../generate";
 import type { ExecuteOutcome } from "../execute";
 import type { AttemptFailureType, LLMProvider, QueryAttempt, SchemaProfile, TableProfile } from "../types";
 import { validateSql } from "../validate";
 
 const MAX_ATTEMPTS = 3;
+const NODES_PER_ATTEMPT = 3;
 
 /** Full detail of one attempt — richer than QueryAttempt, for QueryLog persistence. */
 export interface LoopAttemptRecord {
@@ -59,104 +68,204 @@ export type LoopOutcome =
       attempts: QueryAttempt[];
     };
 
+interface Failure {
+  failureType: AttemptFailureType;
+  detail: string;
+}
+interface Success {
+  sql: string;
+  rows: Record<string, unknown>[];
+  fields: string[];
+  rowCount: number;
+}
+
+const overwrite = <T,>(_prev: T, next: T): T => next;
+
+// Channels carry only what flows between nodes. The providers and callbacks
+// stay in closures rather than in state — they aren't data, and state that
+// can't be inspected or serialized is state you can't debug.
+const LoopState = Annotation.Root({
+  attemptNumber: Annotation<number>({ reducer: overwrite, default: () => 0 }),
+  /** Set when an attempt begins, so any node can compute that attempt's latency. */
+  startedAt: Annotation<number>({ reducer: overwrite, default: () => 0 }),
+  sql: Annotation<string | null>({ reducer: overwrite, default: () => null }),
+  feedback: Annotation<RetryFeedback | undefined>({ reducer: overwrite, default: () => undefined }),
+  failure: Annotation<Failure | null>({ reducer: overwrite, default: () => null }),
+  success: Annotation<Success | null>({ reducer: overwrite, default: () => null }),
+  /** The only accumulating channel: each node appends the attempt it just finished. */
+  attempts: Annotation<QueryAttempt[]>({
+    reducer: (prev, next) => (prev ?? []).concat(next ?? []),
+    default: () => [],
+  }),
+});
+
+type LoopStateType = typeof LoopState.State;
+
 export async function runLoop(opts: LoopOptions): Promise<LoopOutcome> {
   const maxAttempts = opts.maxAttempts ?? MAX_ATTEMPTS;
-  const attempts: QueryAttempt[] = [];
 
-  let feedback: RetryFeedback | undefined;
-  let lastSql: string | null = null;
-  let lastFailure: { failureType: AttemptFailureType; detail: string } | null = null;
-
-  for (let attemptNumber = 1; attemptNumber <= maxAttempts; attemptNumber++) {
-    const started = Date.now();
-
-    // Records the attempt (log + public shape), then hands back control.
-    const finish = async (r: Omit<LoopAttemptRecord, "attemptNumber" | "latencyMs">) => {
-      const latencyMs = Date.now() - started;
-      const record: LoopAttemptRecord = { ...r, attemptNumber, latencyMs };
-      await opts.onAttempt?.(record);
-      attempts.push({
-        attemptNumber,
-        sql: r.sql,
-        retrievedTables: opts.retrievedTableNames,
-        failureType: r.failureType,
-        errorText: r.errorText ?? undefined,
-        latencyMs,
-      });
+  // Persists the attempt and returns the public shape the API exposes.
+  const record = async (
+    r: Omit<LoopAttemptRecord, "latencyMs">,
+    startedAt: number
+  ): Promise<QueryAttempt> => {
+    const latencyMs = Date.now() - startedAt;
+    await opts.onAttempt?.({ ...r, latencyMs });
+    return {
+      attemptNumber: r.attemptNumber,
+      sql: r.sql,
+      retrievedTables: opts.retrievedTableNames,
+      failureType: r.failureType,
+      errorText: r.errorText ?? undefined,
+      latencyMs,
     };
+  };
 
-    // --- generate ---
-    const gen = await generateSql(opts.question, opts.focusedTables, opts.llm, feedback);
+  // --- nodes ---------------------------------------------------------------
+
+  async function generateNode(state: LoopStateType): Promise<Partial<LoopStateType>> {
+    const attemptNumber = state.attemptNumber + 1;
+    const startedAt = Date.now();
+
+    const gen = await generateSql(opts.question, opts.focusedTables, opts.llm, state.feedback);
     if (!gen.ok) {
       // Prose instead of SQL, an empty completion, or a provider error. Treat as
       // a validation-class failure and tell the model exactly what we needed.
       const detail = gen.detail;
-      lastSql = null;
-      lastFailure = { failureType: "validation", detail };
-      await finish({ sql: null, failureType: "validation", errorText: detail, validationResult: { ok: false, failureType: "validation", detail }, executionResult: null });
-      feedback = { previousSql: "(no SQL was produced)", failureType: "validation", detail };
-      continue;
+      const attempt = await record(
+        {
+          attemptNumber,
+          sql: null,
+          failureType: "validation",
+          errorText: detail,
+          validationResult: { ok: false, failureType: "validation", detail },
+          executionResult: null,
+        },
+        startedAt
+      );
+      return {
+        attemptNumber,
+        startedAt,
+        sql: null,
+        failure: { failureType: "validation", detail },
+        feedback: { previousSql: "(no SQL was produced)", failureType: "validation", detail },
+        attempts: [attempt],
+      };
     }
 
-    const sql = gen.value;
-    lastSql = sql;
+    return { attemptNumber, startedAt, sql: gen.value, failure: null };
+  }
 
-    // --- validate (before execution, per D6) ---
+  async function validateNode(state: LoopStateType): Promise<Partial<LoopStateType>> {
+    const sql = state.sql as string;
     const validation = validateSql(sql, opts.profile);
-    if (!validation.ok) {
-      lastFailure = { failureType: validation.failureType, detail: validation.detail };
-      await finish({
+    if (validation.ok) return { failure: null };
+
+    const attempt = await record(
+      {
+        attemptNumber: state.attemptNumber,
         sql,
         failureType: validation.failureType,
         errorText: validation.detail,
         validationResult: { ok: false, failureType: validation.failureType, detail: validation.detail },
         executionResult: null,
-      });
-
-      // A security violation is a request to DENY, not a mistake to fix. Retries
-      // exist to converge on a correct query (wrong column, bad syntax, runtime
-      // error) — not to coax a model that just tried to DROP a table. This is
-      // why architecture.md's retry-feedback types are hallucination |
-      // validation | execution, with security deliberately absent.
-      if (validation.failureType === "security") {
-        return { ok: false, failureType: "security", detail: validation.detail, sql, attempts };
-      }
-
-      feedback = { previousSql: sql, failureType: validation.failureType, detail: validation.detail };
-      continue;
-    }
-
-    // --- execute ---
-    const exec = await opts.execute(sql);
-    if (!exec.ok) {
-      lastFailure = { failureType: "execution", detail: exec.detail };
-      await finish({
-        sql,
-        failureType: "execution",
-        errorText: exec.detail,
-        validationResult: { ok: true },
-        executionResult: { ok: false, detail: exec.detail },
-      });
-      feedback = { previousSql: sql, failureType: "execution", detail: exec.detail };
-      continue;
-    }
-
-    // Success. An empty result set is a valid answer, not a failure — never retry it.
-    await finish({
-      sql,
-      errorText: null,
-      validationResult: { ok: true },
-      executionResult: { ok: true, rowCount: exec.rowCount, fields: exec.fields },
-    });
-    return { ok: true, sql, rows: exec.rows, fields: exec.fields, rowCount: exec.rowCount, attempts };
+      },
+      state.startedAt
+    );
+    return {
+      failure: { failureType: validation.failureType, detail: validation.detail },
+      feedback: { previousSql: sql, failureType: validation.failureType, detail: validation.detail },
+      attempts: [attempt],
+    };
   }
 
-  // Attempts exhausted — report the last failure honestly rather than faking an answer.
+  async function executeNode(state: LoopStateType): Promise<Partial<LoopStateType>> {
+    const sql = state.sql as string;
+    const exec = await opts.execute(sql);
+
+    if (!exec.ok) {
+      const attempt = await record(
+        {
+          attemptNumber: state.attemptNumber,
+          sql,
+          failureType: "execution",
+          errorText: exec.detail,
+          validationResult: { ok: true },
+          executionResult: { ok: false, detail: exec.detail },
+        },
+        state.startedAt
+      );
+      return {
+        failure: { failureType: "execution", detail: exec.detail },
+        feedback: { previousSql: sql, failureType: "execution", detail: exec.detail },
+        attempts: [attempt],
+      };
+    }
+
+    // An empty result set is a valid answer, not a failure — never retried.
+    const attempt = await record(
+      {
+        attemptNumber: state.attemptNumber,
+        sql,
+        errorText: null,
+        validationResult: { ok: true },
+        executionResult: { ok: true, rowCount: exec.rowCount, fields: exec.fields },
+      },
+      state.startedAt
+    );
+    return {
+      failure: null,
+      success: { sql, rows: exec.rows, fields: exec.fields, rowCount: exec.rowCount },
+      attempts: [attempt],
+    };
+  }
+
+  // --- edges ---------------------------------------------------------------
+
+  // Bounded retries (D7): the attempt counter, not the graph, decides when to stop.
+  const retryOrEnd = (state: LoopStateType) => (state.attemptNumber < maxAttempts ? "generate" : END);
+
+  const afterGenerate = (state: LoopStateType) => (state.failure ? retryOrEnd(state) : "validate");
+
+  const afterValidate = (state: LoopStateType) => {
+    if (!state.failure) return "execute";
+    // A security violation is a request to DENY, not a mistake to converge on.
+    // Routing to END here is what guarantees `execute` is never entered (D7a).
+    if (state.failure.failureType === "security") return END;
+    return retryOrEnd(state);
+  };
+
+  const afterExecute = (state: LoopStateType) => (state.success ? END : retryOrEnd(state));
+
+  const graph = new StateGraph(LoopState)
+    .addNode("generate", generateNode)
+    .addNode("validate", validateNode)
+    .addNode("execute", executeNode)
+    .addEdge(START, "generate")
+    .addConditionalEdges("generate", afterGenerate, { validate: "validate", generate: "generate", [END]: END })
+    .addConditionalEdges("validate", afterValidate, { execute: "execute", generate: "generate", [END]: END })
+    .addConditionalEdges("execute", afterExecute, { generate: "generate", [END]: END })
+    .compile();
+
+  // retryOrEnd already caps the walk; this is a backstop against an edge-routing
+  // bug turning into an unbounded (and billable) loop.
+  const final = await graph.invoke(
+    {},
+    { recursionLimit: maxAttempts * NODES_PER_ATTEMPT + 2 }
+  );
+
+  if (final.success) {
+    const { sql, rows, fields, rowCount } = final.success;
+    return { ok: true, sql, rows, fields, rowCount, attempts: final.attempts };
+  }
+
+  // Attempts exhausted (or denied) — report the last failure honestly rather
+  // than faking an answer.
   return {
     ok: false,
-    failureType: lastFailure?.failureType ?? "validation",
-    detail: lastFailure?.detail ?? "Query could not be generated.",
-    sql: lastSql,
-    attempts,
+    failureType: final.failure?.failureType ?? "validation",
+    detail: final.failure?.detail ?? "Query could not be generated.",
+    sql: final.sql,
+    attempts: final.attempts,
   };
 }

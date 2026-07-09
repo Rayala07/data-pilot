@@ -33,13 +33,17 @@ This is a portfolio project built to be **defended in engineering interviews**. 
 - **Auth & tenancy:** email/password with bcrypt + JWT bearer tokens; row-level multi-tenancy — `Connection` and `QueryLog` carry `userId`, every app-DB query is user-scoped. No orgs/roles/OAuth.
 - **SQL validation:** `node-sql-parser` (or equivalent AST-based parser). NEVER regex-based validation.
 - **LLM + embeddings:** provider-agnostic abstraction (`LLMProvider`, `EmbeddingProvider` interfaces) configured via environment variables against any OpenAI-compatible API. No provider names hardcoded in engine logic.
+- **Self-correction loop:** `@langchain/langgraph` — the retry orchestrator is an explicit `StateGraph` (nodes: generate/validate/execute; conditional edges for retry vs. terminate). LangGraph is confined to `engine/loop/`; no other module imports it, and the graph still depends only on the `LLMProvider` interface and an injected `execute` function (see `decisions.md` D15).
 
 ## Repository layout
 
 The backend is **feature-based**: the app layer is grouped by domain feature
 (`features/auth`, `features/connections`), each owning its own routes,
-service, repository, validation, and types. The `engine/` stays a separate,
-framework-free system that features call into — it is NOT a feature.
+service, repository, validation, and types. The `engine/` stays a separate
+system that features call into — it is NOT a feature. The engine is free of
+the web and ORM layers (no Express, no Prisma, no `pg` outside the injected
+execute function); the single orchestration dependency, LangGraph, is
+confined to `engine/loop/`.
 
 ```
 datapilot/
@@ -57,7 +61,7 @@ datapilot/
 │   │   │   ├── generate/     # prompt building + LLM call
 │   │   │   ├── validate/     # AST parse, SELECT-only, schema existence check
 │   │   │   ├── execute/      # read-only execution, timeout, row limit
-│   │   │   ├── loop/         # the retry/self-correction orchestrator
+│   │   │   ├── loop/         # retry/self-correction orchestrator (LangGraph StateGraph)
 │   │   │   ├── present/      # chart-type selection + NL explanation
 │   │   │   └── providers/    # LLMProvider / EmbeddingProvider implementations
 │   │   ├── db/               # Prisma client (app DB only)
@@ -72,7 +76,7 @@ Frontend and backend are fully independent: separate `package.json`, separate `t
 
 Within a feature: `routes` are thin Express adapters; `service` holds orchestration; `repository` is the only place that touches Prisma (and centralizes the `userId` tenancy filter); `validation` and `types` are co-located. `db/` and `userdb/` stay top-level and MUST NOT cross-import — that separation makes the read-only guarantee auditable.
 
-Rule: `engine/` modules must not import Express (or a feature, or Prisma). Feature routes/services are the adapters that call into the engine. This keeps the engine testable and lets the developer explain it as an isolated system in interviews.
+Rule: `engine/` modules must not import Express (or a feature, or Prisma). Feature routes/services are the adapters that call into the engine. This keeps the engine testable and lets the developer explain it as an isolated system in interviews. LangGraph is the one permitted framework inside `engine/`, and only in `loop/`; even there, execution and persistence are injected (an `execute` function and an `onAttempt` callback) so the loop can be unit-tested with stubs and never reaches for I/O itself.
 
 ## Coding conventions
 

@@ -12,6 +12,8 @@
     "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@langchain/core": "^1.2.2",
+    "@langchain/langgraph": "^1.4.7",
     "@prisma/client": "^6.1.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
