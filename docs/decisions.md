@@ -30,6 +30,12 @@ Read-only DB role → AST SELECT-only validation → execution limits (timeout, 
 ## D7 — Max 3 attempts in the self-correction loop
 **Why:** Empirically (to be confirmed by the benchmark), retries past 2–3 rarely recover — if the model is still wrong after seeing the exact error and the real column list, the failure is usually logical, not syntactic, and more attempts just add latency and cost. Bounded retries also make worst-case latency predictable.
 
+### D7a — `security` failures terminate the loop; they are never retried
+**Alternative:** retry every failure type, per a literal reading of "on any fail: attempt++".
+**Why:** A security violation is categorically different from the other failures. `hallucination`, `validation`, and `execution` are *mistakes to converge on* — the model wrote a wrong column, malformed SQL, or hit a runtime error, and showing it the real schema or the pg error reliably fixes it. A `security` failure means the model tried to do something the system must **refuse**, and re-prompting is coaxing the same model that just tried to `DROP` a table. Bounded retries should be spent on convergence, not on negotiating with a request that must be denied.
+**Evidence:** with retries enabled, "drop the usr table" produced `DROP TABLE public.usr` (blocked), then on retry produced `SELECT 1` — which executed and reported **success**, returning a meaningless answer for a request that should have been refused. With security terminal, it returns `ok:false, security` in one attempt.
+**Note:** this also resolves an ambiguity in `architecture.md`, whose retry-feedback format enumerates only `hallucination | validation | execution` — `security` was deliberately absent from the retryable types. Either way the dangerous SQL never reaches the database: validation runs before execution, and the unit tests assert `execute` is never called on a security failure.
+
 ## D8 — LLM-generated table descriptions at ingest time
 **Alternative:** embed raw table/column names only.
 **Why:** Real schemas have names like `usr_txn_amt_v2`. Embedding bare identifiers retrieves poorly. Generating a one-time natural-language description per table (from its columns + sample values) and embedding "name + columns + description + samples" bridges the vocabulary gap between how users ask ("sales", "revenue") and how schemas are named (`pay_txn.txn_amt_inr`). One-time cost at connect, paid back on every query.

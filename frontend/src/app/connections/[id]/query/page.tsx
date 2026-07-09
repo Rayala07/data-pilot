@@ -35,6 +35,36 @@ function cell(v: unknown): string {
   return String(v);
 }
 
+// The attempt trail is the visible proof of the self-correction loop: which
+// attempt failed, why, and what the model tried next.
+function AttemptTrail({ attempts }: { attempts: Attempt[] }) {
+  if (attempts.length <= 1) return null;
+  return (
+    <details className="rounded border p-3">
+      <summary className="cursor-pointer text-sm font-medium">
+        Attempt history ({attempts.length} attempts)
+      </summary>
+      <div className="mt-3 space-y-3">
+        {attempts.map((a) => (
+          <div key={a.attemptNumber} className="space-y-1">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">Attempt {a.attemptNumber}</span>
+              {a.failureType ? (
+                <span className="rounded bg-red-100 px-1.5 py-0.5 text-xs text-red-700">{a.failureType}</span>
+              ) : (
+                <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-700">succeeded</span>
+              )}
+              <span className="text-xs text-zinc-400">{a.latencyMs} ms</span>
+            </div>
+            {a.sql && <pre className="overflow-x-auto rounded bg-zinc-50 p-2 text-xs">{a.sql}</pre>}
+            {a.errorText && <p className="text-xs text-red-600">{a.errorText}</p>}
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 // Day 3 minimal query page: question -> executed SQL + raw rows + attempt info.
 // Charts and NL explanation come in Day 5.
 export default function QueryPage() {
@@ -95,23 +125,36 @@ export default function QueryPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {result && !result.ok && (
-        <div className="space-y-2 rounded border border-red-200 bg-red-50 p-4">
-          <p className="text-sm font-medium text-red-700">
-            {result.failureType} failure
-          </p>
-          <p className="text-sm text-red-700">{result.detail}</p>
-          {result.sql && (
-            <pre className="overflow-x-auto rounded bg-white p-2 text-xs">{result.sql}</pre>
-          )}
+        <div className="space-y-3">
+          <div className="space-y-2 rounded border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-700">
+              {result.failureType} failure
+              {result.attempts.length > 1 && ` after ${result.attempts.length} attempts`}
+            </p>
+            <p className="text-sm text-red-700">{result.detail}</p>
+            {result.sql && (
+              <pre className="overflow-x-auto rounded bg-white p-2 text-xs">{result.sql}</pre>
+            )}
+          </div>
+          <AttemptTrail attempts={result.attempts} />
         </div>
       )}
 
       {result && result.ok && (
         <div className="space-y-4">
+          {result.attempts.length > 1 && (
+            <div className="rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
+              ✓ Self-corrected after {result.attempts.length - 1} retr
+              {result.attempts.length - 1 === 1 ? "y" : "ies"}
+            </div>
+          )}
+
           <div className="space-y-1">
             <p className="text-sm font-medium">Executed SQL</p>
             <pre className="overflow-x-auto rounded bg-zinc-900 p-3 text-xs text-zinc-100">{result.sql}</pre>
           </div>
+
+          <AttemptTrail attempts={result.attempts} />
 
           <div className="space-y-1">
             <p className="text-sm text-zinc-500">

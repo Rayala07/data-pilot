@@ -105,9 +105,12 @@ question
   │            ├─ DB error → fail(execution) with pg error text
   │            └─ success  → rows + fields
   ▼
-on any fail: attempt++ ; if attempt ≤ 3 → back to [generate] with structured failure feedback
+on hallucination/validation/execution fail: attempt++ ; if attempt ≤ 3 → back to [generate] with structured failure feedback
+on security fail: STOP immediately — never retried, never executed (see D7a)
 on success or attempts exhausted → [present]
 ```
+
+An empty result set is a valid answer, not a failure — it is never retried.
 
 Every attempt (successful or not) is written to `QueryLog` in the app DB. This log IS the benchmark data source.
 

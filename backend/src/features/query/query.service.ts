@@ -1,58 +1,47 @@
-// Orchestrates a single query pass: retrieve -> generate -> validate ->
-// execute, logging the attempt to QueryLog no matter where it ends. Day 3 runs
-// exactly one attempt; Day 4's loop/ will wrap this pipeline to retry with
-// structured failure feedback, which is why each stage returns a typed result
-// rather than throwing.
+// Drives the self-correction loop for one question: retrieve the relevant
+// tables, then hand generate/validate/execute to engine/loop, which retries
+// with structured feedback up to 3 times. This layer owns everything the
+// engine must not touch: the pg pool lifecycle and the QueryLog writes.
 
 import type { Connection } from "@prisma/client";
-import { executeSelect } from "../../engine/execute";
-import { generateSql } from "../../engine/generate";
+import type { Pool } from "pg";
+import { executeSelect, type ExecuteOutcome } from "../../engine/execute";
+import { runLoop } from "../../engine/loop";
 import { getEmbeddingProvider, getLLMProvider } from "../../engine/providers/openaiCompatible";
 import { retrieveTables } from "../../engine/retrieval";
-import type { AttemptFailureType, QueryAttempt, RetrievedTable, SchemaProfile, TableProfile } from "../../engine/types";
-import { validateSql } from "../../engine/validate";
+import type { SchemaProfile, TableProfile } from "../../engine/types";
 import { decrypt } from "../../shared/crypto";
 import { connectAndValidate } from "../../userdb/pool";
 import { getSchemaProfile } from "../connections/connections.repository";
 import { writeQueryLog } from "./query.repository";
 import type { QueryOutcome } from "./query.types";
 
-interface RecordArgs {
-  userId: string;
-  connectionId: string;
-  question: string;
-  retrieved: RetrievedTable[];
-  sql: string | null;
-  failureType?: AttemptFailureType;
-  errorText: string | null;
-  validationResult: unknown;
-  executionResult: unknown;
-  latencyMs: number;
-  attemptNumber: number;
-}
+/**
+ * Dev-only hook for demonstrating the self-correction loop: corrupts one
+ * column's name in the PROMPT only. Validation still runs against the real
+ * schema, so attempt 1 hallucinates and the feedback hands the model the real
+ * column list — exactly the recovery path we want to show. Never set in prod.
+ *
+ *   DEV_POISON_COLUMN="usr.full_nm"                -> renames to full_nm_x
+ *   DEV_POISON_COLUMN="usr.full_nm:customer_name"  -> renames to customer_name
+ *
+ * Prefer an explicit, plausible-looking replacement: given an obviously mangled
+ * name the model tends to "helpfully" correct it back and never misses.
+ */
+function applyPoison(tables: TableProfile[]): TableProfile[] {
+  const spec = process.env.DEV_POISON_COLUMN;
+  if (!spec) return tables;
 
-// Writes the QueryLog row and returns the QueryAttempt shape the API exposes.
-async function record(args: RecordArgs): Promise<QueryAttempt> {
-  await writeQueryLog({
-    userId: args.userId,
-    connectionId: args.connectionId,
-    question: args.question,
-    retrievedTables: args.retrieved,
-    sql: args.sql,
-    validationResult: args.validationResult,
-    executionResult: args.executionResult,
-    errorText: args.errorText,
-    attemptNumber: args.attemptNumber,
-    latencyMs: args.latencyMs,
-  });
-  return {
-    attemptNumber: args.attemptNumber,
-    sql: args.sql,
-    retrievedTables: args.retrieved.map((t) => t.name),
-    failureType: args.failureType,
-    errorText: args.errorText ?? undefined,
-    latencyMs: args.latencyMs,
-  };
+  const [target, replacement] = spec.split(":");
+  const [table, column] = (target ?? "").split(".");
+  if (!table || !column) return tables;
+  const poisoned = replacement || `${column}_x`;
+
+  return tables.map((t) =>
+    t.name !== table
+      ? t
+      : { ...t, columns: t.columns.map((c) => (c.name === column ? { ...c, name: poisoned } : c)) }
+  );
 }
 
 export async function runQuery(userId: string, connection: Connection, question: string): Promise<QueryOutcome> {
@@ -66,13 +55,8 @@ export async function runQuery(userId: string, connection: Connection, question:
     tables: stored.tables as unknown as TableProfile[],
   };
 
-  const embedder = getEmbeddingProvider();
-  const llm = getLLMProvider();
-  const attemptNumber = 1;
-  const started = Date.now();
-
-  // --- retrieve ---
-  const retrieval = await retrieveTables(question, profile, embedder);
+  // --- retrieve (Day 2) ---
+  const retrieval = await retrieveTables(question, profile, getEmbeddingProvider());
   if (!retrieval.ok) {
     return { ok: false, failureType: "retrieval", detail: `Retrieval failed: ${retrieval.detail}`, attempts: [] };
   }
@@ -85,73 +69,68 @@ export async function runQuery(userId: string, connection: Connection, question:
       attempts: [],
     };
   }
-  const retrievedNames = new Set(retrieved.map((t) => t.name));
-  const focused = profile.tables.filter((t) => retrievedNames.has(t.name));
+  const retrievedNames = retrieved.map((t) => t.name);
+  const nameSet = new Set(retrievedNames);
+  const focusedTables = applyPoison(profile.tables.filter((t) => nameSet.has(t.name)));
 
-  // --- generate ---
-  const gen = await generateSql(question, focused, llm);
-  if (!gen.ok) {
-    const latencyMs = Date.now() - started;
-    const attempt = await record({
-      userId, connectionId: connection.id, question, retrieved, sql: null,
-      errorText: gen.detail, validationResult: null, executionResult: null, latencyMs, attemptNumber,
-    });
-    return { ok: false, failureType: "generation", detail: gen.detail, attempts: [attempt] };
-  }
-  const sql = gen.value;
+  // The pool is opened lazily on the first execute: a question whose SQL never
+  // survives validation (e.g. "drop the usr table") should never touch the DB.
+  let pool: Pool | null = null;
+  const execute = async (sql: string): Promise<ExecuteOutcome> => {
+    if (!pool) {
+      const connectionString = decrypt({
+        cipherText: connection.connectionStringCipher,
+        iv: connection.connectionStringIv,
+        tag: connection.connectionStringTag,
+      });
+      const opened = await connectAndValidate(connectionString);
+      if (!opened.ok) return { ok: false, detail: `Couldn't open the database: ${opened.detail}` };
+      pool = opened.value;
+    }
+    return executeSelect(pool, sql);
+  };
 
-  // --- validate (before execution, per D6) ---
-  const validation = validateSql(sql, profile);
-  if (!validation.ok) {
-    const latencyMs = Date.now() - started;
-    const attempt = await record({
-      userId, connectionId: connection.id, question, retrieved, sql,
-      failureType: validation.failureType, errorText: validation.detail,
-      validationResult: { ok: false, failureType: validation.failureType, detail: validation.detail },
-      executionResult: null, latencyMs, attemptNumber,
-    });
-    return { ok: false, failureType: validation.failureType, detail: validation.detail, sql, attempts: [attempt] };
-  }
-
-  // --- execute ---
-  const connectionString = decrypt({
-    cipherText: connection.connectionStringCipher,
-    iv: connection.connectionStringIv,
-    tag: connection.connectionStringTag,
-  });
-  const opened = await connectAndValidate(connectionString);
-  if (!opened.ok) {
-    const latencyMs = Date.now() - started;
-    const detail = `Couldn't open the database to run the query: ${opened.detail}`;
-    const attempt = await record({
-      userId, connectionId: connection.id, question, retrieved, sql, failureType: "execution",
-      errorText: detail, validationResult: { ok: true }, executionResult: { ok: false, detail },
-      latencyMs, attemptNumber,
-    });
-    return { ok: false, failureType: "execution", detail, sql, attempts: [attempt] };
-  }
-
-  let exec;
   try {
-    exec = await executeSelect(opened.value, sql);
-  } finally {
-    await opened.value.end().catch(() => {});
-  }
-
-  const latencyMs = Date.now() - started;
-  if (!exec.ok) {
-    const attempt = await record({
-      userId, connectionId: connection.id, question, retrieved, sql, failureType: "execution",
-      errorText: exec.detail, validationResult: { ok: true }, executionResult: { ok: false, detail: exec.detail },
-      latencyMs, attemptNumber,
+    const result = await runLoop({
+      question,
+      profile,
+      focusedTables,
+      retrievedTableNames: retrievedNames,
+      llm: getLLMProvider(),
+      execute,
+      onAttempt: (record) =>
+        writeQueryLog({
+          userId,
+          connectionId: connection.id,
+          question,
+          retrievedTables: retrieved,
+          sql: record.sql,
+          validationResult: record.validationResult,
+          executionResult: record.executionResult,
+          errorText: record.errorText,
+          attemptNumber: record.attemptNumber,
+          latencyMs: record.latencyMs,
+        }).then(() => undefined),
     });
-    return { ok: false, failureType: "execution", detail: exec.detail, sql, attempts: [attempt] };
-  }
 
-  const attempt = await record({
-    userId, connectionId: connection.id, question, retrieved, sql, errorText: null,
-    validationResult: { ok: true }, executionResult: { ok: true, rowCount: exec.rowCount, fields: exec.fields },
-    latencyMs, attemptNumber,
-  });
-  return { ok: true, sql, rows: exec.rows, fields: exec.fields, rowCount: exec.rowCount, attempts: [attempt] };
+    if (result.ok) {
+      return {
+        ok: true,
+        sql: result.sql,
+        rows: result.rows,
+        fields: result.fields,
+        rowCount: result.rowCount,
+        attempts: result.attempts,
+      };
+    }
+    return {
+      ok: false,
+      failureType: result.failureType,
+      detail: result.detail,
+      sql: result.sql ?? undefined,
+      attempts: result.attempts,
+    };
+  } finally {
+    if (pool) await (pool as Pool).end().catch(() => {});
+  }
 }
