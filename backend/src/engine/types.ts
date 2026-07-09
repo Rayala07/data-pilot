@@ -57,7 +57,6 @@ export interface LLMProvider {
 }
 
 export interface EmbeddingProvider {
-  /** Embeds a batch of texts, returning one vector per input in order. */
   embed(texts: string[]): Promise<Result<number[][], "embedding_error">>;
 }
 
