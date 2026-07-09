@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { corsOptions } from "./cors";
 import { authRouter } from "./features/auth/auth.routes";
 import { connectionsRouter } from "./features/connections/connections.routes";
 import { queryRouter } from "./features/query/query.routes";
@@ -9,7 +10,7 @@ import { queryRouter } from "./features/query/query.routes";
 export function createApp() {
   const app = express();
 
-  app.use(cors({ origin: process.env.FRONTEND_URL ?? "http://localhost:3000" }));
+  app.use(cors(corsOptions()));
   app.use(express.json());
 
   app.use("/auth", authRouter);
