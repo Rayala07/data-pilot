@@ -1,26 +1,53 @@
 @import "tailwindcss";
 
-:root {
-  --background: #f9f9f7;
-  --foreground: #0b0b0b;
+/* ---------------------------------------------------------------------------
+   Design tokens.
 
-  /* Surfaces / ink */
-  --surface: #fcfcfb;
-  --ink-primary: #0b0b0b;
-  --ink-secondary: #52514e;
-  --ink-muted: #898781;
-  --hairline: rgba(11, 11, 11, 0.1);
+   Raw values live on :root and are overridden once for dark mode. They are
+   exposed to Tailwind through @theme, so components use semantic utilities
+   (bg-surface, text-fg-muted, border-line) and never a raw hex. Changing a
+   brand colour is a one-line edit here, not a find-and-replace.
+
+   The chart palette (--series-*) is the validated categorical set: fixed slot
+   order, never cycled; dark is a set selected for the dark surface, not a flip.
+--------------------------------------------------------------------------- */
+
+:root {
+  /* Planes */
+  --canvas: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+
+  /* Ink */
+  --fg: #18181b;
+  --fg-muted: #52525b;
+  --fg-subtle: #a1a1aa;
+
+  /* Lines */
+  --line: #e4e4e7;
+  --line-strong: #d4d4d8;
+
+  /* Brand — the same hue as chart series 1, so the product reads as one system */
+  --brand: #2a78d6;
+  --brand-hover: #256abf;
+  --brand-fg: #ffffff;
+  --focus: #2a78d6;
+
+  /* Status */
+  --success: #0f7a30;
+  --success-surface: #f0fdf4;
+  --danger: #c02626;
+  --danger-surface: #fef2f2;
+  --warning: #a86400;
+  --warning-surface: #fffbeb;
 
   /* Chart chrome */
-  --viz-surface: #fcfcfb;
-  --viz-grid: #e1e0d9;
-  --viz-axis: #c3c2b7;
-  --viz-muted: #898781;
+  --viz-surface: #ffffff;
+  --viz-grid: #e4e4e7;
+  --viz-axis: #d4d4d8;
+  --viz-muted: #71717a;
 
-  /* Categorical series, fixed order — never cycled, never reassigned by rank.
-     Validated (light surface): CVD worst-adjacent ΔE 24.2. Three slots sit
-     below 3:1 contrast, so the relief rule applies — the raw result table is
-     always rendered beneath the chart. */
+  /* Categorical series — fixed order, never cycled */
   --series-1: #2a78d6;
   --series-2: #1baf7a;
   --series-3: #eda100;
@@ -31,32 +58,37 @@
   --series-8: #eb6834;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0d0d0d;
-    --foreground: #ffffff;
+    --canvas: #0b0b0c;
+    --surface: #151517;
+    --surface-2: #1d1d20;
 
-    --surface: #1a1a19;
-    --ink-primary: #ffffff;
-    --ink-secondary: #c3c2b7;
-    --ink-muted: #898781;
-    --hairline: rgba(255, 255, 255, 0.1);
+    --fg: #fafafa;
+    --fg-muted: #a1a1aa;
+    --fg-subtle: #71717a;
 
-    --viz-surface: #1a1a19;
-    --viz-grid: #2c2c2a;
-    --viz-axis: #383835;
-    --viz-muted: #898781;
+    --line: #27272a;
+    --line-strong: #3f3f46;
 
-    /* Dark is *selected*, not an automatic flip: the same eight hues stepped
-       for the dark surface (all >= 3:1). Worst adjacent ΔE 10.3 = floor band,
-       so identity never rests on color alone — legend + table view always ship. */
+    --brand: #3987e5;
+    --brand-hover: #5598e7;
+    --brand-fg: #ffffff;
+    --focus: #5598e7;
+
+    --success: #22c55e;
+    --success-surface: #0d2818;
+    --danger: #f87171;
+    --danger-surface: #2a1416;
+    --warning: #eab308;
+    --warning-surface: #2a2110;
+
+    --viz-surface: #151517;
+    --viz-grid: #27272a;
+    --viz-axis: #3f3f46;
+    --viz-muted: #8a8a93;
+
+    /* Dark steps of the same eight hues, selected for the dark surface */
     --series-1: #3987e5;
     --series-2: #199e70;
     --series-3: #c98500;
@@ -68,8 +100,50 @@
   }
 }
 
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-fg: var(--brand-fg);
+
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-card: 0.75rem;
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
+  height: 100%;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--fg);
   font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One focus treatment everywhere, so keyboard users get a consistent ring. */
+:where(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
 }

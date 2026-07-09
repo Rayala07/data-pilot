@@ -33,3 +33,8 @@ export function writeQueryLog(input: QueryLogInput) {
     },
   });
 }
+
+/** Scoped by userId — a global count would leak other tenants' activity. */
+export function countQueryLogs(userId: string): Promise<number> {
+  return prisma.queryLog.count({ where: { userId } });
+}

@@ -25,7 +25,7 @@ This is a portfolio project built to be **defended in engineering interviews**. 
 
 ## Tech stack (locked — do not substitute)
 
-- **Frontend:** Next.js (App Router) + TypeScript. Plain, clean UI. Tailwind for styling. Recharts for charts.
+- **Frontend:** Next.js (App Router) + TypeScript. Tailwind for styling, driven by semantic design tokens declared once in `globals.css` (`@theme`) — components use `bg-surface` / `text-fg-muted`, never raw hex. Recharts for charts. **Redux Toolkit** (which is redux-thunk) for global state: one `createApiThunk` factory and one `attachAsync` helper mean loading, dispatch and error transitions are written in a single place, never re-declared as component `useState`.
 - **Backend:** Express.js + TypeScript. All engine logic lives here. The Next app only talks to Express over HTTP.
 - **App database:** Supabase-hosted PostgreSQL via **Prisma** (pooled connection + `directUrl` for migrations); stores users, connections metadata, schema profiles, embeddings as float arrays, query logs.
 - **User's target database:** PostgreSQL via the raw **`pg`** driver, read-only, direct connection (never the pooler), SSL enabled. Prisma NEVER touches the user's database.
@@ -45,9 +45,22 @@ the web and ORM layers (no Express, no Prisma, no `pg` outside the injected
 execute function); the single orchestration dependency, LangGraph, is
 confined to `engine/loop/`.
 
+The frontend is feature-based too: `app/` holds only thin route files inside
+two guarded route groups, and each feature owns its slice, thunks and
+components.
+
 ```
 datapilot/
 ├── frontend/                 # Next.js app (UI only — no engine logic ever)
+│   └── src/
+│       ├── app/              # routes only — thin adapters over feature views
+│       │   ├── (public)/     # RequireGuest: /login, /signup
+│       │   └── (app)/        # RequireAuth: /connections, /profile
+│       ├── features/         # auth · connections · query · retrieval
+│       │   └── <feature>/    # <feature>.slice/.thunks + components/
+│       ├── store/            # store, typed hooks, createApiThunk, attachAsync
+│       ├── components/       # ui/ primitives, AppShell, guards
+│       └── lib/              # api client + shared types
 ├── backend/                  # Express app
 │   ├── src/
 │   │   ├── index.ts          # entrypoint: load env + listen

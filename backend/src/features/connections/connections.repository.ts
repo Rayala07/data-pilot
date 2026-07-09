@@ -47,3 +47,8 @@ export async function saveSchemaProfile(connectionId: string, scannedAt: string,
     data: { lastScannedAt: scannedAt },
   });
 }
+
+/** Scoped by userId — a global count would leak other tenants' activity. */
+export function countConnections(userId: string): Promise<number> {
+  return prisma.connection.count({ where: { userId } });
+}

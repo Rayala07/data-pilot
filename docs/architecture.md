@@ -146,6 +146,7 @@ Naming the available columns on hallucination failures is what makes retries act
 |---|---|---|---|
 | POST | /auth/signup | `{ email, password }` | `{ token }` |
 | POST | /auth/login | `{ email, password }` | `{ token }` |
+| GET | /auth/me | — | `{ id, email, createdAt, connectionCount, queryCount }` (never `passwordHash`) |
 | POST | /connections | `{ name, connectionString }` | `{ id, name, tableCount }` or structured error |
 | GET | /connections | — | list (id, name, tableCount, scannedAt) |
 | GET | /connections/:id/schema | — | SchemaProfile (without connection string) |

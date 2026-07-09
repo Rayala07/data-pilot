@@ -1,7 +1,9 @@
 import bcrypt from "bcrypt";
+import { countConnections } from "../connections/connections.repository";
+import { countQueryLogs } from "../query/query.repository";
 import { signToken } from "./auth.jwt";
-import { createUser, findUserByEmail } from "./auth.repository";
-import type { AuthResult, CredentialsInput } from "./auth.types";
+import { createUser, findUserByEmail, findUserById } from "./auth.repository";
+import type { AuthResult, CredentialsInput, UserProfile } from "./auth.types";
 
 const BCRYPT_COST = 12;
 
@@ -24,4 +26,26 @@ export async function login({ email, password }: CredentialsInput): Promise<Auth
     return { ok: false, status: 401, error: "Invalid email or password" };
   }
   return { ok: true, token: signToken({ userId: user.id }) };
+}
+
+/**
+ * The authenticated user's own profile. `userId` comes from the verified JWT,
+ * never from the request body, and every count is scoped to it.
+ */
+export async function getProfile(userId: string): Promise<UserProfile | null> {
+  const user = await findUserById(userId);
+  if (!user) return null;
+
+  const [connectionCount, queryCount] = await Promise.all([
+    countConnections(userId),
+    countQueryLogs(userId),
+  ]);
+
+  return {
+    id: user.id,
+    email: user.email,
+    createdAt: user.createdAt.toISOString(),
+    connectionCount,
+    queryCount,
+  };
 }

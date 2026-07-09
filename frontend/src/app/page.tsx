@@ -2,14 +2,26 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { getToken } from "@/lib/api";
+import { Skeleton } from "@/components/ui";
+import { useAppSelector } from "@/store/hooks";
 
-export default function Home() {
+/**
+ * The only route outside a guarded group: it decides where "/" goes once the
+ * persisted token has been read.
+ */
+export default function RootPage() {
   const router = useRouter();
+  const { token, hydrated } = useAppSelector((s) => s.auth);
 
   useEffect(() => {
-    router.replace(getToken() ? "/connections" : "/login");
-  }, [router]);
+    if (!hydrated) return;
+    router.replace(token ? "/connections" : "/login");
+  }, [hydrated, token, router]);
 
-  return null;
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-4 p-8">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
 }

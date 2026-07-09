@@ -10,3 +10,11 @@ export function findUserByEmail(email: string) {
 export function createUser(email: string, passwordHash: string) {
   return prisma.user.create({ data: { email, passwordHash } });
 }
+
+/** Selects explicitly — passwordHash must never leave the repository. */
+export function findUserById(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: { id: true, email: true, createdAt: true },
+  });
+}

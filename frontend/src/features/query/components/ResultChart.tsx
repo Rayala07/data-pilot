@@ -14,10 +14,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Card } from "@/components/ui";
 import type { ChartSpec } from "@/lib/types";
 
-// Fixed slot order — a series keeps its hue regardless of rank or how many
-// siblings it has. Never cycled: past 8 series we fall back to the table.
+// Fixed slot order — a series keeps its hue regardless of rank or sibling
+// count. Never cycled: past 8 series the selector falls back to a table.
 const SERIES = [
   "var(--series-1)",
   "var(--series-2)",
@@ -45,9 +46,8 @@ function formatDateLabel(v: unknown): string {
 const compact = new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 });
 const formatTick = (v: number) => compact.format(v);
 
-const AXIS = { fill: "var(--viz-muted)", fontSize: 12 } as const;
 const axisProps = {
-  tick: AXIS,
+  tick: { fill: "var(--viz-muted)", fontSize: 12 },
   tickLine: false,
   axisLine: { stroke: "var(--viz-axis)" },
 } as const;
@@ -55,53 +55,40 @@ const axisProps = {
 const tooltipProps = {
   contentStyle: {
     background: "var(--viz-surface)",
-    border: "1px solid var(--hairline)",
+    border: "1px solid var(--line)",
     borderRadius: 8,
-    color: "var(--ink-primary)",
+    color: "var(--fg)",
     fontSize: 12,
   },
-  labelStyle: { color: "var(--ink-secondary)" },
+  labelStyle: { color: "var(--fg-muted)" },
   cursor: { stroke: "var(--viz-axis)", strokeWidth: 1 },
 } as const;
 
-function Grid() {
-  // Recessive: horizontal hairlines only, never a full mesh.
-  return <CartesianGrid stroke="var(--viz-grid)" strokeDasharray="0" vertical={false} />;
-}
+// Recessive: horizontal hairlines only, never a full mesh.
+const Grid = () => <CartesianGrid stroke="var(--viz-grid)" vertical={false} />;
 
-export function ResultChart({
-  chart,
-  rows,
-}: {
-  chart: ChartSpec;
-  rows: Record<string, unknown>[];
-}) {
+export function ResultChart({ chart, rows }: { chart: ChartSpec; rows: Record<string, unknown>[] }) {
   if (chart.type === "table") return null;
 
   // A hero number needs no plot, no axes, and no tooltip.
   if (chart.type === "stat") {
     const n = toNum(chart.value);
     return (
-      <div className="rounded-lg border p-6" style={{ borderColor: "var(--hairline)", background: "var(--surface)" }}>
-        <p className="text-sm" style={{ color: "var(--ink-secondary)" }}>
-          {chart.label}
-        </p>
-        <p className="mt-1 text-4xl font-semibold" style={{ color: "var(--ink-primary)" }}>
+      <Card className="p-6">
+        <p className="text-sm text-fg-muted">{chart.label}</p>
+        <p className="mt-1 text-4xl font-semibold tracking-tight text-fg">
           {n === null ? String(chart.value) : n.toLocaleString()}
         </p>
-      </div>
+      </Card>
     );
   }
 
-  const shell = (children: React.ReactNode) => (
-    <div
-      className="rounded-lg border p-4"
-      style={{ borderColor: "var(--hairline)", background: "var(--surface)" }}
-    >
-      <div style={{ width: "100%", height: 300 }}>
-        <ResponsiveContainer>{children as React.ReactElement}</ResponsiveContainer>
+  const shell = (children: React.ReactElement) => (
+    <Card className="p-4">
+      <div className="h-[300px] w-full">
+        <ResponsiveContainer>{children}</ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 
   if (chart.type === "line") {
@@ -122,7 +109,8 @@ export function ResultChart({
         {/* One axis. Never a second y-scale — differing magnitudes stay honest. */}
         <YAxis {...axisProps} tickFormatter={formatTick} width={56} />
         <Tooltip {...tooltipProps} />
-        {yFields.length > 1 && <Legend wrapperStyle={{ fontSize: 12, color: "var(--ink-secondary)" }} />}
+        {/* A legend whenever identity can't rest on a single named series. */}
+        {yFields.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
         {yFields.slice(0, SERIES.length).map((y, i) => (
           <Line
             key={y}
@@ -131,7 +119,6 @@ export function ResultChart({
             stroke={SERIES[i]}
             strokeWidth={2}
             dot={{ r: 3, strokeWidth: 0, fill: SERIES[i] }}
-            // 2px surface ring so overlapping marks stay separable.
             activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--viz-surface)" }}
             connectNulls
           />
@@ -143,10 +130,18 @@ export function ResultChart({
   if (chart.type === "bar") {
     const { xField, yField } = chart;
     const data = rows.map((r) => ({ [xField]: String(r[xField] ?? ""), [yField]: toNum(r[yField]) }));
+    const crowded = data.length > 8;
     return shell(
       <BarChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 8 }} barCategoryGap="20%">
         <Grid />
-        <XAxis dataKey={xField} {...axisProps} interval={0} angle={data.length > 8 ? -30 : 0} textAnchor={data.length > 8 ? "end" : "middle"} height={data.length > 8 ? 64 : 30} />
+        <XAxis
+          dataKey={xField}
+          {...axisProps}
+          interval={0}
+          angle={crowded ? -30 : 0}
+          textAnchor={crowded ? "end" : "middle"}
+          height={crowded ? 64 : 30}
+        />
         <YAxis {...axisProps} tickFormatter={formatTick} width={56} />
         <Tooltip {...tooltipProps} cursor={{ fill: "var(--viz-grid)", opacity: 0.35 }} />
         {/* Rounded data-end, anchored to the baseline. */}
@@ -155,7 +150,6 @@ export function ResultChart({
     );
   }
 
-  // scatter
   const { xField, yField } = chart;
   const data = rows
     .map((r) => ({ x: toNum(r[xField]), y: toNum(r[yField]) }))

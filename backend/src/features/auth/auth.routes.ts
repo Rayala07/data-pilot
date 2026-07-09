@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { login, signup } from "./auth.service";
+import { requireAuth } from "./auth.middleware";
+import { getProfile, login, signup } from "./auth.service";
 import { validateCredentials } from "./auth.validation";
 
 export const authRouter = Router();
@@ -30,4 +31,15 @@ authRouter.post("/login", async (req, res) => {
     return;
   }
   res.json({ token: result.token });
+});
+
+// The only authenticated route in this feature. The id comes from the verified
+// token, so a caller can only ever read their own profile.
+authRouter.get("/me", requireAuth, async (req, res) => {
+  const profile = await getProfile(req.userId!);
+  if (!profile) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  res.json(profile);
 });

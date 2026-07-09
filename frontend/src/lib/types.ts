@@ -37,6 +37,13 @@ export interface SchemaProfile {
   tables: TableProfile[];
 }
 
+export interface RetrievedTable {
+  schema: string;
+  name: string;
+  score: number;
+  viaForeignKey: boolean;
+}
+
 // --- Query / presentation (Day 5) -------------------------------------------
 
 export type FieldKind = "numeric" | "date" | "boolean" | "text";
@@ -75,3 +82,11 @@ export interface QueryAnswer {
 export type QueryResponse =
   | { ok: true; answer: QueryAnswer; attempts: Attempt[] }
   | { ok: false; failureType: string; detail: string; sql?: string; attempts: Attempt[] };
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  createdAt: string;
+  connectionCount: number;
+  queryCount: number;
+}
