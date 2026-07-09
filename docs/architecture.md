@@ -150,6 +150,7 @@ Naming the available columns on hallucination failures is what makes retries act
 | POST | /connections | `{ name, connectionString }` | `{ id, name, tableCount }` or structured error |
 | GET | /connections | — | list (id, name, tableCount, scannedAt) |
 | GET | /connections/:id/schema | — | SchemaProfile (without connection string) |
+| GET | /connections/:id/summary | — | `{ headline, entities[], dateRange, suggestedQuestions[] }` — business-language overview, cached; regenerated only on rescan |
 | POST | /connections/:id/rescan | — | refreshed SchemaProfile |
 | POST | /query | `{ connectionId, question, explain? }` | `{ ok, answer: { explanation, sqlDescription, chart, rows, fields, rowCount, sql }, attempts: QueryAttempt[] }` |
 | GET | /logs?connectionId= | — | query logs (for the benchmark page) |

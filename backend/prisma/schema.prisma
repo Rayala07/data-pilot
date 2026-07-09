@@ -44,6 +44,11 @@ model SchemaProfile {
   scannedAt    DateTime   @default(now())
   // TableProfile[] as defined in engine/types.ts, stored whole — introspection re-scans replace it entirely.
   tables       Json
+  // Cached business-language summary (ConnectionSummary in engine/types.ts).
+  // Costs an LLM call to build, so it is generated once on first request and
+  // served from here after. Nulled on rescan, because the schema it describes
+  // has changed.
+  summary      Json?
 }
 
 model QueryLog {

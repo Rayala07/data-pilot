@@ -1,13 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Alert, Badge, Button, Card, PageHeader, Skeleton } from "@/components/ui";
-import type { TableProfile } from "@/lib/types";
-import { isLoading } from "@/store/asyncState";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchSchema, rescanConnection } from "../connections.thunks";
+import { Badge, Card } from "@/components/ui";
+import type { SchemaProfile, TableProfile } from "@/lib/types";
 
+/**
+ * The raw, system-model view of the schema: tables, columns, types, keys,
+ * sample values. Unchanged from when it was the default screen — it is now
+ * demoted behind "View technical details" on the overview, because
+ * `ord_hdr → usr (FK: usr_id)` is noise to a non-technical user. It stays
+ * because semi-technical users and demos want it.
+ */
 function TableCard({ table }: { table: TableProfile }) {
   return (
     <Card className="overflow-hidden">
@@ -63,58 +65,15 @@ function TableCard({ table }: { table: TableProfile }) {
   );
 }
 
-export function SchemaView({ connectionId }: { connectionId: string }) {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-  const { schema, schemaRequest, rescan } = useAppSelector((s) => s.connections);
-
-  useEffect(() => {
-    dispatch(fetchSchema(connectionId));
-  }, [dispatch, connectionId]);
-
-  const busy = isLoading(schemaRequest) || isLoading(rescan);
-
+export function SchemaTables({ schema }: { schema: SchemaProfile }) {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Schema"
-        description={
-          schema
-            ? `${schema.tables.length} tables · scanned ${new Date(schema.scannedAt).toLocaleString()}`
-            : "Loading the database structure…"
-        }
-        actions={
-          <>
-            <Button onClick={() => router.push(`/connections/${connectionId}/query`)}>Ask a question</Button>
-            <Button variant="secondary" onClick={() => router.push(`/connections/${connectionId}/retrieve`)}>
-              Retrieval debug
-            </Button>
-            <Button
-              variant="secondary"
-              loading={isLoading(rescan)}
-              onClick={() => dispatch(rescanConnection(connectionId))}
-            >
-              Rescan
-            </Button>
-          </>
-        }
-      />
-
-      {schemaRequest.error && <Alert title="Couldn't load the schema">{schemaRequest.error}</Alert>}
-      {rescan.error && <Alert title="Rescan failed">{rescan.error}</Alert>}
-
-      {busy && !schema && (
-        <div className="space-y-3">
-          <Skeleton className="h-40" />
-          <Skeleton className="h-40" />
-        </div>
-      )}
-
-      <div className="space-y-4">
-        {schema?.tables.map((t) => (
-          <TableCard key={`${t.schema}.${t.name}`} table={t} />
-        ))}
-      </div>
+    <div className="space-y-4">
+      <p className="text-xs text-fg-subtle">
+        {schema.tables.length} tables · scanned {new Date(schema.scannedAt).toLocaleString()}
+      </p>
+      {schema.tables.map((t) => (
+        <TableCard key={`${t.schema}.${t.name}`} table={t} />
+      ))}
     </div>
   );
 }

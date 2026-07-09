@@ -1,7 +1,7 @@
 // Mirrors the shapes returned by the backend API. Duplicated intentionally —
 // the frontend never imports backend code (see CLAUDE.md repo layout rule).
 
-export interface ConnectionSummary {
+export interface ConnectionListItem {
   id: string;
   name: string;
   tableCount: number;
@@ -89,4 +89,19 @@ export interface UserProfile {
   createdAt: string;
   connectionCount: number;
   queryCount: number;
+}
+
+// --- Business summary (post-connect overview) -------------------------------
+
+export interface EntitySummary {
+  label: string;
+  count: number;
+  emoji: string;
+}
+
+export interface ConnectionSummary {
+  headline: string;
+  entities: EntitySummary[];
+  dateRange: { from: string; to: string } | null;
+  suggestedQuestions: string[];
 }

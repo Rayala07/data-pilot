@@ -3,7 +3,7 @@
 // alone is a tenancy bug (CLAUDE.md hard rule 6). A miss returns null so the
 // caller can respond 404, never 403 (403 would leak that the id exists).
 
-import type { Connection } from "@prisma/client";
+import { Prisma, type Connection } from "@prisma/client";
 import { prisma } from "../../db/prisma";
 import type { EncryptedPayload } from "../../shared/crypto";
 
@@ -40,11 +40,21 @@ export async function saveSchemaProfile(connectionId: string, scannedAt: string,
   await prisma.schemaProfile.upsert({
     where: { connectionId },
     create: { connectionId, scannedAt, tables },
-    update: { scannedAt, tables },
+    // A rescan means the schema changed, so the cached summary describes a
+    // database that no longer exists. Drop it; the next request regenerates.
+    update: { scannedAt, tables, summary: Prisma.DbNull },
   });
   await prisma.connection.update({
     where: { id: connectionId },
     data: { lastScannedAt: scannedAt },
+  });
+}
+
+/** Caches the generated business summary so later loads cost no LLM call. */
+export async function saveSummary(connectionId: string, summary: object): Promise<void> {
+  await prisma.schemaProfile.update({
+    where: { connectionId },
+    data: { summary },
   });
 }
 

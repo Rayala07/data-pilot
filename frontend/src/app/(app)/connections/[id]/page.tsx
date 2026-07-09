@@ -1,6 +1,6 @@
-import { SchemaView } from "@/features/connections/components/SchemaView";
+import { ConnectionOverview } from "@/features/connections/components/ConnectionOverview";
 
-export default async function SchemaPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConnectionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <SchemaView connectionId={id} />;
+  return <ConnectionOverview connectionId={id} />;
 }

@@ -125,3 +125,27 @@ export interface Presentation {
   /** One line describing what the SQL does. Empty string on failure. */
   sqlDescription: string;
 }
+
+// --- Business summary (post-connect overview) -------------------------------
+
+export interface EntitySummary {
+  /** Human name for an ugly table, e.g. "Orders" from `ord_hdr`. */
+  label: string;
+  /** Always taken from the profile's rowEstimate — the LLM never supplies a number. */
+  count: number;
+  emoji: string;
+}
+
+/**
+ * The business-language view of a connected database. Built once from the
+ * stored SchemaProfile and cached; the raw schema stays available behind a
+ * technical disclosure.
+ */
+export interface ConnectionSummary {
+  /** e.g. "Looks like an e-commerce business". Empty string when unknown. */
+  headline: string;
+  entities: EntitySummary[];
+  dateRange: { from: string; to: string } | null;
+  /** Exactly 4, plain English, answerable from the tables present. */
+  suggestedQuestions: string[];
+}

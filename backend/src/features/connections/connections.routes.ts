@@ -4,7 +4,7 @@ import { requireAuth } from "../auth/auth.middleware";
 import { friendlyConnectionError } from "./connections.errors";
 import * as repo from "./connections.repository";
 import * as service from "./connections.service";
-import type { ConnectionSummary } from "./connections.types";
+import type { ConnectionListItem } from "./connections.types";
 import { validateCreateConnection, validateQuestion } from "./connections.validation";
 
 export const connectionsRouter = Router();
@@ -31,7 +31,7 @@ connectionsRouter.post("/", async (req, res) => {
 
 connectionsRouter.get("/", async (req, res) => {
   const connections = await repo.listConnections(req.userId!);
-  const summaries: ConnectionSummary[] = connections.map((c) => ({
+  const summaries: ConnectionListItem[] = connections.map((c) => ({
     id: c.id,
     name: c.name,
     tableCount: Array.isArray(c.schemaProfile?.tables) ? (c.schemaProfile!.tables as unknown[]).length : 0,
@@ -62,6 +62,24 @@ connectionsRouter.get("/:id/schema", async (req, res) => {
     tables,
   };
   res.json(profile);
+});
+
+// Business-language overview of the connection: the default post-connect view.
+// Served from cache after the first call; never rescans the user's database.
+connectionsRouter.get("/:id/summary", async (req, res) => {
+  const connection = await repo.getOwnedConnection(req.userId!, req.params.id);
+  if (!connection) {
+    res.status(404).json({ error: "Connection not found" });
+    return;
+  }
+
+  const result = await service.getConnectionSummary(connection);
+  if (!result.ok) {
+    res.status(404).json({ error: result.detail });
+    return;
+  }
+
+  res.json(result.value);
 });
 
 // Day 2 debug: show which tables retrieval selects for a question, with scores.

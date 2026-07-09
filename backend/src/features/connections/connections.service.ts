@@ -4,10 +4,23 @@
 
 import type { Connection } from "@prisma/client";
 import type { Pool } from "pg";
+import { executeSelect } from "../../engine/execute";
 import { introspectSchema } from "../../engine/introspect";
+import {
+  buildDateRangeSql,
+  fallbackSummary,
+  generateSummary,
+  pickDateRangeTarget,
+} from "../../engine/present/summary";
 import { getEmbeddingProvider, getLLMProvider } from "../../engine/providers/openaiCompatible";
 import { enrichSchemaProfile, retrieveTables } from "../../engine/retrieval";
-import type { Result, RetrievedTable, SchemaProfile, TableProfile } from "../../engine/types";
+import type {
+  ConnectionSummary,
+  Result,
+  RetrievedTable,
+  SchemaProfile,
+  TableProfile,
+} from "../../engine/types";
 import { decrypt, encrypt } from "../../shared/crypto";
 import { connectAndValidate } from "../../userdb/pool";
 import * as repo from "./connections.repository";
@@ -64,6 +77,93 @@ export async function rescan(connection: Connection): Promise<Result<SchemaProfi
   if (!validation.ok) return validation;
 
   return introspectAndPersist(validation.value, connection.id);
+}
+
+/**
+ * Business-language summary of a connection.
+ *
+ * Cache-first: generated once (an LLM call) and served from the SchemaProfile
+ * row afterwards. `saveSchemaProfile` nulls it on rescan, so a changed schema
+ * regenerates. The user's database is never rescanned here — at most ONE cheap
+ * MIN/MAX query runs, through the same read-only/timeout/row-cap path as every
+ * other user-DB read.
+ *
+ * Never fails: an LLM outage degrades to the deterministic fallback rather than
+ * breaking the first screen a user sees after connecting.
+ */
+export async function getConnectionSummary(
+  connection: Connection
+): Promise<Result<ConnectionSummary, "not_scanned">> {
+  const stored = await repo.getSchemaProfile(connection.id);
+  if (!stored) {
+    return { ok: false, reason: "not_scanned", detail: "This connection hasn't been scanned yet." };
+  }
+
+  // Cache hit — no LLM call, no user-DB query.
+  if (stored.summary) {
+    return { ok: true, value: stored.summary as unknown as ConnectionSummary };
+  }
+
+  const profile: SchemaProfile = {
+    connectionId: connection.id,
+    scannedAt: stored.scannedAt.toISOString(),
+    tables: stored.tables as unknown as TableProfile[],
+  };
+
+  let summary: ConnectionSummary;
+  try {
+    const generated = await generateSummary(profile, getLLMProvider());
+    summary = generated.ok ? generated.value : fallbackSummary(profile);
+  } catch {
+    // Provider misconfigured (e.g. missing key) — construction throws.
+    summary = fallbackSummary(profile);
+  }
+
+  summary.dateRange = await readDateRange(connection, profile);
+
+  await repo.saveSummary(connection.id, summary as unknown as object);
+  return { ok: true, value: summary };
+}
+
+/**
+ * At most one query against the user's database. Any failure yields null and
+ * the UI omits the line — we don't build scanning infrastructure for a caption.
+ */
+async function readDateRange(
+  connection: Connection,
+  profile: SchemaProfile
+): Promise<ConnectionSummary["dateRange"]> {
+  const target = pickDateRangeTarget(profile);
+  if (!target) return null;
+
+  const connectionString = decrypt({
+    cipherText: connection.connectionStringCipher,
+    iv: connection.connectionStringIv,
+    tag: connection.connectionStringTag,
+  });
+
+  const opened = await connectAndValidate(connectionString);
+  if (!opened.ok) return null;
+
+  try {
+    const result = await executeSelect(opened.value, buildDateRangeSql(target));
+    if (!result.ok || result.rows.length === 0) return null;
+
+    const row = result.rows[0];
+    const from = toIsoDate(row.from_date);
+    const to = toIsoDate(row.to_date);
+    return from && to ? { from, to } : null;
+  } catch {
+    return null;
+  } finally {
+    await opened.value.end().catch(() => {});
+  }
+}
+
+function toIsoDate(value: unknown): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 // Day 2 debug: which tables does retrieval pick for a question, and with what

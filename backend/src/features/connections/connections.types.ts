@@ -5,7 +5,7 @@ export interface CreateConnectionInput {
   connectionString: string;
 }
 
-export interface ConnectionSummary {
+export interface ConnectionListItem {
   id: string;
   name: string;
   tableCount: number;
