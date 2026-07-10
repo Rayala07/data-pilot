@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Emit a standalone bundle so the Docker runner stage only ships
-  // server.js + the files it actually imports — no devDependencies needed.
-  output: "standalone",
+  // output: "standalone" is only needed for Docker deployments.
+  // Vercel handles Next.js natively — do not set this here.
 };
 
 export default nextConfig;
