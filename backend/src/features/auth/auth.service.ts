@@ -1,4 +1,8 @@
-import bcrypt from "bcrypt";
+// bcryptjs, not bcrypt: the native addon was the only package in the whole
+// backend needing a C++ toolchain (python3/make/g++) to install. The pure-JS
+// implementation produces and verifies the same $2b$ hashes — existing
+// passwords keep working — and costs ~40ms more per hash, on login only.
+import bcrypt from "bcryptjs";
 import { countConnections } from "../connections/connections.repository";
 import { countQueryLogs } from "../query/query.repository";
 import { signToken } from "./auth.jwt";
