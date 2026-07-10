@@ -1,9 +1,3 @@
-# Build:  docker build -t datapilot-backend .   (run from this backend/ folder)
-# Run:    docker run --env-file .env -p 4000:4000 datapilot-backend
-
-# ---- base: shared by both stages ----
-# Alpine keeps the image small. It works here because no dependency is a native
-# C++ addon — every package is pure JavaScript.
 FROM node:22-alpine AS base
 WORKDIR /app
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false \

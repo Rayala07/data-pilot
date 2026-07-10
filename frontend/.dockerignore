@@ -1,16 +1,17 @@
-# Build context is backend/. Everything here is either rebuilt inside the
-# image, platform-specific, or a secret.
+# Build context is frontend/. Everything here is either rebuilt inside the
+# image or is a secret / local-only file.
 
 # ── Rebuilt inside the image ─────────────────────────────────────────────────
-# Copying the host's node_modules would drag in binaries compiled for the host
-# OS — bcrypt and Prisma's query engine would be the wrong ABI.
 node_modules
-dist
+.next
 *.tsbuildinfo
 
-# ── Secrets — NEVER baked into an image layer ─────────────────────────────────
+# ── Secrets ───────────────────────────────────────────────────────────────────
 .env
 .env.*
+# .env.local is always a secret; .env.example is safe but unnecessary
+.env.local
+.env.example
 
 # ── Dev / test artefacts ──────────────────────────────────────────────────────
 *.log
@@ -19,9 +20,6 @@ coverage
 *.test.ts
 *.spec.ts
 __tests__
-
-# ── Source maps (runtime image has no use for them) ──────────────────────────
-src/**/*.map
 
 # ── OS / editor noise ────────────────────────────────────────────────────────
 .DS_Store
@@ -33,10 +31,6 @@ Thumbs.db
 Dockerfile
 .dockerignore
 
-# ── Repo metadata (only reachable if the context is widened to the repo root) ─
+# ── Repo metadata ─────────────────────────────────────────────────────────────
 .git
 .gitignore
-
-# NOTE: prisma/ is deliberately NOT ignored.
-#   • schema.prisma  → needed by `npx prisma generate`
-#   • prisma/migrations → needed by `npx prisma migrate deploy`
