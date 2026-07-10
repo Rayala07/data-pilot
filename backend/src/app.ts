@@ -10,6 +10,9 @@ import { queryRouter } from "./features/query/query.routes";
 export function createApp() {
   const app = express();
 
+  // Don't advertise the framework on every response — free reconnaissance.
+  app.disable("x-powered-by");
+
   app.use(cors(corsOptions()));
   app.use(express.json());
 

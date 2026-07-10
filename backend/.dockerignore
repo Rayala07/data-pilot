@@ -1,0 +1,31 @@
+# Build context is backend/. Everything here is either rebuilt inside the image,
+# platform-specific, or a secret.
+
+# Rebuilt in the image. Copying the host's node_modules would drag in binaries
+# compiled for the host OS — bcrypt and Prisma's engines would be the wrong ABI.
+node_modules
+dist
+*.tsbuildinfo
+
+# Secrets. Never in an image layer: layers are cached, shared, and pushed.
+.env
+.env.*
+
+# Local noise
+*.log
+npm-debug.log*
+.DS_Store
+.vscode
+.idea
+coverage
+
+# Docker's own files — nothing in the image needs them
+Dockerfile
+.dockerignore
+
+# Repo metadata (only reachable if the build context is widened to the repo root)
+.git
+.gitignore
+
+# NOTE: prisma/ is deliberately NOT ignored. schema.prisma is needed to generate
+# the client, and prisma/migrations is needed by `prisma migrate deploy`.
