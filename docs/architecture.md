@@ -146,6 +146,7 @@ Naming the available columns on hallucination failures is what makes retries act
 |---|---|---|---|
 | POST | /auth/signup | `{ email, password }` | `{ token }` |
 | POST | /auth/login | `{ email, password }` | `{ token }` |
+| POST | /auth/demo | — | `{ token, connectionId }` — ephemeral sandbox tenant (2h token) with the template connection cloned in; rate-limited per IP, swept after 24h |
 | GET | /auth/me | — | `{ id, email, createdAt, connectionCount, queryCount }` (never `passwordHash`) |
 | POST | /connections | `{ name, connectionString }` | `{ id, name, tableCount }` or structured error |
 | GET | /connections | — | list (id, name, tableCount, scannedAt, canWrite) — `canWrite` is probed at connect/rescan: true = credential can modify data, false = verified read-only, null = not probed |

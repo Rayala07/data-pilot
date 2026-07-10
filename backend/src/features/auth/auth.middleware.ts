@@ -6,6 +6,8 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
+      /** True for ephemeral demo-sandbox sessions (read from the JWT claim). */
+      isDemo?: boolean;
     }
   }
 }
@@ -20,8 +22,9 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   try {
-    const { userId } = verifyToken(token);
-    req.userId = userId;
+    const payload = verifyToken(token);
+    req.userId = payload.userId;
+    req.isDemo = payload.demo === true;
     next();
   } catch {
     res.status(401).json({ error: "Invalid or expired token" });

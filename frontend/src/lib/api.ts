@@ -16,6 +16,21 @@ export function clearToken(): void {
   window.localStorage.removeItem(TOKEN_KEY);
 }
 
+/**
+ * Reads the JWT's (unverified) claims. Safe for UI decisions only — e.g.
+ * showing the demo banner. Anything that matters is verified server-side.
+ */
+export function getTokenClaims(): { userId?: string; demo?: boolean } | null {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+}
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);

@@ -1,5 +1,7 @@
 export interface TokenPayload {
   userId: string;
+  /** Present (true) only on ephemeral demo-sandbox tokens. */
+  demo?: boolean;
 }
 
 // Signup and login take the same shape; one type covers both.

@@ -38,3 +38,12 @@ export function writeQueryLog(input: QueryLogInput) {
 export function countQueryLogs(userId: string): Promise<number> {
   return prisma.queryLog.count({ where: { userId } });
 }
+
+/**
+ * The demo query cap's ledger. Every attempt is already logged for the
+ * benchmark (D11), so rate limiting is a count over existing data — no new
+ * bookkeeping. Counts attempts, not questions: retries cost LLM calls too.
+ */
+export function countQueryLogsSince(userId: string, since: Date): Promise<number> {
+  return prisma.queryLog.count({ where: { userId, createdAt: { gte: since } } });
+}

@@ -2,7 +2,7 @@ import { createSlice, type Draft, type PayloadAction } from "@reduxjs/toolkit";
 import type { UserProfile } from "@/lib/types";
 import { sessionExpired } from "@/store/actions";
 import { attachAsync, idleRequest, type RequestState } from "@/store/asyncState";
-import { fetchProfile, login, logout, signup } from "./auth.thunks";
+import { demoLogin, fetchProfile, login, logout, signup, type DemoSession } from "./auth.thunks";
 
 interface AuthState {
   token: string | null;
@@ -47,6 +47,9 @@ const authSlice = createSlice({
       s.token = token;
     });
     attachAsync(builder, logout, (s) => s.request, clearSession);
+    attachAsync(builder, demoLogin, (s) => s.request, (s, session: DemoSession) => {
+      s.token = session.token;
+    });
     attachAsync(builder, fetchProfile, (s) => s.profileRequest, (s, profile: UserProfile) => {
       s.profile = profile;
     });

@@ -10,6 +10,11 @@ export function createApp() {
 
   app.disable("x-powered-by");
 
+  // One hop of proxy (Render-style load balancer). Without this, req.ip is the
+  // LB for every request, and the demo endpoint's per-IP rate limit would
+  // throttle all visitors as if they were one client.
+  app.set("trust proxy", 1);
+
   app.use(cors(corsOptions()));
   app.use(express.json());
 

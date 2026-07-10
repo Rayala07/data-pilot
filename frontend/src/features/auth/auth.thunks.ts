@@ -32,3 +32,16 @@ export const logout = createApiThunk<void>("auth/logout", async () => {
 export const fetchProfile = createApiThunk<UserProfile>("auth/fetchProfile", () =>
   apiFetch<UserProfile>("/auth/me")
 );
+
+export interface DemoSession {
+  token: string;
+  /** The cloned seed connection — the page lands the visitor directly on it. */
+  connectionId: string;
+}
+
+/** One click from a portfolio to a live, isolated sandbox. */
+export const demoLogin = createApiThunk<DemoSession>("auth/demo", async () => {
+  const session = await apiFetch<DemoSession>("/auth/demo", { method: "POST" });
+  setToken(session.token);
+  return session;
+});
