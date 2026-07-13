@@ -25,7 +25,9 @@ Authorization: Bearer dp_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 A missing, malformed, unknown, or revoked key all return the same `401` — the
 API never reveals which. Revoke a key from the same page; it stops working
-immediately.
+immediately. A revoked key can then be deleted to remove it from the list
+(deletion is only allowed after revocation, so a live key can't vanish out from
+under whatever is using it).
 
 The API-key and web-session (JWT) systems are independent: a web JWT is rejected
 on `/v1`, and an API key is rejected on the web routes.

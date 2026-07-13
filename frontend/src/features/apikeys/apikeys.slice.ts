@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { ApiKeySummary, CreatedApiKey } from "@/lib/types";
 import { attachAsync, idleRequest, type RequestState } from "@/store/asyncState";
-import { createApiKey, fetchApiKeys, revokeApiKey } from "./apikeys.thunks";
+import { createApiKey, deleteApiKey, fetchApiKeys, revokeApiKey } from "./apikeys.thunks";
 
 interface ApiKeysState {
   items: ApiKeySummary[];
@@ -10,6 +10,7 @@ interface ApiKeysState {
   list: RequestState;
   create: RequestState;
   revoke: RequestState;
+  remove: RequestState;
 }
 
 const initialState: ApiKeysState = {
@@ -18,6 +19,7 @@ const initialState: ApiKeysState = {
   list: idleRequest(),
   create: idleRequest(),
   revoke: idleRequest(),
+  remove: idleRequest(),
 };
 
 const apiKeysSlice = createSlice({
@@ -38,6 +40,7 @@ const apiKeysSlice = createSlice({
       s.createdKey = created;
     });
     attachAsync(builder, revokeApiKey, (s) => s.revoke);
+    attachAsync(builder, deleteApiKey, (s) => s.remove);
   },
 });
 

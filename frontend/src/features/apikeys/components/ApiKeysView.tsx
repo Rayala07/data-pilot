@@ -17,7 +17,7 @@ import {
 import { isLoading } from "@/store/asyncState";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { dismissCreatedKey } from "../apikeys.slice";
-import { createApiKey, fetchApiKeys, revokeApiKey } from "../apikeys.thunks";
+import { createApiKey, deleteApiKey, fetchApiKeys, revokeApiKey } from "../apikeys.thunks";
 
 /** The one-time reveal. Once dismissed the raw key is unrecoverable. */
 function CreatedKeyNotice() {
@@ -95,6 +95,7 @@ function KeyRow({
 }) {
   const dispatch = useAppDispatch();
   const revoke = useAppSelector((s) => s.apikeys.revoke);
+  const remove = useAppSelector((s) => s.apikeys.remove);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 last:border-0">
@@ -111,13 +112,13 @@ function KeyRow({
           {lastUsedAt ? `Last used ${new Date(lastUsedAt).toLocaleString()}` : "Never used"}
         </p>
       </div>
-      {!revokedAt && (
-        <Button
-          variant="danger"
-          size="sm"
-          loading={isLoading(revoke)}
-          onClick={() => dispatch(revokeApiKey(id))}
-        >
+      {revokedAt ? (
+        // A revoked key can no longer authenticate; deleting only tidies the list.
+        <Button variant="ghost" size="sm" loading={isLoading(remove)} onClick={() => dispatch(deleteApiKey(id))}>
+          Delete
+        </Button>
+      ) : (
+        <Button variant="danger" size="sm" loading={isLoading(revoke)} onClick={() => dispatch(revokeApiKey(id))}>
           Revoke
         </Button>
       )}

@@ -22,6 +22,22 @@ export async function revokeApiKey(userId: string, id: string): Promise<number> 
 }
 
 /**
+ * Permanently deletes a key, but only if it's already revoked — you can't hard-
+ * delete a live credential, which forces the safe two-step (revoke, then remove)
+ * and keeps a still-active key from vanishing out from under whatever uses it.
+ */
+export async function deleteRevokedApiKey(
+  userId: string,
+  id: string
+): Promise<"deleted" | "not_found" | "not_revoked"> {
+  const key = await prisma.apiKey.findFirst({ where: { id, userId }, select: { revokedAt: true } });
+  if (!key) return "not_found";
+  if (!key.revokedAt) return "not_revoked";
+  await prisma.apiKey.deleteMany({ where: { id, userId } });
+  return "deleted";
+}
+
+/**
  * The authentication lookup: an ACTIVE key by its hash. Returns only what the
  * middleware needs (the owning userId + the key id), never a raw secret.
  */

@@ -21,3 +21,10 @@ export const revokeApiKey = createApiThunk<string, string>("apikeys/revoke", asy
   api.dispatch(fetchApiKeys());
   return id;
 });
+
+/** Permanent removal — the backend only allows it once the key is revoked. */
+export const deleteApiKey = createApiThunk<string, string>("apikeys/delete", async (id, api) => {
+  await apiFetch(`/api-keys/${id}`, { method: "DELETE" });
+  api.dispatch(fetchApiKeys());
+  return id;
+});

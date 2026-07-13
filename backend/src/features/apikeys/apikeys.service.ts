@@ -61,3 +61,8 @@ export async function listKeys(userId: string): Promise<ApiKeySummary[]> {
 export async function revokeKey(userId: string, id: string): Promise<boolean> {
   return (await repo.revokeApiKey(userId, id)) > 0;
 }
+
+/** Permanently removes a revoked key. See repository for the revoke-first rule. */
+export function deleteKey(userId: string, id: string): Promise<"deleted" | "not_found" | "not_revoked"> {
+  return repo.deleteRevokedApiKey(userId, id);
+}
