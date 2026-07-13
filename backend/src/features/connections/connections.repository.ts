@@ -12,6 +12,16 @@ export function getOwnedConnection(userId: string, connectionId: string): Promis
 }
 
 /**
+ * Deletes a connection the user owns. The SchemaProfile and QueryLog rows go
+ * with it via onDelete: Cascade. Returns the affected count so the caller can
+ * 404 on a foreign or unknown id — scoped by userId, never by id alone.
+ */
+export async function deleteOwnedConnection(userId: string, connectionId: string): Promise<number> {
+  const result = await prisma.connection.deleteMany({ where: { id: connectionId, userId } });
+  return result.count;
+}
+
+/**
  * Unscoped by design — the ONLY permitted caller is the demo-template lookup,
  * where the id comes from operator configuration (DEMO_TEMPLATE_CONNECTION_ID),
  * never from a request. Every request-driven read goes through

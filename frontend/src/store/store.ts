@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { apiKeysReducer } from "@/features/apikeys/apikeys.slice";
 import { authReducer } from "@/features/auth/auth.slice";
 import { connectionsReducer } from "@/features/connections/connections.slice";
 import { queryReducer } from "@/features/query/query.slice";
@@ -13,6 +14,7 @@ export const makeStore = () =>
       connections: connectionsReducer,
       query: queryReducer,
       retrieval: retrievalReducer,
+      apikeys: apiKeysReducer,
     },
     // configureStore installs redux-thunk by default — that's the middleware
     // every createApiThunk here runs on.

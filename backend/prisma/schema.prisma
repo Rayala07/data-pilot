@@ -21,6 +21,24 @@ model User {
   createdAt    DateTime     @default(now())
   connections  Connection[]
   queryLogs    QueryLog[]
+  apiKeys      ApiKey[]
+}
+
+// Machine-to-machine credentials for the public /v1 API. The raw key is shown
+// once at creation and never stored — only its SHA-256 hash. keyPrefix is the
+// non-secret leading slice, kept for display so a user can recognise a key.
+model ApiKey {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  keyHash    String    @unique
+  keyPrefix  String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  @@index([userId])
 }
 
 model Connection {

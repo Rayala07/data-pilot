@@ -107,3 +107,23 @@ export interface ConnectionSummary {
   dateRange: { from: string; to: string } | null;
   suggestedQuestions: string[];
 }
+
+// --- API keys (public /v1 API management) -----------------------------------
+
+export interface ApiKeySummary {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  lastUsedAt: string | null;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
+export interface CreatedApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  createdAt: string;
+  /** The full secret — returned once, at creation. */
+  key: string;
+}

@@ -80,6 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <nav className="flex items-center gap-1">
             <NavLink href="/connections">Connections</NavLink>
+            <NavLink href="/api-keys">API keys</NavLink>
             <NavLink href="/profile">Profile</NavLink>
           </nav>
         </div>
