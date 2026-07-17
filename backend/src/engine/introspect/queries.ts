@@ -30,12 +30,23 @@ const EXCLUDED_SCHEMAS = [
 
 const EXCLUDED_SCHEMAS_SQL = EXCLUDED_SCHEMAS.map((s) => `'${s}'`).join(", ");
 
+// VIEWs are included, not just base tables: granting an outsider a read-only
+// VIEW layer over the real tables is one of the most common ways to expose a
+// database, and excluding them made such a schema introspect to zero tables -
+// a successful connect that looks broken.
+//
+// Still read from information_schema rather than pg_catalog on purpose: this
+// view is privilege-filtered, so DataPilot only ever learns about relations the
+// read-only role can actually SELECT. pg_catalog would list everything in the
+// database, including tables every generated query would then be denied on.
+// (Materialized views are not exposed by information_schema at all, so they
+// remain invisible - see docs.)
 export const COLUMNS_QUERY = `
   SELECT c.table_schema, c.table_name, c.column_name, c.data_type, c.is_nullable, c.ordinal_position
   FROM information_schema.columns c
   JOIN information_schema.tables t
     ON t.table_schema = c.table_schema AND t.table_name = c.table_name
-  WHERE t.table_type = 'BASE TABLE'
+  WHERE t.table_type IN ('BASE TABLE', 'VIEW')
     AND t.table_schema NOT IN (${EXCLUDED_SCHEMAS_SQL})
     AND t.table_schema NOT LIKE 'pg\\_%'
   ORDER BY c.table_schema, c.table_name, c.ordinal_position;
@@ -84,6 +95,11 @@ export const FOREIGN_KEY_QUERY = `
     AND n.nspname NOT IN (${EXCLUDED_SCHEMAS_SQL});
 `;
 
+// 'r' ordinary table, 'p' partitioned table, 'm' materialized view. A
+// partitioned table is reported as a BASE TABLE by information_schema, so
+// without 'p' a partitioned schema introspected with every row count at zero.
+// Views ('v') are deliberately absent: reltuples is meaningless for them (-1),
+// and a missing row here simply leaves rowEstimate at its 0 default.
 export const ROW_ESTIMATE_QUERY = `
   SELECT
     n.nspname AS table_schema,
@@ -91,7 +107,7 @@ export const ROW_ESTIMATE_QUERY = `
     c.reltuples AS row_estimate
   FROM pg_class c
   JOIN pg_namespace n ON n.oid = c.relnamespace
-  WHERE c.relkind = 'r'
+  WHERE c.relkind IN ('r', 'p', 'm')
     AND n.nspname NOT IN (${EXCLUDED_SCHEMAS_SQL})
     AND n.nspname NOT LIKE 'pg\\_%';
 `;
