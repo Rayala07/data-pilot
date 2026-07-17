@@ -39,9 +39,17 @@ export interface DemoSession {
   connectionId: string;
 }
 
-/** One click from a portfolio to a live, isolated sandbox. */
-export const demoLogin = createApiThunk<DemoSession>("auth/demo", async () => {
-  const session = await apiFetch<DemoSession>("/auth/demo", { method: "POST" });
+/**
+ * One click from a portfolio to a live, isolated sandbox.
+ *
+ * `ref` is the /demo?ref=... tag identifying who the link was sent to. It is
+ * telemetry only - the server sanitizes it and it grants nothing.
+ */
+export const demoLogin = createApiThunk<DemoSession, string | undefined>("auth/demo", async (ref) => {
+  const session = await apiFetch<DemoSession>("/auth/demo", {
+    method: "POST",
+    body: JSON.stringify(ref ? { ref } : {}),
+  });
   setToken(session.token);
   return session;
 });

@@ -10,6 +10,7 @@ import {
   getConnectionByIdInternal,
 } from "../connections/connections.repository";
 import { getConnectionSummary } from "../connections/connections.service";
+import { recordDemoEvent } from "../demo/demo.repository";
 import { countQueryLogs } from "../query/query.repository";
 import { signToken } from "./auth.jwt";
 import {
@@ -62,7 +63,7 @@ export type DemoResult =
  * ready in well under a second. Each visitor is a real, isolated tenant; the
  * same row-level scoping that protects paying users protects them too.
  */
-export async function createDemoSession(): Promise<DemoResult> {
+export async function createDemoSession(ref?: string): Promise<DemoResult> {
   const templateId = process.env.DEMO_TEMPLATE_CONNECTION_ID;
   if (!templateId) {
     return { ok: false, status: 503, error: "Demo mode is not configured" };
@@ -99,9 +100,13 @@ export async function createDemoSession(): Promise<DemoResult> {
     return { ok: false, status: 503, error: "Demo mode is not configured" };
   }
 
+  // Outlives the sweep that will delete this user in 24h.
+  recordDemoEvent({ sessionId: user.id, ref, event: "session_started" });
+
   return {
     ok: true,
-    token: signToken({ userId: user.id, demo: true }, DEMO_TOKEN_EXPIRY),
+    // `ref` rides along so events later in the session still attribute to the link.
+    token: signToken({ userId: user.id, demo: true, ...(ref ? { ref } : {}) }, DEMO_TOKEN_EXPIRY),
     connectionId,
   };
 }

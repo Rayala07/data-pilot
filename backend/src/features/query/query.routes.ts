@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../auth/auth.middleware";
 import { getOwnedConnection } from "../connections/connections.repository";
+import { recordDemoEvent } from "../demo/demo.repository";
 import { countQueryLogsSince } from "./query.repository";
 import { runQuery } from "./query.service";
 import { validateAsk } from "./query.validation";
@@ -35,6 +36,17 @@ queryRouter.post("/", async (req, res) => {
       });
       return;
     }
+  }
+
+  // Recorded before running: what the visitor ASKED is the interesting part,
+  // and it survives the 24h sweep that will take QueryLog with it.
+  if (req.isDemo) {
+    recordDemoEvent({
+      sessionId: req.userId!,
+      ref: req.demoRef,
+      event: "question_asked",
+      detail: parsed.value.question,
+    });
   }
 
   const result = await runQuery(req.userId!, connection, parsed.value.question, {

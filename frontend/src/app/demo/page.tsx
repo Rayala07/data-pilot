@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef } from "react";
 import { Alert, Button, Spinner } from "@/components/ui";
 import { demoLogin } from "@/features/auth/auth.thunks";
 import { isLoading } from "@/store/asyncState";
@@ -18,11 +18,14 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
  * connection's overview - headline, entity chips, and four suggested questions.
  * The visitor's first click is already an answered query.
  */
-export default function DemoPage() {
+function DemoFlow() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { token, hydrated, request } = useAppSelector((s) => s.auth);
   const started = useRef(false);
+  // /demo?ref=acme - tags this session so its activity is attributable to the
+  // link that was sent. Telemetry only; the server sanitizes it.
+  const ref = useSearchParams().get("ref") ?? undefined;
 
   useEffect(() => {
     if (!hydrated || started.current) return;
@@ -34,12 +37,12 @@ export default function DemoPage() {
       return;
     }
 
-    dispatch(demoLogin()).then((action) => {
+    dispatch(demoLogin(ref)).then((action) => {
       if (demoLogin.fulfilled.match(action)) {
         router.replace(`/connections/${action.payload.connectionId}`);
       }
     });
-  }, [hydrated, token, dispatch, router]);
+  }, [hydrated, token, dispatch, router, ref]);
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-6 px-6 py-12">
@@ -56,7 +59,7 @@ export default function DemoPage() {
               className="flex-1"
               onClick={() => {
                 started.current = false;
-                dispatch(demoLogin()).then((action) => {
+                dispatch(demoLogin(ref)).then((action) => {
                   if (demoLogin.fulfilled.match(action)) {
                     router.replace(`/connections/${action.payload.connectionId}`);
                   }
@@ -85,5 +88,24 @@ export default function DemoPage() {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Reading ?ref= opts the flow into client-side rendering, which Next requires
+ * to sit behind a Suspense boundary or the page can't be prerendered at all.
+ */
+export default function DemoPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-full flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+          <Spinner className="size-5 text-brand" />
+          <p className="text-sm font-medium text-fg">Setting up your demo sandbox…</p>
+        </div>
+      }
+    >
+      <DemoFlow />
+    </Suspense>
   );
 }

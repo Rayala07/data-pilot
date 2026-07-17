@@ -8,6 +8,17 @@ import { validateCredentials } from "./auth.validation";
 // per-IP brake. 5/hour is generous for a human and useless for a script.
 const DEMO_CREATIONS_PER_IP_PER_HOUR = 5;
 
+/**
+ * The /demo?ref=... tag. It arrives from a URL a stranger can edit, so it is
+ * treated as untrusted: a short, boring slug or nothing at all. It only ever
+ * labels a telemetry row - it grants nothing.
+ */
+function cleanRef(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const ref = value.trim().toLowerCase().slice(0, 64);
+  return /^[a-z0-9][a-z0-9_-]*$/.test(ref) ? ref : undefined;
+}
+
 export const authRouter = Router();
 
 authRouter.post("/demo", async (req, res) => {
@@ -16,7 +27,7 @@ authRouter.post("/demo", async (req, res) => {
     return;
   }
 
-  const result = await createDemoSession();
+  const result = await createDemoSession(cleanRef((req.body as Record<string, unknown> | undefined)?.ref));
   if (!result.ok) {
     res.status(result.status).json({ error: result.error });
     return;
