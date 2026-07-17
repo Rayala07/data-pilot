@@ -73,7 +73,6 @@ export function ProfileView() {
           <Card>
             <Row label="Email" value={profile.email} />
             <Row label="Member since" value={new Date(profile.createdAt).toLocaleDateString(undefined, { dateStyle: "long" })} />
-            <Row label="User ID" value={profile.id} />
           </Card>
 
           <p className="text-xs text-fg-subtle">
