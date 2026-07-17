@@ -120,7 +120,6 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
   ]);
 
   return {
-    id: user.id,
     email: user.email,
     createdAt: user.createdAt.toISOString(),
     connectionCount,

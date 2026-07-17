@@ -14,9 +14,9 @@ export type AuthResult =
   | { ok: true; token: string }
   | { ok: false; status: number; error: string };
 
-/** Never includes passwordHash. */
+/** Never includes passwordHash. The user's id is deliberately absent too: the
+ *  caller already carries it in their token, and nothing needs it rendered. */
 export interface UserProfile {
-  id: string;
   email: string;
   createdAt: string;
   connectionCount: number;
