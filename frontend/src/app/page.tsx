@@ -15,7 +15,7 @@ export default function RootPage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    router.replace(token ? "/connections" : "/login");
+    router.replace(token ? "/connections" : "/home");
   }, [hydrated, token, router]);
 
   return (
