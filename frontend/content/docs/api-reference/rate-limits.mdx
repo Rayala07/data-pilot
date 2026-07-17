@@ -1,0 +1,59 @@
+---
+title: Rate limits
+description: Two windows per key — a per-minute cap on all calls, and a daily cap on queries.
+---
+
+Every API key has two independent limits. Both are enforced per key, in fixed
+time windows.
+
+| Limit | Window | Applies to |
+|-------|--------|------------|
+| Requests per minute | rolling 60s | **all** `/v1` endpoints |
+| Queries per day | 24h | `POST /v1/query` only |
+
+The exact ceilings are set by the deployment (the defaults are generous for a
+single integration). Registering and listing connections count only against the
+per-minute limit; only `POST /v1/query` also draws down the daily query budget.
+
+## When you hit a limit
+
+You get **429 `rate_limited`** with a `retryAfterSeconds` field and a matching
+`Retry-After` header:
+
+```json title="429 Too Many Requests"
+{
+  "error": {
+    "code": "rate_limited",
+    "message": "Rate limit exceeded: at most 20 requests per minute."
+  },
+  "retryAfterSeconds": 42
+}
+```
+
+<Callout type="info">
+  Back off for `retryAfterSeconds` before retrying. Respecting the `Retry-After`
+  header is the simplest way to stay within budget under bursty load.
+</Callout>
+
+## Designing around them
+
+<Steps>
+<Step>
+### Cache connection metadata
+
+You register a connection once; don't call `GET /v1/connections` on every
+request. Store the `connectionId` you get back and reuse it.
+</Step>
+<Step>
+### Treat queries as the scarce resource
+
+The daily budget is on `POST /v1/query`. If you're fanning out many questions,
+batch or cache answers where the underlying data hasn't changed.
+</Step>
+<Step>
+### Handle 429 explicitly
+
+Read `retryAfterSeconds`, wait, and retry once — rather than hammering and
+compounding the backoff.
+</Step>
+</Steps>

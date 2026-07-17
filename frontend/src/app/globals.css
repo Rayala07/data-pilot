@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Fumadocs theme for the /docs section. Its base rules live in @layer base, so
+   the app's own unlayered `body` rule below still wins — the app's look is
+   unchanged. The fd-* variables and classes it adds are namespaced. */
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@source "../../node_modules/fumadocs-ui/dist/**/*.js";
+
 /* ---------------------------------------------------------------------------
    Design tokens.
 

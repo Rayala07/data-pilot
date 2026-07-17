@@ -1,0 +1,66 @@
+---
+title: Security
+description: Layered defenses so a question can never become a write — and one tenant can never see another's data.
+---
+
+DataPilot runs generated SQL against your database, so safety is designed in
+layers. Each one can individually fail and the system stays safe unless all of
+them fail at once.
+
+<Steps>
+<Step>
+### Read-only credential
+
+You give DataPilot a database role that can only `SELECT`. At connect time it
+also probes whether that credential can write and warns you if it can — so a
+credential that's stronger than it needs to be doesn't go unnoticed.
+</Step>
+<Step>
+### Read-only session
+
+On top of the role, every connection sets a session-level read-only flag. Even
+if a credential *could* write, the session won't let it.
+</Step>
+<Step>
+### AST validation
+
+Generated SQL is parsed and allowed only if it's a single, pure `SELECT`. This
+is a whitelist, not a keyword blocklist — writes, multiple statements, and
+data-modifying CTEs are all rejected structurally, before execution.
+</Step>
+<Step>
+### Execution limits
+
+Every query runs with a statement timeout and a row cap, so one heavy question
+can't exhaust the database or the server.
+</Step>
+<Step>
+### Untrusted result fencing
+
+Row values returned from your database are treated as untrusted text when they
+re-enter a prompt (for the explanation), so a value in your data can't hijack
+the model.
+</Step>
+</Steps>
+
+<Callout type="warn">
+  Always connect with a **read-only database role**, especially for third-party
+  or API use. DataPilot's session flag and validation are defense in depth — a
+  credential that genuinely cannot write is the foundation they sit on.
+</Callout>
+
+## Tenant isolation
+
+Every connection and every query log belongs to a `userId`, and every lookup is
+scoped by it. Requesting a resource you don't own returns **404**, not 403 — so
+the API never even confirms that a resource exists for someone else.
+
+This applies identically whether you authenticate with a web session or an API
+key: the key simply resolves to its owner, and from there the same scoping
+applies. See [Authentication](/docs/api-reference/authentication).
+
+## Connection strings
+
+The connection string you provide is **encrypted at rest** and is never returned
+to the browser or API after you submit it. API keys are stored only as a hash —
+the raw key is shown once, at creation, and can't be retrieved again.

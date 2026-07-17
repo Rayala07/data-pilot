@@ -1,0 +1,117 @@
+---
+title: Query
+description: Ask a question in plain English and get rows, a chart, and the SQL.
+---
+
+```text
+POST /v1/query
+```
+
+Runs the full pipeline against a connection: retrieval → generation → validation
+→ execution → self-correction → presentation. Returns the same structured answer
+the web app renders.
+
+<TypeTable
+  type={{
+    connectionId: {
+      description: "The connection to query, from POST /v1/connections.",
+      type: "string",
+      required: true,
+    },
+    question: {
+      description: "A plain-English question about the data.",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+```bash title="Request"
+curl -X POST https://datapilot.example.com/v1/query \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "connectionId": "3f2c…",
+    "question": "top 5 products by revenue last month"
+  }'
+```
+
+```json title="200 OK"
+{
+  "rows": [{ "product": "Widget", "revenue": "48210.00" }],
+  "fields": [
+    { "name": "product", "kind": "text" },
+    { "name": "revenue", "kind": "numeric" }
+  ],
+  "rowCount": 5,
+  "chart": { "type": "bar", "xField": "product", "yField": "revenue" },
+  "explanation": "The five highest-grossing products last month…",
+  "sql": "SELECT p.prod_title AS product, SUM(...) ...",
+  "attempts": [
+    {
+      "attemptNumber": 1,
+      "sql": "SELECT …",
+      "retrievedTables": ["ord_line", "products"],
+      "latencyMs": 2140
+    }
+  ],
+  "usage": { "attemptsUsed": 1 }
+}
+```
+
+## Response
+
+<TypeTable
+  type={{
+    rows: {
+      description: "The result rows. Numeric and date values may be JSON strings to preserve precision.",
+      type: "object[]",
+    },
+    fields: {
+      description: "One entry per column: { name, kind } where kind is numeric, date, boolean, or text.",
+      type: "object[]",
+    },
+    rowCount: { description: "Number of rows returned.", type: "number" },
+    chart: {
+      description: "Deterministic chart suggestion: type is stat, line, bar, scatter, or table, with the relevant field names.",
+      type: "object",
+    },
+    explanation: {
+      description: "A short natural-language summary of the result.",
+      type: "string",
+    },
+    sql: { description: "The exact SQL that ran.", type: "string" },
+    attempts: {
+      description: "The self-correction trail. More than one entry means the engine recovered from an earlier failure.",
+      type: "object[]",
+    },
+    "usage.attemptsUsed": {
+      description: "How many attempts this query consumed.",
+      type: "number",
+    },
+  }}
+/>
+
+<Callout type="info">
+  A query that runs and returns **zero rows is a success** (`200`, `rows: []`) —
+  it's a valid answer, not an error.
+</Callout>
+
+## When a query can't be answered
+
+If the engine runs but can't produce a usable answer — retries exhausted, or a
+request refused for safety — you get **422 `query_failed`**, with the attempt
+trail kept so you can see what was tried:
+
+```json title="422 Unprocessable Entity"
+{
+  "error": { "code": "query_failed", "message": "Unknown column(s): revenu…" },
+  "failureType": "hallucination",
+  "sql": "SELECT revenu FROM …",
+  "attempts": [
+    { "attemptNumber": 1, "failureType": "hallucination", "errorText": "…" }
+  ]
+}
+```
+
+See [Errors](/docs/api-reference/errors) for the full list of codes.

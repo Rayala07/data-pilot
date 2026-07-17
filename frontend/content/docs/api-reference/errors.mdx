@@ -1,0 +1,49 @@
+---
+title: Errors
+description: One error shape across the whole /v1 API.
+---
+
+Every `/v1` error uses the same envelope:
+
+```json
+{ "error": { "code": "not_found", "message": "Connection not found" } }
+```
+
+Some errors add fields — a `429` includes `retryAfterSeconds`, and a
+`query_failed` includes the attempt trail.
+
+## Status codes
+
+| HTTP | `code` | When |
+|------|--------|------|
+| 400 | `bad_request` | A required body field is missing or invalid. |
+| 401 | `unauthorized` | Missing, malformed, unknown, or revoked API key. |
+| 404 | `not_found` | The connection doesn't exist, **belongs to another key's owner**, or isn't scanned yet. |
+| 422 | `connection_failed` | The database couldn't be reached, authenticated, or introspected. |
+| 422 | `query_failed` | The engine ran but couldn't produce a usable answer. Includes `failureType`, `sql`, and `attempts`. |
+| 429 | `rate_limited` | A rate limit was hit. Includes `retryAfterSeconds`. |
+| 500 | `internal` | An unexpected server error. No internal detail is ever exposed. |
+
+<Callout type="info">
+  A cross-tenant request returns **404**, not 403 — the API never confirms that a
+  resource exists for someone else.
+</Callout>
+
+## Handling failures
+
+<Accordions>
+  <Accordion title="401 unauthorized">
+    Missing, wrong, or revoked key — all indistinguishable by design. Check the
+    `Authorization: Bearer dp_live_…` header and that the key hasn't been revoked.
+  </Accordion>
+  <Accordion title="422 query_failed">
+    The question ran but couldn't be answered safely or correctly. Inspect
+    `failureType` and `attempts` — a `security` failure means the request was
+    refused (e.g. it implied a write); other types mean the model couldn't
+    converge on valid SQL. Rephrasing the question usually helps.
+  </Accordion>
+  <Accordion title="429 rate_limited">
+    Back off and retry after `retryAfterSeconds` (also sent as the `Retry-After`
+    header). See [Rate limits](/docs/api-reference/rate-limits).
+  </Accordion>
+</Accordions>

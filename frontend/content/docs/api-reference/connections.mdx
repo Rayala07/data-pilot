@@ -1,0 +1,95 @@
+---
+title: Connections
+description: Register, list, and remove the databases you query.
+---
+
+A **connection** is a database DataPilot has introspected and indexed. You query
+against a connection, never a raw connection string. Everything here is scoped to
+the API key's owner.
+
+## Register a connection
+
+```text
+POST /v1/connections
+```
+
+Opens the database read-only, introspects its schema, and builds the retrieval
+index. This does real work and can take **20–40 seconds** — it's a one-time cost
+per connection.
+
+<TypeTable
+  type={{
+    name: {
+      description: "A label for the connection.",
+      type: "string",
+      required: true,
+    },
+    connectionString: {
+      description: "A PostgreSQL connection string. Use a read-only role.",
+      type: "string",
+      required: true,
+    },
+  }}
+/>
+
+```bash title="Request"
+curl -X POST https://datapilot.example.com/v1/connections \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Production analytics",
+    "connectionString": "postgresql://readonly:***@db.example.com:5432/app"
+  }'
+```
+
+```json title="201 Created"
+{
+  "connectionId": "3f2c…",
+  "name": "Production analytics",
+  "tableCount": 8
+}
+```
+
+Use `connectionId` in [`POST /v1/query`](/docs/api-reference/query). `tableCount`
+is how many tables were found and indexed. A database that can't be reached,
+authenticated, or introspected returns **422 `connection_failed`**.
+
+## List connections
+
+```text
+GET /v1/connections
+```
+
+```bash title="Request"
+curl https://datapilot.example.com/v1/connections \
+  -H "Authorization: Bearer $DP_KEY"
+```
+
+```json title="200 OK"
+[
+  {
+    "id": "3f2c…",
+    "name": "Production analytics",
+    "tableCount": 8,
+    "scannedAt": "2026-01-12T09:30:00.000Z"
+  }
+]
+```
+
+## Delete a connection
+
+```text
+DELETE /v1/connections/:id
+```
+
+Removes the connection and its stored schema profile and query logs. A foreign
+or unknown id returns **404** (tenancy is enforced by scoping to the key owner).
+
+```bash title="Request"
+curl -X DELETE https://datapilot.example.com/v1/connections/3f2c… \
+  -H "Authorization: Bearer $DP_KEY"
+```
+
+```json title="200 OK"
+{ "deleted": true }
+```

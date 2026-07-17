@@ -1,0 +1,4 @@
+{
+  "title": "API reference",
+  "pages": ["authentication", "connections", "query", "errors", "rate-limits"]
+}

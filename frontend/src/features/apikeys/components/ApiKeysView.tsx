@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -60,8 +61,11 @@ function CreateKeyForm() {
         <div className="space-y-1">
           <h2 className="text-sm font-semibold text-fg">Create an API key</h2>
           <p className="text-xs text-fg-muted">
-            Use it with the public API (see <span className="font-mono">docs/api.md</span>) to run queries from your own
-            backend.
+            Use it with the public API (
+            <Link href="/docs/api-reference/authentication" className="font-medium text-brand hover:underline">
+              see docs
+            </Link>
+            ) to run queries from your own backend.
           </p>
         </div>
         {create.error && <Alert>{create.error}</Alert>}

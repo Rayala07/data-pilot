@@ -1,0 +1,76 @@
+---
+title: Introduction
+description: Ask your PostgreSQL database questions in plain English — from the app, or from your own backend.
+---
+
+DataPilot turns a plain-English question into a **safe, read-only SQL query**,
+runs it against your PostgreSQL database, and returns the rows, a chart, and a
+short explanation. It connects once, learns your schema, and answers questions
+about it — no SQL required.
+
+Everything the web app does is also available as a **public API**, so you can
+embed the same engine in your own product.
+
+<Cards>
+  <Card title="Quickstart" href="/docs/quickstart">
+    Connect a database and ask your first question in a couple of minutes.
+  </Card>
+  <Card title="API reference" href="/docs/api-reference/authentication">
+    Authenticate with an API key and call the engine from any backend.
+  </Card>
+  <Card title="How it works" href="/docs/concepts/how-it-works">
+    Retrieval → generation → validation → execution → self-correction.
+  </Card>
+  <Card title="Security" href="/docs/concepts/security">
+    Read-only roles, AST validation, and strict per-tenant isolation.
+  </Card>
+</Cards>
+
+## What makes it different
+
+<Accordions>
+  <Accordion title="It validates SQL before running it">
+    Generated SQL is parsed to an abstract syntax tree. Only a single, pure
+    `SELECT` survives — writes, multiple statements, and references to tables or
+    columns that don't exist are rejected **before** anything touches your
+    database.
+  </Accordion>
+  <Accordion title="It corrects its own mistakes">
+    When a query fails, the exact error — including the real column names — is
+    fed back to the model, which tries again, up to three attempts. The response
+    shows the full trail, so a recovery is visible rather than hidden.
+  </Accordion>
+  <Accordion title="It's read-only by construction">
+    DataPilot connects with a read-only session flag, recommends a read-only
+    database role, and verifies at connect time whether the credential can
+    write. Even a bug in one layer can't turn a question into a write.
+  </Accordion>
+  <Accordion title="It understands messy schemas">
+    Real tables are named `ord_hdr` and `pay_txn`, not `orders` and `payments`.
+    DataPilot writes a short description of every table at connect time and uses
+    it to map how you ask ("revenue") onto how your schema is named.
+  </Accordion>
+</Accordions>
+
+## Two ways to use it
+
+<Steps>
+<Step>
+### The web app
+
+Sign in, paste a connection string, and ask questions in the browser. Best for
+exploring a database interactively.
+</Step>
+<Step>
+### The public API
+
+Generate an API key and call `POST /v1/query` from your own backend. Best for
+building DataPilot's answering into your own product.
+[Get started →](/docs/api-reference/authentication)
+</Step>
+</Steps>
+
+<Callout type="info">
+  DataPilot supports **PostgreSQL** databases. It only ever reads — it never
+  writes to the database you connect.
+</Callout>

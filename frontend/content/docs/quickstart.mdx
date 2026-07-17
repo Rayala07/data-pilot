@@ -1,0 +1,97 @@
+---
+title: Quickstart
+description: Connect a database and get your first answer.
+---
+
+## Try the live demo
+
+The fastest way to see DataPilot is the demo sandbox — no signup, a sample
+e-commerce database already connected.
+
+<Cards>
+  <Card title="Open the demo →" href="/demo">
+    Lands you in an isolated workspace with suggested questions ready to click.
+  </Card>
+</Cards>
+
+## Connect your own database
+
+<Steps>
+<Step>
+### Create a read-only role
+
+Give DataPilot a credential that can only read. Run this once on the database
+you want to connect (see [Security](/docs/concepts/security) for why):
+
+```sql
+CREATE ROLE datapilot_readonly WITH LOGIN PASSWORD 'choose-a-strong-password';
+GRANT USAGE ON SCHEMA public TO datapilot_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO datapilot_readonly;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO datapilot_readonly;
+```
+</Step>
+<Step>
+### Add the connection
+
+In the app, open **Connections → Add a connection** and paste the connection
+string for that role:
+
+```
+postgresql://datapilot_readonly:PASSWORD@HOST:5432/DATABASE
+```
+
+DataPilot introspects the schema and builds its retrieval index. This takes a
+few seconds — it's a one-time cost per connection.
+</Step>
+<Step>
+### Ask a question
+
+Open the connection and ask something in plain English:
+
+- _"How many users signed up in 2025?"_
+- _"Top 5 products by revenue"_
+- _"Monthly revenue for the last 6 months"_
+
+You'll get a chart, a short explanation, and the exact SQL that ran.
+</Step>
+</Steps>
+
+## Call it from your backend
+
+Prefer to build DataPilot into your own product? Generate an API key and hit the
+public API.
+
+<Steps>
+<Step>
+### Generate an API key
+
+In the app, open **API keys**, create a key, and copy it. The raw key is shown
+once.
+</Step>
+<Step>
+### Register a connection
+
+```bash
+curl -X POST https://datapilot.example.com/v1/connections \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Analytics", "connectionString": "postgresql://readonly:***@host:5432/app" }'
+```
+</Step>
+<Step>
+### Ask a question
+
+```bash
+curl -X POST https://datapilot.example.com/v1/query \
+  -H "Authorization: Bearer $DP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "connectionId": "CONNECTION_ID", "question": "top 5 products by revenue" }'
+```
+</Step>
+</Steps>
+
+<Cards>
+  <Card title="Full API reference" href="/docs/api-reference/authentication">
+    Authentication, every endpoint, error codes, and rate limits.
+  </Card>
+</Cards>
