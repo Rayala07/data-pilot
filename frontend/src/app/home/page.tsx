@@ -300,10 +300,8 @@ export default function HomePage() {
                 Connect your database
                 <IconArrow />
               </Link>
-              {/* The zero-friction way in: a sandbox with a database already
-                  connected, no signup. "Sign in" is already in the nav. */}
-              <Link href="/demo" className="dp-btn dp-btn--ghost dp-btn--lg">
-                Try the live demo
+              <Link href="/login" className="dp-btn dp-btn--ghost dp-btn--lg">
+                Sign in
               </Link>
             </div>
 
@@ -610,7 +608,6 @@ export default function HomePage() {
           {/* The footer is the one nav that survives every breakpoint, so the
               docs and API paths live here as well as in the (desktop-only) nav. */}
           <nav className="dp-footer__links" aria-label="Footer navigation">
-            <Link href="/demo" className="dp-footer__link">Live demo</Link>
             <Link href="/docs" className="dp-footer__link">Docs</Link>
             <Link href="/docs/api-reference/authentication" className="dp-footer__link">API reference</Link>
             <Link href="/login" className="dp-footer__link">Sign in</Link>
