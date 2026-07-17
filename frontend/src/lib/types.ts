@@ -39,13 +39,6 @@ export interface SchemaProfile {
   tables: TableProfile[];
 }
 
-export interface RetrievedTable {
-  schema: string;
-  name: string;
-  score: number;
-  viaForeignKey: boolean;
-}
-
 // --- Query / presentation (Day 5) -------------------------------------------
 
 export type FieldKind = "numeric" | "date" | "boolean" | "text";

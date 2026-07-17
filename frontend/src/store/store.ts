@@ -3,7 +3,6 @@ import { apiKeysReducer } from "@/features/apikeys/apikeys.slice";
 import { authReducer } from "@/features/auth/auth.slice";
 import { connectionsReducer } from "@/features/connections/connections.slice";
 import { queryReducer } from "@/features/query/query.slice";
-import { retrievalReducer } from "@/features/retrieval/retrieval.slice";
 
 // A factory, not a module-level singleton: Next renders on the server, and a
 // shared store would leak one request's state into another's.
@@ -13,7 +12,6 @@ export const makeStore = () =>
       auth: authReducer,
       connections: connectionsReducer,
       query: queryReducer,
-      retrieval: retrievalReducer,
       apikeys: apiKeysReducer,
     },
     // configureStore installs redux-thunk by default — that's the middleware

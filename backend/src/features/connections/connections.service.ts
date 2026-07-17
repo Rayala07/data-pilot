@@ -13,11 +13,10 @@ import {
   pickDateRangeTarget,
 } from "../../engine/present/summary";
 import { getEmbeddingProvider, getLLMProvider } from "../../engine/providers/openaiCompatible";
-import { enrichSchemaProfile, retrieveTables } from "../../engine/retrieval";
+import { enrichSchemaProfile } from "../../engine/retrieval";
 import type {
   ConnectionSummary,
   Result,
-  RetrievedTable,
   SchemaProfile,
   TableProfile,
 } from "../../engine/types";
@@ -170,21 +169,4 @@ function toIsoDate(value: unknown): string | null {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(String(value));
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
-// Day 2 debug: which tables does retrieval pick for a question, and with what
-// scores. Reads the stored (already-embedded) profile — no user-DB access.
-export async function retrieveForQuestion(
-  connectionId: string,
-  question: string
-): Promise<Result<RetrievedTable[], "embedding_error" | "not_scanned">> {
-  const stored = await repo.getSchemaProfile(connectionId);
-  if (!stored) return { ok: false, reason: "not_scanned", detail: "This connection has not been scanned yet" };
-
-  const profile: SchemaProfile = {
-    connectionId,
-    scannedAt: stored.scannedAt.toISOString(),
-    tables: stored.tables as unknown as TableProfile[],
-  };
-  return retrieveTables(question, profile, getEmbeddingProvider());
 }

@@ -97,9 +97,6 @@ export function ConnectionOverview({ connectionId }: { connectionId: string }) {
         actions={
           <>
             <Button onClick={() => router.push(`/connections/${connectionId}/query`)}>Ask a question</Button>
-            <Button variant="secondary" onClick={() => router.push(`/connections/${connectionId}/retrieve`)}>
-              Retrieval debug
-            </Button>
             <Button variant="secondary" loading={isLoading(rescan)} onClick={handleRescan}>
               Rescan
             </Button>

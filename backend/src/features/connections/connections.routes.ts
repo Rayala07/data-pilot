@@ -5,7 +5,7 @@ import { friendlyConnectionError } from "./connections.errors";
 import * as repo from "./connections.repository";
 import * as service from "./connections.service";
 import type { ConnectionListItem } from "./connections.types";
-import { validateCreateConnection, validateQuestion } from "./connections.validation";
+import { validateCreateConnection } from "./connections.validation";
 
 export const connectionsRouter = Router();
 connectionsRouter.use(requireAuth);
@@ -81,30 +81,6 @@ connectionsRouter.get("/:id/summary", async (req, res) => {
   }
 
   res.json(result.value);
-});
-
-// Day 2 debug: show which tables retrieval selects for a question, with scores.
-connectionsRouter.post("/:id/retrieve", async (req, res) => {
-  const parsed = validateQuestion(req.body);
-  if (!parsed.ok) {
-    res.status(400).json({ error: parsed.error });
-    return;
-  }
-
-  const connection = await repo.getOwnedConnection(req.userId!, req.params.id);
-  if (!connection) {
-    res.status(404).json({ error: "Connection not found" });
-    return;
-  }
-
-  const result = await service.retrieveForQuestion(connection.id, parsed.value.question);
-  if (!result.ok) {
-    const status = result.reason === "not_scanned" ? 404 : 502;
-    res.status(status).json({ error: result.detail });
-    return;
-  }
-
-  res.json({ question: parsed.value.question, tables: result.value });
 });
 
 connectionsRouter.post("/:id/rescan", async (req, res) => {
