@@ -27,11 +27,11 @@ the web app renders.
 />
 
 ```bash title="Request"
-curl -X POST https://datapilot.example.com/v1/query \
+curl https://data-pilot-backend-service.onrender.com/v1/query \
   -H "Authorization: Bearer $DP_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "connectionId": "3f2c…",
+    "connectionId": "CONNECTION_ID",
     "question": "top 5 products by revenue last month"
   }'
 ```

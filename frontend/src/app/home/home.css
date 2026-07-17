@@ -919,6 +919,48 @@
   margin: 0;
 }
 
+/* ── API / developers ──────────────────────────────────────────────────────── */
+/* The terminal body. .dp-mockup__bar/.dp-dot already supply the window chrome,
+   so only the code surface is new here. Matches .dp-loop__sql's treatment:
+   mono token, 0.75rem, --fg-muted on --surface. */
+.dp-api-code {
+  margin: 0;
+  padding: 1.25rem;
+  background: var(--surface);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  line-height: 1.85;
+  color: var(--fg-muted);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Syntax colours reuse the chart palette, so code, charts and brand stay one
+   system (--series-1 is the brand hue by design). */
+.dp-api-code__cmd {
+  color: var(--fg);
+  font-weight: 600;
+}
+.dp-api-code__flag {
+  color: var(--series-1);
+}
+.dp-api-code__str {
+  color: var(--series-2);
+}
+.dp-api-code__muted {
+  color: var(--fg-subtle);
+}
+
+/* Left-aligned CTA for split sections (.dp-hero__cta centres, so it can't be
+   reused here). Centres itself when the split stacks at <=1024px. */
+.dp-split__cta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.75rem;
+}
+
 /* ── Testimonials ──────────────────────────────────────────────────────────── */
 .dp-testimonials {
   display: grid;

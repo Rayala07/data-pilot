@@ -37,7 +37,7 @@ In the app, open **Connections → Add a connection** and paste the connection
 string for that role:
 
 ```
-postgresql://datapilot_readonly:PASSWORD@HOST:5432/DATABASE
+postgresql://datapilot_readonly:YOUR_PASSWORD@YOUR_HOST:5432/YOUR_DATABASE
 ```
 
 DataPilot introspects the schema and builds its retrieval index. This takes a
@@ -72,17 +72,17 @@ once.
 ### Register a connection
 
 ```bash
-curl -X POST https://datapilot.example.com/v1/connections \
+curl https://data-pilot-backend-service.onrender.com/v1/connections \
   -H "Authorization: Bearer $DP_KEY" \
   -H "Content-Type: application/json" \
-  -d '{ "name": "Analytics", "connectionString": "postgresql://readonly:***@host:5432/app" }'
+  -d '{ "name": "Analytics", "connectionString": "postgresql://datapilot_readonly:YOUR_PASSWORD@YOUR_HOST:5432/YOUR_DATABASE" }'
 ```
 </Step>
 <Step>
 ### Ask a question
 
 ```bash
-curl -X POST https://datapilot.example.com/v1/query \
+curl https://data-pilot-backend-service.onrender.com/v1/query \
   -H "Authorization: Bearer $DP_KEY" \
   -H "Content-Type: application/json" \
   -d '{ "connectionId": "CONNECTION_ID", "question": "top 5 products by revenue" }'

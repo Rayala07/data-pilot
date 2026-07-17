@@ -202,13 +202,61 @@ function LoopMockup() {
 }
 
 /* ── Page ─────────────────────────────────────────────────────────────────── */
+/**
+ * The public API, shown the way a developer meets it: a request and what comes
+ * back. Kept in step with the quickstart in content/docs/quickstart.mdx — the
+ * Content-Type header is not decoration, express.json() ignores the body
+ * without it.
+ */
+function ApiMockup() {
+  return (
+    <div className="dp-mockup" role="img" aria-label="An example DataPilot API request and its JSON response">
+      <div className="dp-mockup__bar">
+        <span className="dp-dot dp-dot--red" />
+        <span className="dp-dot dp-dot--yellow" />
+        <span className="dp-dot dp-dot--green" />
+        <span className="dp-mockup__title">your-backend</span>
+      </div>
+      <pre className="dp-api-code">
+        <code>
+          <span className="dp-api-code__cmd">curl</span>
+          {" $DATAPILOT_URL/v1/query \\\n  "}
+          <span className="dp-api-code__flag">-H</span>
+          {" "}
+          <span className="dp-api-code__str">{'"Authorization: Bearer $DP_KEY"'}</span>
+          {" \\\n  "}
+          <span className="dp-api-code__flag">-H</span>
+          {" "}
+          <span className="dp-api-code__str">{'"Content-Type: application/json"'}</span>
+          {" \\\n  "}
+          <span className="dp-api-code__flag">-d</span>
+          {" "}
+          <span className="dp-api-code__str">
+            {'\'{ "connectionId": "4f9a1c72...", "question": "top 5 products by revenue" }\''}
+          </span>
+          {"\n\n"}
+          <span className="dp-api-code__muted">{"# 200 OK"}</span>
+          {"\n"}
+          {`{
+  "rows":  [{ "product": "Aurora Lamp", "revenue": "48210.00" }],
+  "chart": { "type": "bar", "xField": "product", "yField": "revenue" },
+  "sql":   "SELECT p.prod_title AS product, SUM(ol.line_total) ...",
+  "usage": { "attemptsUsed": 1 }
+}`}
+        </code>
+      </pre>
+    </div>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="dp-page">
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <header className="dp-nav">
         <div className="dp-nav__inner">
-          <Link href="/" className="dp-logo" aria-label="DataPilot home">
+          {/* /home, not "/": "/" bounces a signed-out visitor straight back here. */}
+          <Link href="/home" className="dp-logo" aria-label="DataPilot home">
             <span className="dp-logo__icon" aria-hidden="true">⬡</span>
             <span className="dp-logo__text">DataPilot</span>
           </Link>
@@ -216,6 +264,8 @@ export default function HomePage() {
             <a href="#how-it-works" className="dp-nav__link">How it works</a>
             <a href="#features" className="dp-nav__link">Features</a>
             <a href="#security" className="dp-nav__link">Security</a>
+            <a href="#api" className="dp-nav__link">API</a>
+            <Link href="/docs" className="dp-nav__link">Docs</Link>
           </nav>
           <div className="dp-nav__actions">
             <Link href="/login" className="dp-btn dp-btn--ghost">Sign in</Link>
@@ -250,8 +300,10 @@ export default function HomePage() {
                 Connect your database
                 <IconArrow />
               </Link>
-              <Link href="/login" className="dp-btn dp-btn--ghost dp-btn--lg">
-                Sign in
+              {/* The zero-friction way in: a sandbox with a database already
+                  connected, no signup. "Sign in" is already in the nav. */}
+              <Link href="/demo" className="dp-btn dp-btn--ghost dp-btn--lg">
+                Try the live demo
               </Link>
             </div>
 
@@ -459,6 +511,41 @@ export default function HomePage() {
         </section>
 
 
+        {/* ── For developers / public API ───────────────────────────────── */}
+        <section className="dp-section" id="api" aria-labelledby="api-heading">
+          <div className="dp-container dp-container--split">
+            <div className="dp-split__text">
+              <span className="dp-eyebrow">For developers</span>
+              <h2 id="api-heading" className="dp-section__title dp-section__title--left">
+                The same engine, from your own backend.
+              </h2>
+              <p className="dp-section__sub dp-section__sub--left">
+                Everything the app does is a REST API. Register a database once, then POST a question and get the rows,
+                a chart spec, a plain-English explanation and the exact SQL back as JSON - retrieval, validation and the
+                self-correction loop included. Build DataPilot into your own product instead of sending people to ours.
+              </p>
+              <ul className="dp-feature-list">
+                <li><IconCheck /><span>Authenticated by API keys - your servers never touch a password or a session</span></li>
+                <li><IconCheck /><span>Keys are hashed at rest, scoped to their owner, and revocable in one click</span></li>
+                <li><IconCheck /><span>One predictable error shape, per-key rate limits, and the full attempt trail</span></li>
+                <li><IconCheck /><span>The same read-only guarantees the app runs on - a question can never write</span></li>
+              </ul>
+              <div className="dp-split__cta">
+                <Link href="/docs/api-reference/authentication" className="dp-btn dp-btn--primary">
+                  Read the API reference
+                  <IconArrow />
+                </Link>
+                <Link href="/docs/quickstart" className="dp-btn dp-btn--ghost">
+                  Quickstart
+                </Link>
+              </div>
+            </div>
+            <div className="dp-split__visual">
+              <ApiMockup />
+            </div>
+          </div>
+        </section>
+
         {/* ── User journey ──────────────────────────────────────────────── */}
         <section className="dp-section dp-section--alt" aria-labelledby="journey-heading">
           <div className="dp-container">
@@ -515,12 +602,17 @@ export default function HomePage() {
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className="dp-footer">
         <div className="dp-footer__inner">
-          <Link href="/" className="dp-logo dp-logo--footer" aria-label="DataPilot home">
+          <Link href="/home" className="dp-logo dp-logo--footer" aria-label="DataPilot home">
             <span className="dp-logo__icon" aria-hidden="true">⬡</span>
             <span className="dp-logo__text">DataPilot</span>
           </Link>
           <p className="dp-footer__copy">© {new Date().getFullYear()} DataPilot. Talk to your data.</p>
+          {/* The footer is the one nav that survives every breakpoint, so the
+              docs and API paths live here as well as in the (desktop-only) nav. */}
           <nav className="dp-footer__links" aria-label="Footer navigation">
+            <Link href="/demo" className="dp-footer__link">Live demo</Link>
+            <Link href="/docs" className="dp-footer__link">Docs</Link>
+            <Link href="/docs/api-reference/authentication" className="dp-footer__link">API reference</Link>
             <Link href="/login" className="dp-footer__link">Sign in</Link>
             <Link href="/signup" className="dp-footer__link">Sign up</Link>
           </nav>

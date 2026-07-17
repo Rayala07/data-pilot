@@ -33,18 +33,18 @@ per connection.
 />
 
 ```bash title="Request"
-curl -X POST https://datapilot.example.com/v1/connections \
+curl https://data-pilot-backend-service.onrender.com/v1/connections \
   -H "Authorization: Bearer $DP_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Production analytics",
-    "connectionString": "postgresql://readonly:***@db.example.com:5432/app"
+    "connectionString": "postgresql://datapilot_readonly:YOUR_PASSWORD@YOUR_HOST:5432/YOUR_DATABASE"
   }'
 ```
 
 ```json title="201 Created"
 {
-  "connectionId": "3f2c…",
+  "connectionId": "4f9a1c72-8b3e-4d21-9c0a-6e5b2d7f1a83",
   "name": "Production analytics",
   "tableCount": 8
 }
@@ -61,14 +61,14 @@ GET /v1/connections
 ```
 
 ```bash title="Request"
-curl https://datapilot.example.com/v1/connections \
+curl https://data-pilot-backend-service.onrender.com/v1/connections \
   -H "Authorization: Bearer $DP_KEY"
 ```
 
 ```json title="200 OK"
 [
   {
-    "id": "3f2c…",
+    "id": "4f9a1c72-8b3e-4d21-9c0a-6e5b2d7f1a83",
     "name": "Production analytics",
     "tableCount": 8,
     "scannedAt": "2026-01-12T09:30:00.000Z"
@@ -86,7 +86,7 @@ Removes the connection and its stored schema profile and query logs. A foreign
 or unknown id returns **404** (tenancy is enforced by scoping to the key owner).
 
 ```bash title="Request"
-curl -X DELETE https://datapilot.example.com/v1/connections/3f2c… \
+curl -X DELETE https://data-pilot-backend-service.onrender.com/v1/connections/CONNECTION_ID \
   -H "Authorization: Bearer $DP_KEY"
 ```
 

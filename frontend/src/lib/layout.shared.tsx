@@ -1,7 +1,8 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
-// Shared nav/branding for every Fumadocs layout. "Open app" links back to the
-// main app at the same origin - the mirror of the "Docs" link in the app nav.
+// Shared nav/branding for every Fumadocs layout. The route back to the app is
+// NOT configured here: DocsLayout ignores BaseLayoutProps.links entirely, so it
+// is rendered as a sidebar slot in app/docs/layout.tsx instead.
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
@@ -29,13 +30,6 @@ export function baseOptions(): BaseLayoutProps {
       ),
       url: "/docs",
     },
-    links: [
-      {
-        text: "Open app",
-        url: "/",
-        active: "none",
-      },
-    ],
     githubUrl: "https://github.com/Rayala07/data-pilot",
   };
 }

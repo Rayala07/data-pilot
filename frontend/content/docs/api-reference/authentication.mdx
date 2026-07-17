@@ -8,7 +8,7 @@ from the web app's login sessions, so your servers never handle a user password
 or manage a session.
 
 ```text
-Base URL   https://datapilot.example.com
+Base URL   https://data-pilot-backend-service.onrender.com
 ```
 
 ## Get a key
@@ -40,7 +40,7 @@ control.
 Send it as a bearer token on every `/v1` request:
 
 ```bash
-curl https://datapilot.example.com/v1/connections \
+curl https://data-pilot-backend-service.onrender.com/v1/connections \
   -H "Authorization: Bearer dp_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
