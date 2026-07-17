@@ -36,7 +36,7 @@ function NavLink({ href, children }: { href: string; children: ReactNode }) {
 }
 
 /**
- * Shown only for demo-sandbox sessions (the JWT carries a `demo` claim — an
+ * Shown only for demo-sandbox sessions (the JWT carries a `demo` claim - an
  * unverified read, fine for UI). The signup CTA must clear the demo token
  * first, or RequireGuest would bounce the visitor straight back into the app.
  */
@@ -48,7 +48,7 @@ function DemoBanner() {
     <div className="border-b border-line bg-warning-surface">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-2">
         <p className="text-xs text-warning">
-          <span className="font-semibold">Demo sandbox</span> — a sample e-commerce database, isolated to you. Data
+          <span className="font-semibold">Demo sandbox</span> - a sample e-commerce database, isolated to you. Data
           resets after 24 hours.
         </p>
         <button

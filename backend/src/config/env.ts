@@ -2,7 +2,7 @@
 //
 // Every secret is read lazily at the point of use (getLLMProvider, signToken,
 // encrypt), which means a service with no secrets at all still boots, answers
-// /health with 200, and gets marked live by the platform — then 500s the first
+// /health with 200, and gets marked live by the platform - then 500s the first
 // time someone signs up or connects a database. Checking at startup turns a
 // silent bad deploy into a loud one.
 //
@@ -21,7 +21,7 @@ export function validateEnv(env: Env = process.env): string[] {
   const isProduction = env.NODE_ENV === "production";
 
   const required = (key: string, hint?: string) => {
-    if (!present(env[key])) problems.push(`${key} is required${hint ? ` — ${hint}` : ""}`);
+    if (!present(env[key])) problems.push(`${key} is required${hint ? ` - ${hint}` : ""}`);
   };
 
   // --- app database ---
@@ -40,7 +40,7 @@ export function validateEnv(env: Env = process.env): string[] {
 
   required("ENCRYPTION_KEY");
   if (present(env.ENCRYPTION_KEY) && !HEX_64.test(env.ENCRYPTION_KEY)) {
-    problems.push("ENCRYPTION_KEY must be 64 hex characters (32 bytes) — generate with: openssl rand -hex 32");
+    problems.push("ENCRYPTION_KEY must be 64 hex characters (32 bytes) - generate with: openssl rand -hex 32");
   }
 
   // --- providers ---
@@ -68,7 +68,7 @@ export function validateEnv(env: Env = process.env): string[] {
     // This hook deliberately corrupts a column name in the SQL prompt to demo
     // the self-correction loop. In production it would poison real queries.
     if (present(env.DEV_POISON_COLUMN)) {
-      problems.push("DEV_POISON_COLUMN must not be set in production — it corrupts a column name in the SQL prompt");
+      problems.push("DEV_POISON_COLUMN must not be set in production - it corrupts a column name in the SQL prompt");
     }
   }
 
@@ -79,7 +79,7 @@ export function validateEnv(env: Env = process.env): string[] {
 export function envWarnings(env: Env = process.env): string[] {
   const warnings: string[] = [];
   if (env.NODE_ENV !== "production") {
-    warnings.push("NODE_ENV is not 'production' — CORS accepts any localhost origin. Set it before deploying.");
+    warnings.push("NODE_ENV is not 'production' - CORS accepts any localhost origin. Set it before deploying.");
   }
   return warnings;
 }
@@ -92,7 +92,7 @@ export function assertEnv(): void {
   if (problems.length === 0) return;
 
   console.error(
-    ["Refusing to start — the environment is not configured:", ...problems.map((p) => `  • ${p}`), ""].join("\n")
+    ["Refusing to start - the environment is not configured:", ...problems.map((p) => `  • ${p}`), ""].join("\n")
   );
   process.exit(1);
 }

@@ -13,7 +13,7 @@ import { useAppSelector } from "@/store/hooks";
  * on `token === null` before hydration would bounce a signed-in user to /login
  * on every hard refresh.
  *
- * Neither guard renders its children while a redirect is pending — otherwise a
+ * Neither guard renders its children while a redirect is pending - otherwise a
  * protected page would flash its contents, and would fire its data-fetching
  * effects, before navigating away.
  */

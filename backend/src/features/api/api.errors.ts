@@ -1,6 +1,6 @@
 // The single error shape for every /v1 response. Keeping construction in one
 // place guarantees consistency and makes it impossible to accidentally leak an
-// internal message or stack — callers pass a stable code and a safe message.
+// internal message or stack - callers pass a stable code and a safe message.
 
 export type ApiErrorCode =
   | "bad_request"

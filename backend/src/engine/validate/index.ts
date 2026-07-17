@@ -1,7 +1,7 @@
 // Validate: AST-based, never regex (decision D4). A candidate query is allowed
 // only if its AST root is a single pure SELECT and every table/column it
-// references exists in the SchemaProfile. This is a whitelist — anything not
-// explicitly permitted is rejected — and it runs BEFORE execution (D6) so
+// references exists in the SchemaProfile. This is a whitelist - anything not
+// explicitly permitted is rejected - and it runs BEFORE execution (D6) so
 // hallucinated identifiers are caught cheaply and named in the failure detail.
 
 import { Parser } from "node-sql-parser";
@@ -60,7 +60,7 @@ function collectAliases(node: unknown, out: Set<string>, depth = 0): void {
 }
 
 // Names produced by a CTE (its output columns) are valid to reference in the
-// outer query even though they aren't base-table columns — collect them so the
+// outer query even though they aren't base-table columns - collect them so the
 // column-existence check doesn't flag them as hallucinated.
 function collectCteOutputs(cte: LooseCte): string[] {
   const names = new Set<string>();
@@ -105,7 +105,7 @@ export function validateSql(sql: string, profile: SchemaProfile): ValidateOutcom
     };
   }
 
-  // 4. Any CTE must itself be a SELECT — reject data-modifying CTEs
+  // 4. Any CTE must itself be a SELECT - reject data-modifying CTEs
   // (`WITH x AS (DELETE ... RETURNING ...) ...`). CTE names are excluded from
   // the table-existence check below since they aren't real tables.
   const cteNames = new Set<string>();
@@ -170,7 +170,7 @@ export function validateSql(sql: string, profile: SchemaProfile): ValidateOutcom
 
     if (qualifier && qualifier !== "null") {
       const qLow = qualifier.toLowerCase();
-      if (cteNames.has(qLow)) continue; // column off a CTE output — unverifiable, allow
+      if (cteNames.has(qLow)) continue; // column off a CTE output - unverifiable, allow
       const set = columnsByTable.get(qLow);
       if (set && !set.has(colLow)) missingCols.push(`${qualifier}.${column}`);
     } else {

@@ -1,4 +1,4 @@
-// Every query attempt is logged to the app DB (D11) — this table is the sole
+// Every query attempt is logged to the app DB (D11) - this table is the sole
 // data source for the Day 6 benchmark, so it's written from the very first
 // end-to-end query, not retrofitted later.
 
@@ -34,14 +34,14 @@ export function writeQueryLog(input: QueryLogInput) {
   });
 }
 
-/** Scoped by userId — a global count would leak other tenants' activity. */
+/** Scoped by userId - a global count would leak other tenants' activity. */
 export function countQueryLogs(userId: string): Promise<number> {
   return prisma.queryLog.count({ where: { userId } });
 }
 
 /**
  * The demo query cap's ledger. Every attempt is already logged for the
- * benchmark (D11), so rate limiting is a count over existing data — no new
+ * benchmark (D11), so rate limiting is a count over existing data - no new
  * bookkeeping. Counts attempts, not questions: retries cost LLM calls too.
  */
 export function countQueryLogsSince(userId: string, since: Date): Promise<number> {

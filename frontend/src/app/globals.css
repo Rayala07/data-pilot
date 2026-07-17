@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Fumadocs theme for the /docs section. Its base rules live in @layer base, so
-   the app's own unlayered `body` rule below still wins — the app's look is
+   the app's own unlayered `body` rule below still wins - the app's look is
    unchanged. The fd-* variables and classes it adds are namespaced. */
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
@@ -34,7 +34,7 @@
   --line: #e4e4e7;
   --line-strong: #d4d4d8;
 
-  /* Brand — the same hue as chart series 1, so the product reads as one system */
+  /* Brand - the same hue as chart series 1, so the product reads as one system */
   --brand: #2a78d6;
   --brand-hover: #256abf;
   --brand-fg: #ffffff;
@@ -54,7 +54,7 @@
   --viz-axis: #d4d4d8;
   --viz-muted: #71717a;
 
-  /* Categorical series — fixed order, never cycled */
+  /* Categorical series - fixed order, never cycled */
   --series-1: #2a78d6;
   --series-2: #1baf7a;
   --series-3: #eda100;

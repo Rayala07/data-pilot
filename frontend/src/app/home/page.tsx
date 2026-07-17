@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import "./home.css";
 
 export const metadata: Metadata = {
-  title: "DataPilot — Ask Your Database Anything",
+  title: "DataPilot - Ask Your Database Anything",
   description:
-    "Connect your PostgreSQL database and ask questions in plain English. DataPilot translates your question into verified SQL, executes it safely, and renders the result as a chart — all in seconds.",
+    "Connect your PostgreSQL database and ask questions in plain English. DataPilot translates your question into verified SQL, executes it safely, and renders the result as a chart - all in seconds.",
 };
 
 /* ── Inline SVG icons ─────────────────────────────────────────────────────── */
@@ -242,7 +242,7 @@ export default function HomePage() {
             <p className="dp-hero__sub">
               Connect a PostgreSQL database. Type a question in plain English.
               DataPilot translates it into verified SQL, executes it safely,
-              and renders the result as a chart — in seconds.
+              and renders the result as a chart - in seconds.
             </p>
 
             <div className="dp-hero__cta">
@@ -280,7 +280,7 @@ export default function HomePage() {
                 Your data is locked behind SQL.
               </h2>
               <p className="dp-section__sub">
-                Every time a non-technical stakeholder needs a number, they open a Slack thread. Every time a developer needs a quick answer, they context-switch to a SQL editor. The bottleneck isn't the database — it's the language barrier.
+                Every time a non-technical stakeholder needs a number, they open a Slack thread. Every time a developer needs a quick answer, they context-switch to a SQL editor. The bottleneck isn't the database - it's the language barrier.
               </p>
             </div>
 
@@ -364,13 +364,13 @@ export default function HomePage() {
                 It doesn't give up on the first try.
               </h2>
               <p className="dp-section__sub dp-section__sub--left">
-                Most AI SQL tools hallucinate a query and silently fail. DataPilot runs a structured self-correction loop — each failed attempt feeds back into the next with the exact error, the real column list, and the schema context. The result: answers, not apologies.
+                Most AI SQL tools hallucinate a query and silently fail. DataPilot runs a structured self-correction loop - each failed attempt feeds back into the next with the exact error, the real column list, and the schema context. The result: answers, not apologies.
               </p>
               <ul className="dp-feature-list">
                 <li><IconCheck /><span>Detects hallucinated table and column names</span></li>
                 <li><IconCheck /><span>Validates SQL against the real schema before execution</span></li>
                 <li><IconCheck /><span>Blocks all non-SELECT queries at the security layer</span></li>
-                <li><IconCheck /><span>Full attempt audit trail — you see every retry</span></li>
+                <li><IconCheck /><span>Full attempt audit trail - you see every retry</span></li>
               </ul>
             </div>
             <div className="dp-split__visual">
@@ -392,12 +392,12 @@ export default function HomePage() {
                 {
                   icon: <IconSparkle />,
                   title: "Semantic table retrieval",
-                  desc: "Uses embeddings to find the exact tables relevant to your question — even across databases with dozens of tables and cryptic names.",
+                  desc: "Uses embeddings to find the exact tables relevant to your question - even across databases with dozens of tables and cryptic names.",
                 },
                 {
                   icon: <IconChart />,
                   title: "Auto-chart selection",
-                  desc: "Chart type is determined by result shape — deterministically. A bar chart when comparing categories. A line when trending over time. Never a random guess.",
+                  desc: "Chart type is determined by result shape - deterministically. A bar chart when comparing categories. A line when trending over time. Never a random guess.",
                 },
                 {
                   icon: <IconRefresh />,
@@ -407,7 +407,7 @@ export default function HomePage() {
                 {
                   icon: <IconDatabase />,
                   title: "Business-language schema summary",
-                  desc: "Connect a database and DataPilot tells you what it's about in plain English — entities, row counts, date ranges, and suggested questions.",
+                  desc: "Connect a database and DataPilot tells you what it's about in plain English - entities, row counts, date ranges, and suggested questions.",
                 },
                 {
                   icon: <IconShield />,
@@ -417,7 +417,7 @@ export default function HomePage() {
                 {
                   icon: <IconLock />,
                   title: "Encrypted credentials",
-                  desc: "Connection strings are AES-256 encrypted at rest. The plaintext is never stored or logged — decrypted only in memory, only when needed.",
+                  desc: "Connection strings are AES-256 encrypted at rest. The plaintext is never stored or logged - decrypted only in memory, only when needed.",
                 },
               ].map((f) => (
                 <article key={f.title} className="dp-feature-card">
@@ -444,9 +444,9 @@ export default function HomePage() {
             <div className="dp-security-grid">
               {[
                 { title: "AES-256 encryption", desc: "Connection strings encrypted at rest. Decrypted in memory only during query execution." },
-                { title: "Read-only sessions", desc: "Queries run on a read-only session. No INSERT, UPDATE, DELETE, DROP — ever." },
+                { title: "Read-only sessions", desc: "Queries run on a read-only session. No INSERT, UPDATE, DELETE, DROP - ever." },
                 { title: "SELECT enforcement", desc: "A security layer validates every generated query before it touches your database." },
-                { title: "Credential verification", desc: "DataPilot checks whether your credential has write access and warns you if it does — and guides you to downgrade it." },
+                { title: "Credential verification", desc: "DataPilot checks whether your credential has write access and warns you if it does - and guides you to downgrade it." },
               ].map((s) => (
                 <div key={s.title} className="dp-security-card">
                   <div className="dp-security-card__icon"><IconShield /></div>
@@ -500,7 +500,7 @@ export default function HomePage() {
             </p>
             <div className="dp-cta__actions">
               <Link href="/signup" className="dp-btn dp-btn--primary dp-btn--lg dp-btn--light">
-                Get started — it&apos;s free
+                Get started - it&apos;s free
                 <IconArrow />
               </Link>
               <Link href="/login" className="dp-btn dp-btn--ghost-light dp-btn--lg">

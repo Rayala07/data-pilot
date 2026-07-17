@@ -12,7 +12,7 @@ specific failure mode, and the whole thing is wrapped in a self-correction loop.
 
 DataPilot embeds your question and compares it against an embedding of every
 table (built from its name, columns, sample values, and a generated
-description). Only the handful of tables relevant to the question move forward —
+description). Only the handful of tables relevant to the question move forward -
 the model never sees your entire schema, which keeps prompts small and answers
 focused.
 </Step>
@@ -28,7 +28,7 @@ included too.
 
 The SQL is parsed to an abstract syntax tree. It's accepted only if the root is
 a single `SELECT` **and** every table and column it references actually exists.
-Anything else is rejected here — before it can run.
+Anything else is rejected here - before it can run.
 </Step>
 <Step>
 ### Execution
@@ -42,7 +42,7 @@ feedback.
 
 A chart type is chosen deterministically from the result's shape, a short
 natural-language explanation is written, and the executed SQL is returned
-alongside — never hidden.
+alongside - never hidden.
 </Step>
 </Steps>
 
@@ -59,13 +59,13 @@ The stages above form a loop, not a straight line.
                                                      (up to 3 attempts)
 ```
 
-When validation or execution fails, the failure — **including the real column
-names** when the model hallucinated one — is fed back into the next generation
+When validation or execution fails, the failure - **including the real column
+names** when the model hallucinated one - is fed back into the next generation
 attempt. Naming the available columns is what makes retries actually converge
 instead of guessing again.
 
 <Callout type="info">
-  A `SELECT` that returns **zero rows is a success**, not a failure — it's a
+  A `SELECT` that returns **zero rows is a success**, not a failure - it's a
   real answer, and the loop never retries it.
 </Callout>
 
@@ -77,5 +77,5 @@ one attempt means the engine fixed its own mistake.
 A database can have hundreds of tables. Sending all of them to the model on
 every question is slow, expensive, and dilutes the context. DataPilot indexes
 the schema once at connect time and, per question, retrieves only what's
-relevant — plus any tables joined to those by a foreign key, so joins still
+relevant - plus any tables joined to those by a foreign key, so joins still
 work.

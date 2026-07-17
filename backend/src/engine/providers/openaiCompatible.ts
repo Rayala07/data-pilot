@@ -76,7 +76,7 @@ class OpenAICompatibleEmbeddings implements EmbeddingProvider {
   }
 }
 
-// Lazily constructed singletons — env isn't read until first use, so importing
+// Lazily constructed singletons - env isn't read until first use, so importing
 // the module doesn't require the vars to be set (keeps Day 1 routes bootable).
 let llm: LLMProvider | undefined;
 let embeddings: EmbeddingProvider | undefined;

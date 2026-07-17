@@ -1,5 +1,5 @@
 // Design-system primitives. Everything here speaks in semantic tokens
-// (bg-surface, text-fg-muted, border-line) — never raw colours — so a theme
+// (bg-surface, text-fg-muted, border-line) - never raw colours - so a theme
 // change is a token edit, not a sweep through feature code.
 
 "use client";

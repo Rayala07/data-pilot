@@ -35,7 +35,7 @@ export const fetchProfile = createApiThunk<UserProfile>("auth/fetchProfile", () 
 
 export interface DemoSession {
   token: string;
-  /** The cloned seed connection — the page lands the visitor directly on it. */
+  /** The cloned seed connection - the page lands the visitor directly on it. */
   connectionId: string;
 }
 

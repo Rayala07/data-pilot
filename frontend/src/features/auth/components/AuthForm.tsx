@@ -9,12 +9,12 @@ import { clearError } from "../auth.slice";
 import { login, signup } from "../auth.thunks";
 
 /**
- * One component for both screens — the only differences are the thunk, the
+ * One component for both screens - the only differences are the thunk, the
  * copy, and the link. Loading and error come straight from the auth slice, so
  * there is no local `useState` for either.
  *
- * No redirect here: a successful thunk sets `auth.token`, and RequireGuest —
- * which wraps this route group — navigates away. Redirect logic lives in one place.
+ * No redirect here: a successful thunk sets `auth.token`, and RequireGuest -
+ * which wraps this route group - navigates away. Redirect logic lives in one place.
  */
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const dispatch = useAppDispatch();

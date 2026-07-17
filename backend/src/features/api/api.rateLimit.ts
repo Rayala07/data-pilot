@@ -1,13 +1,13 @@
 // Per-API-key rate limiting for /v1, as Express middleware.
 //
 // In-memory fixed windows, keyed by apiKeyId. This app runs as a single
-// instance, and the counters are deliberately simple — no Redis, no counter
+// instance, and the counters are deliberately simple - no Redis, no counter
 // table. The accepted tradeoff (matching the existing demo limiter) is that a
 // restart resets the windows; for a public demo API that is fine.
 //
 // Two independent limits:
-//   • per-minute request cap  — every /v1 route
-//   • per-day query cap       — /v1/query only
+//   • per-minute request cap  - every /v1 route
+//   • per-day query cap       - /v1/query only
 // Counting REQUESTS (not QueryLog rows) makes the day-cap exactly "queries per
 // day" rather than "attempts", and keeps it per-key rather than per-user.
 

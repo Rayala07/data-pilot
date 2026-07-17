@@ -1,6 +1,6 @@
 # DataPilot Public API (`/v1`)
 
-Machine-to-machine access to DataPilot's engine — connect a PostgreSQL database
+Machine-to-machine access to DataPilot's engine - connect a PostgreSQL database
 and ask questions in plain English, from your own backend. Authenticated by API
 key, separate from the web app's user sessions.
 
@@ -15,7 +15,7 @@ Base URL: `https://<your-deployment>` (routes are under `/v1`).
 ## Authentication
 
 1. Sign in to the DataPilot web app and open **API keys**.
-2. Create a key. The raw key (`dp_live_…`) is shown **once** — copy it then; it
+2. Create a key. The raw key (`dp_live_…`) is shown **once** - copy it then; it
    is stored only as a hash and can never be retrieved again.
 3. Send it as a bearer token on every `/v1` request:
 
@@ -23,7 +23,7 @@ Base URL: `https://<your-deployment>` (routes are under `/v1`).
 Authorization: Bearer dp_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-A missing, malformed, unknown, or revoked key all return the same `401` — the
+A missing, malformed, unknown, or revoked key all return the same `401` - the
 API never reveals which. Revoke a key from the same page; it stops working
 immediately. A revoked key can then be deleted to remove it from the list
 (deletion is only allowed after revocation, so a live key can't vanish out from
@@ -36,10 +36,10 @@ on `/v1`, and an API key is rejected on the web routes.
 
 ## Endpoints
 
-### `POST /v1/connections` — register a database
+### `POST /v1/connections` - register a database
 
 Opens the database read-only, introspects its schema, and builds the retrieval
-index. This does real work (introspection + embeddings) and may take 20–40s.
+index. This does real work (introspection + embeddings) and may take 20-40s.
 
 ```bash
 curl -X POST https://<host>/v1/connections \
@@ -55,7 +55,7 @@ curl -X POST https://<host>/v1/connections \
 { "connectionId": "3f2c…", "name": "Production analytics", "tableCount": 8 }
 ```
 
-### `GET /v1/connections` — list your connections
+### `GET /v1/connections` - list your connections
 
 ```bash
 curl https://<host>/v1/connections -H "Authorization: Bearer $DP_KEY"
@@ -67,7 +67,7 @@ curl https://<host>/v1/connections -H "Authorization: Bearer $DP_KEY"
 ]
 ```
 
-### `POST /v1/query` — ask a question
+### `POST /v1/query` - ask a question
 
 Runs the full pipeline: relevant-table retrieval → SQL generation → AST
 validation → read-only execution → self-correction (up to 3 attempts) →
@@ -97,9 +97,9 @@ curl -X POST https://<host>/v1/query \
 
 `fields[].kind` is one of `numeric | date | boolean | text`. `chart.type` is one
 of `stat | line | bar | scatter | table`. `attempts` is the self-correction
-trail — more than one entry means the engine recovered from an earlier failure.
+trail - more than one entry means the engine recovered from an earlier failure.
 
-### `DELETE /v1/connections/:id` — remove a connection
+### `DELETE /v1/connections/:id` - remove a connection
 
 Deletes the connection and its stored schema profile and query logs.
 

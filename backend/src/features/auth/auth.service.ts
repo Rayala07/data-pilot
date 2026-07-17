@@ -1,7 +1,7 @@
 // bcryptjs, not bcrypt: the native addon was the only package in the whole
 // backend needing a C++ toolchain (python3/make/g++) to install. The pure-JS
-// implementation produces and verifies the same $2b$ hashes — existing
-// passwords keep working — and costs ~40ms more per hash, on login only.
+// implementation produces and verifies the same $2b$ hashes - existing
+// passwords keep working - and costs ~40ms more per hash, on login only.
 import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import {
@@ -57,7 +57,7 @@ export type DemoResult =
 
 /**
  * Creates an ephemeral demo tenant: a throwaway user with the template
- * connection CLONED in — row copies only. The embeddings and cached summary
+ * connection CLONED in - row copies only. The embeddings and cached summary
  * come along with the SchemaProfile, so no LLM is called and the sandbox is
  * ready in well under a second. Each visitor is a real, isolated tenant; the
  * same row-level scoping that protects paying users protects them too.
@@ -76,7 +76,7 @@ export async function createDemoSession(): Promise<DemoResult> {
   }
 
   // Self-healing: a rescan of the template nulls its cached summary (by
-  // design), and a clone copies that null — every visitor would then pay the
+  // design), and a clone copies that null - every visitor would then pay the
   // LLM-generation wait on landing. Warming here means at most ONE unlucky
   // request regenerates it; everyone after clones a warm cache.
   await getConnectionSummary(template);
@@ -86,7 +86,7 @@ export async function createDemoSession(): Promise<DemoResult> {
   await deleteDemoUsersOlderThan(new Date(Date.now() - DEMO_RETENTION_MS));
 
   if ((await countDemoUsers()) >= DEMO_MAX_LIVE_USERS) {
-    return { ok: false, status: 503, error: "The demo is at capacity right now — try again in a bit" };
+    return { ok: false, status: 503, error: "The demo is at capacity right now - try again in a bit" };
   }
 
   // Nobody ever logs in with this password; it exists to satisfy the schema.

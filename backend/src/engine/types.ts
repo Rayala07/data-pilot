@@ -1,4 +1,4 @@
-// Shared types for all engine/ modules. Engine code is framework-free —
+// Shared types for all engine/ modules. Engine code is framework-free -
 // nothing here may import Express or Prisma.
 
 export interface ColumnProfile {
@@ -41,7 +41,7 @@ export type Result<T, R extends string = FailureReason> = { ok: true; value: T }
 
 // --- Provider interfaces (Day 2) -------------------------------------------
 // The engine depends only on these interfaces, never on a concrete SDK or a
-// provider name — implementations live in engine/providers/ and are wired from
+// provider name - implementations live in engine/providers/ and are wired from
 // env. This is what makes swapping models a config change (decision D10).
 
 export interface LLMMessage {
@@ -95,7 +95,7 @@ export interface QueryResult {
  * Semantic kind of a result column, derived from the Postgres type OID rather
  * than from the value. This matters: node-pg returns `numeric` and `int8`
  * (e.g. COUNT(*), SUM(...)) as JavaScript STRINGS, so inferring the kind from
- * the value would classify every revenue and count column as text — and no
+ * the value would classify every revenue and count column as text - and no
  * chart would ever be selected.
  */
 export type FieldKind = "numeric" | "date" | "boolean" | "text";
@@ -106,7 +106,7 @@ export interface FieldMeta {
 }
 
 /**
- * Chart choice is a function of result shape, not a judgement call — so it's a
+ * Chart choice is a function of result shape, not a judgement call - so it's a
  * deterministic lookup, never an LLM decision (D9). The frontend renders
  * exactly these shapes and nothing else, so a chart type it can't draw can't
  * be hallucinated into existence.
@@ -120,7 +120,7 @@ export type ChartSpec =
 
 export interface Presentation {
   chart: ChartSpec;
-  /** 2–4 sentences. Empty string if the explanation call failed — never fatal. */
+  /** 2-4 sentences. Empty string if the explanation call failed - never fatal. */
   explanation: string;
   /** One line describing what the SQL does. Empty string on failure. */
   sqlDescription: string;
@@ -131,7 +131,7 @@ export interface Presentation {
 export interface EntitySummary {
   /** Human name for an ugly table, e.g. "Orders" from `ord_hdr`. */
   label: string;
-  /** Always taken from the profile's rowEstimate — the LLM never supplies a number. */
+  /** Always taken from the profile's rowEstimate - the LLM never supplies a number. */
   count: number;
   emoji: string;
 }

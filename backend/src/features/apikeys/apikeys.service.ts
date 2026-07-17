@@ -3,7 +3,7 @@
 // The raw key is `dp_live_` + 32 cryptographically random bytes (base64url).
 // We store only its SHA-256 hash and a short non-secret prefix. SHA-256 (not
 // bcrypt) is deliberate: an API key is already high-entropy random, so there is
-// no dictionary to defend against — the property we need is a fast, exact,
+// no dictionary to defend against - the property we need is a fast, exact,
 // indexable lookup on every request, which a salted hash cannot give.
 
 import { createHash, randomBytes } from "node:crypto";

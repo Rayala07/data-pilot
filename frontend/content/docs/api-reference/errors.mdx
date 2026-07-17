@@ -9,7 +9,7 @@ Every `/v1` error uses the same envelope:
 { "error": { "code": "not_found", "message": "Connection not found" } }
 ```
 
-Some errors add fields — a `429` includes `retryAfterSeconds`, and a
+Some errors add fields - a `429` includes `retryAfterSeconds`, and a
 `query_failed` includes the attempt trail.
 
 ## Status codes
@@ -25,7 +25,7 @@ Some errors add fields — a `429` includes `retryAfterSeconds`, and a
 | 500 | `internal` | An unexpected server error. No internal detail is ever exposed. |
 
 <Callout type="info">
-  A cross-tenant request returns **404**, not 403 — the API never confirms that a
+  A cross-tenant request returns **404**, not 403 - the API never confirms that a
   resource exists for someone else.
 </Callout>
 
@@ -33,12 +33,12 @@ Some errors add fields — a `429` includes `retryAfterSeconds`, and a
 
 <Accordions>
   <Accordion title="401 unauthorized">
-    Missing, wrong, or revoked key — all indistinguishable by design. Check the
+    Missing, wrong, or revoked key - all indistinguishable by design. Check the
     `Authorization: Bearer dp_live_…` header and that the key hasn't been revoked.
   </Accordion>
   <Accordion title="422 query_failed">
     The question ran but couldn't be answered safely or correctly. Inspect
-    `failureType` and `attempts` — a `security` failure means the request was
+    `failureType` and `attempts` - a `security` failure means the request was
     refused (e.g. it implied a write); other types mean the model couldn't
     converge on valid SQL. Rephrasing the question usually helps.
   </Accordion>

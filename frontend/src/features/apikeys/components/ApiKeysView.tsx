@@ -29,7 +29,7 @@ function CreatedKeyNotice() {
   return (
     <Alert tone="success" title={`Key "${created.name}" created`}>
       <div className="space-y-2">
-        <p>Copy it now — for your security it won&apos;t be shown again.</p>
+        <p>Copy it now - for your security it won&apos;t be shown again.</p>
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <CodeBlock>{created.key}</CodeBlock>

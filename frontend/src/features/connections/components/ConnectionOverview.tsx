@@ -11,7 +11,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchConnections, fetchSchema, fetchSummary, rescanConnection } from "../connections.thunks";
 import { SchemaTables } from "./SchemaTables";
 
-/** "Jan 2024 – Jun 2026" */
+/** "Jan 2024 - Jun 2026" */
 function formatRange(range: NonNullable<ConnectionSummary["dateRange"]>): string | null {
   const fmt = (iso: string) => {
     const d = new Date(iso);
@@ -19,7 +19,7 @@ function formatRange(range: NonNullable<ConnectionSummary["dateRange"]>): string
   };
   const from = fmt(range.from);
   const to = fmt(range.to);
-  return from && to ? `${from} – ${to}` : null;
+  return from && to ? `${from} - ${to}` : null;
 }
 
 function EntityChip({ entity }: { entity: EntitySummary }) {
@@ -109,7 +109,7 @@ export function ConnectionOverview({ connectionId }: { connectionId: string }) {
       {connection?.canWrite === true && (
         <Alert tone="warning" title="This credential can modify your data">
           DataPilot only ever runs read-only queries, but the credential you gave it is stronger than it needs to be.
-          Consider swapping it for a read-only role — the connect screen shows how.
+          Consider swapping it for a read-only role - the connect screen shows how.
         </Alert>
       )}
 

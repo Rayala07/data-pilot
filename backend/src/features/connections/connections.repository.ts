@@ -1,5 +1,5 @@
 // All app-DB access for the connections feature. getOwnedConnection is the
-// single tenancy choke point every route uses — fetching a Connection by id
+// single tenancy choke point every route uses - fetching a Connection by id
 // alone is a tenancy bug (CLAUDE.md hard rule 6). A miss returns null so the
 // caller can respond 404, never 403 (403 would leak that the id exists).
 
@@ -14,7 +14,7 @@ export function getOwnedConnection(userId: string, connectionId: string): Promis
 /**
  * Deletes a connection the user owns. The SchemaProfile and QueryLog rows go
  * with it via onDelete: Cascade. Returns the affected count so the caller can
- * 404 on a foreign or unknown id — scoped by userId, never by id alone.
+ * 404 on a foreign or unknown id - scoped by userId, never by id alone.
  */
 export async function deleteOwnedConnection(userId: string, connectionId: string): Promise<number> {
   const result = await prisma.connection.deleteMany({ where: { id: connectionId, userId } });
@@ -22,7 +22,7 @@ export async function deleteOwnedConnection(userId: string, connectionId: string
 }
 
 /**
- * Unscoped by design — the ONLY permitted caller is the demo-template lookup,
+ * Unscoped by design - the ONLY permitted caller is the demo-template lookup,
  * where the id comes from operator configuration (DEMO_TEMPLATE_CONNECTION_ID),
  * never from a request. Every request-driven read goes through
  * getOwnedConnection above.
@@ -78,7 +78,7 @@ export async function saveSummary(connectionId: string, summary: object): Promis
   });
 }
 
-/** Scoped by userId — a global count would leak other tenants' activity. */
+/** Scoped by userId - a global count would leak other tenants' activity. */
 export function countConnections(userId: string): Promise<number> {
   return prisma.connection.count({ where: { userId } });
 }
@@ -92,7 +92,7 @@ export async function setCredentialWriteAccess(connectionId: string, canWrite: b
 }
 
 /**
- * Clones a fully-scanned connection into another user's tenant — pure row
+ * Clones a fully-scanned connection into another user's tenant - pure row
  * copies, no LLM calls, no scan of the target database. The expensive
  * artifacts (embeddings inside `tables`, the cached `summary`) already exist,
  * which is what makes demo-sandbox creation sub-second. The encrypted
@@ -103,7 +103,7 @@ export async function cloneConnectionForUser(templateConnectionId: string, newUs
     where: { id: templateConnectionId },
     include: { schemaProfile: true },
   });
-  // An unscanned template would clone into a broken first impression — refuse.
+  // An unscanned template would clone into a broken first impression - refuse.
   if (!template || !template.schemaProfile) return null;
 
   const clone = await prisma.connection.create({

@@ -4,7 +4,7 @@
 // endpoint is the only unauthenticated route that WRITES to the database, so
 // it needs a brake that doesn't depend on any other infrastructure. If the
 // backend ever scales horizontally, this becomes per-instance and should move
-// to something shared — that limitation is accepted, not overlooked.
+// to something shared - that limitation is accepted, not overlooked.
 
 const WINDOW_MS = 60 * 60 * 1000;
 

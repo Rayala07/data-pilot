@@ -22,7 +22,7 @@ export async function revokeApiKey(userId: string, id: string): Promise<number> 
 }
 
 /**
- * Permanently deletes a key, but only if it's already revoked — you can't hard-
+ * Permanently deletes a key, but only if it's already revoked - you can't hard-
  * delete a live credential, which forces the safe two-step (revoke, then remove)
  * and keeps a still-active key from vanishing out from under whatever uses it.
  */

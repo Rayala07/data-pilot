@@ -3,7 +3,7 @@
 
 // Schemas to exclude from introspection: Postgres system schemas plus every
 // schema Supabase provisions by default (auth, storage, realtime, vault, ...).
-// None of these hold user-created application tables — including them would
+// None of these hold user-created application tables - including them would
 // flood the SchemaProfile with auth.users, storage.objects, vault.secrets, etc.
 // Confirmed empirically: scanning a fresh Supabase project without this list
 // returned 40 tables instead of the ~5 the user actually created.
@@ -44,7 +44,7 @@ export const COLUMNS_QUERY = `
 // PK/FK deliberately read from pg_catalog, not information_schema.
 // information_schema.table_constraints hides rows from a role that only has
 // SELECT (its visibility predicate requires INSERT/UPDATE/REFERENCES-type
-// privileges) — and DataPilot ALWAYS connects as a read-only, SELECT-only
+// privileges) - and DataPilot ALWAYS connects as a read-only, SELECT-only
 // role by design (hard rule 1). Confirmed empirically against a real
 // read-only role: table_constraints returned zero rows while pg_constraint
 // returned all of them. pg_catalog tables have no such privilege gating.

@@ -93,14 +93,14 @@ curl -X POST https://datapilot.example.com/v1/query \
 />
 
 <Callout type="info">
-  A query that runs and returns **zero rows is a success** (`200`, `rows: []`) —
+  A query that runs and returns **zero rows is a success** (`200`, `rows: []`) -
   it's a valid answer, not an error.
 </Callout>
 
 ## When a query can't be answered
 
-If the engine runs but can't produce a usable answer — retries exhausted, or a
-request refused for safety — you get **422 `query_failed`**, with the attempt
+If the engine runs but can't produce a usable answer - retries exhausted, or a
+request refused for safety - you get **422 `query_failed`**, with the attempt
 trail kept so you can see what was tried:
 
 ```json title="422 Unprocessable Entity"

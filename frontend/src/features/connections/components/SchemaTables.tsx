@@ -5,7 +5,7 @@ import type { SchemaProfile, TableProfile } from "@/lib/types";
 
 /**
  * The raw, system-model view of the schema: tables, columns, types, keys,
- * sample values. Unchanged from when it was the default screen — it is now
+ * sample values. Unchanged from when it was the default screen - it is now
  * demoted behind "View technical details" on the overview, because
  * `ord_hdr → usr (FK: usr_id)` is noise to a non-technical user. It stays
  * because semi-technical users and demos want it.
@@ -54,7 +54,7 @@ function TableCard({ table }: { table: TableProfile }) {
                 <td className="px-4 py-1.5 text-xs text-fg-muted">{col.dataType}</td>
                 <td className="px-4 py-1.5 text-xs text-fg-muted">{col.nullable ? "yes" : "no"}</td>
                 <td className="max-w-sm truncate px-4 py-1.5 text-xs text-fg-subtle">
-                  {col.sampleValues.join(", ") || "—"}
+                  {col.sampleValues.join(", ") || "-"}
                 </td>
               </tr>
             ))}

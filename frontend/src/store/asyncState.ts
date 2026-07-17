@@ -21,7 +21,7 @@ export const isLoading = (r: RequestState) => r.status === "loading";
  * here does not work: its ThunkApiConfig makes `rejected` contravariant on
  * `rejectValue`, and leaving `Returned` inferable from both the thunk and the
  * payload annotation makes TS union them into `T | undefined`. The payload type
- * is asserted once, below — the annotation on `onFulfilled` is the contract.
+ * is asserted once, below - the annotation on `onFulfilled` is the contract.
  */
 interface ThunkActionCreators {
   pending: any;
@@ -40,7 +40,7 @@ interface RejectedAction {
  *
  * This is the single place loading and error transitions are written. A slice
  * only supplies (a) which RequestState slot the thunk owns and (b) what to do
- * with the payload on success — it never repeats the three-case boilerplate,
+ * with the payload on success - it never repeats the three-case boilerplate,
  * so a slice can't forget to clear an error or leave a spinner stuck on.
  */
 export function attachAsync<S, Returned = void>(

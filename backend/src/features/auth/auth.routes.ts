@@ -12,7 +12,7 @@ export const authRouter = Router();
 
 authRouter.post("/demo", async (req, res) => {
   if (!allowHit(`demo:${req.ip}`, DEMO_CREATIONS_PER_IP_PER_HOUR)) {
-    res.status(429).json({ error: "Too many demo sessions from this address — try again later" });
+    res.status(429).json({ error: "Too many demo sessions from this address - try again later" });
     return;
   }
 

@@ -17,7 +17,7 @@ function buildUserPrompt(table: TableProfile): string {
   const columnLines = table.columns
     .map((c) => {
       const samples = c.sampleValues.slice(0, 5).join(" | ");
-      return `- ${c.name} (${c.dataType})${samples ? ` — samples: ${samples}` : ""}`;
+      return `- ${c.name} (${c.dataType})${samples ? ` - samples: ${samples}` : ""}`;
     })
     .join("\n");
 
@@ -33,7 +33,7 @@ function buildUserPrompt(table: TableProfile): string {
 
 /**
  * Returns a description string for the table, or a safe fallback on LLM failure
- * (a missing description must never fail the whole scan — retrieval still works
+ * (a missing description must never fail the whole scan - retrieval still works
  * off name + columns, just less well).
  */
 export async function describeTable(table: TableProfile, llm: LLMProvider): Promise<string> {

@@ -1,7 +1,7 @@
 // Maps Postgres type OIDs to the semantic kind the presentation layer needs.
 //
 // Why OIDs and not `typeof value`: node-pg returns int8 (bigint) and numeric as
-// JavaScript strings to avoid precision loss. Verified against the seed DB —
+// JavaScript strings to avoid precision loss. Verified against the seed DB -
 // COUNT(*) comes back as "10057" (oid 20) and SUM(line_amt_inr) as
 // "558324675.32" (oid 1700). Inferring from the value would label both "text"
 // and chart selection would degrade to a table for every aggregate query.

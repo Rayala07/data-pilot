@@ -11,11 +11,11 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 /**
  * The portfolio's "try it live" target. Lives outside the (public)/(app) route
  * groups so neither guard interferes mid-flow: a visitor arrives signed out,
- * and leaves signed in — both guards would want to redirect at some point in
+ * and leaves signed in - both guards would want to redirect at some point in
  * between.
  *
  * Flow: create an ephemeral sandbox tenant, then land directly on the cloned
- * connection's overview — headline, entity chips, and four suggested questions.
+ * connection's overview - headline, entity chips, and four suggested questions.
  * The visitor's first click is already an answered query.
  */
 export default function DemoPage() {
@@ -28,7 +28,7 @@ export default function DemoPage() {
     if (!hydrated || started.current) return;
     started.current = true;
 
-    // Already signed in (maybe an earlier demo) — nothing to create.
+    // Already signed in (maybe an earlier demo) - nothing to create.
     if (token) {
       router.replace("/connections");
       return;

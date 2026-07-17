@@ -1,7 +1,7 @@
 // Probes whether the credential the user gave us can actually modify their data.
 //
 // Hard rule 1 says the target database is opened with a read-only role. Until
-// now that was a request in the UI, not a fact we checked — a user could paste
+// now that was a request in the UI, not a fact we checked - a user could paste
 // a superuser string and nothing would say so. This verifies it.
 //
 // The probe is pure introspection: has_table_privilege and has_schema_privilege
@@ -9,7 +9,7 @@
 // read-only session as everything else.
 //
 // It is informational. The session read-only flag and the AST SELECT-only
-// validator still apply whatever this returns — the point is to tell the user
+// validator still apply whatever this returns - the point is to tell the user
 // their credential is stronger than it needs to be, not to rely on it.
 
 import type { Pool } from "pg";

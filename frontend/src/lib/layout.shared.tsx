@@ -1,7 +1,7 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
 // Shared nav/branding for every Fumadocs layout. "Open app" links back to the
-// main app at the same origin — the mirror of the "Docs" link in the app nav.
+// main app at the same origin - the mirror of the "Docs" link in the app nav.
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {

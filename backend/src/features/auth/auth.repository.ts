@@ -1,4 +1,4 @@
-// All app-DB access for the auth feature lives here — the service never touches
+// All app-DB access for the auth feature lives here - the service never touches
 // Prisma directly.
 
 import { prisma } from "../../db/prisma";
@@ -11,7 +11,7 @@ export function createUser(email: string, passwordHash: string) {
   return prisma.user.create({ data: { email, passwordHash } });
 }
 
-/** Selects explicitly — passwordHash must never leave the repository. */
+/** Selects explicitly - passwordHash must never leave the repository. */
 export function findUserById(id: string) {
   return prisma.user.findUnique({
     where: { id },
@@ -31,7 +31,7 @@ export function countDemoUsers(): Promise<number> {
 
 /**
  * Deletes demo tenants older than the cutoff. onDelete: Cascade wipes their
- * connections, schema profiles, and query logs with them — sandboxes leave
+ * connections, schema profiles, and query logs with them - sandboxes leave
  * nothing behind.
  */
 export async function deleteDemoUsersOlderThan(cutoff: Date): Promise<number> {

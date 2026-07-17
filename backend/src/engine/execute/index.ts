@@ -1,7 +1,7 @@
 // Execute: runs an already-validated SELECT against the user's database under
 // the execution-level safety limits (hard rule 3). Read-only is enforced two
-// ways — the connection uses a read-only role, and getReadOnlyClient sets the
-// session read-only flag — so this layer only adds the timeout and row cap.
+// ways - the connection uses a read-only role, and getReadOnlyClient sets the
+// session read-only flag - so this layer only adds the timeout and row cap.
 
 import type { Pool } from "pg";
 import { getReadOnlyClient } from "../../userdb/pool";
@@ -36,7 +36,7 @@ export async function executeSelect(pool: Pool, sql: string, opts: ExecuteOption
     return {
       ok: true,
       rows: res.rows,
-      // Carry the column's semantic kind, not just its name — chart selection
+      // Carry the column's semantic kind, not just its name - chart selection
       // depends on it and it cannot be recovered from the values.
       fields: res.fields.map((f) => ({ name: f.name, kind: kindForOid(f.dataTypeID) })),
       rowCount: res.rowCount ?? res.rows.length,

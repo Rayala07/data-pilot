@@ -21,7 +21,7 @@ import type { QueryOutcome } from "./query.types";
  * Dev-only hook for demonstrating the self-correction loop: corrupts one
  * column's name in the PROMPT only. Validation still runs against the real
  * schema, so attempt 1 hallucinates and the feedback hands the model the real
- * column list — exactly the recovery path we want to show. Never set in prod.
+ * column list - exactly the recovery path we want to show. Never set in prod.
  *
  *   DEV_POISON_COLUMN="usr.full_nm"                -> renames to full_nm_x
  *   DEV_POISON_COLUMN="usr.full_nm:customer_name"  -> renames to customer_name

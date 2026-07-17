@@ -1,5 +1,5 @@
 // AES-256-GCM encryption for connection strings at rest. ENCRYPTION_KEY must be
-// a 64-character hex string (32 bytes) — generate with `openssl rand -hex 32`.
+// a 64-character hex string (32 bytes) - generate with `openssl rand -hex 32`.
 // A cross-cutting security primitive: not domain logic, so it lives in shared/.
 
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";

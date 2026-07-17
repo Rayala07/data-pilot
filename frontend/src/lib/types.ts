@@ -1,4 +1,4 @@
-// Mirrors the shapes returned by the backend API. Duplicated intentionally —
+// Mirrors the shapes returned by the backend API. Duplicated intentionally -
 // the frontend never imports backend code (see CLAUDE.md repo layout rule).
 
 export interface ConnectionListItem {
@@ -117,6 +117,6 @@ export interface CreatedApiKey {
   name: string;
   keyPrefix: string;
   createdAt: string;
-  /** The full secret — returned once, at creation. */
+  /** The full secret - returned once, at creation. */
   key: string;
 }

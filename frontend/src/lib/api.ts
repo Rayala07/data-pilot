@@ -1,4 +1,4 @@
-// Thin fetch wrapper. UI-only — no engine logic lives on this side of the HTTP boundary.
+// Thin fetch wrapper. UI-only - no engine logic lives on this side of the HTTP boundary.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const TOKEN_KEY = "datapilot_token";
@@ -17,7 +17,7 @@ export function clearToken(): void {
 }
 
 /**
- * Reads the JWT's (unverified) claims. Safe for UI decisions only — e.g.
+ * Reads the JWT's (unverified) claims. Safe for UI decisions only - e.g.
  * showing the demo banner. Anything that matters is verified server-side.
  */
 export function getTokenClaims(): { userId?: string; demo?: boolean } | null {

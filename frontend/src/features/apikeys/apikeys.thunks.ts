@@ -6,7 +6,7 @@ export const fetchApiKeys = createApiThunk<ApiKeySummary[]>("apikeys/fetchAll", 
   apiFetch<ApiKeySummary[]>("/api-keys")
 );
 
-/** Returns the raw key — the caller shows it once, then it's gone. */
+/** Returns the raw key - the caller shows it once, then it's gone. */
 export const createApiKey = createApiThunk<CreatedApiKey, string>("apikeys/create", async (name, api) => {
   const created = await apiFetch<CreatedApiKey>("/api-keys", {
     method: "POST",
@@ -22,7 +22,7 @@ export const revokeApiKey = createApiThunk<string, string>("apikeys/revoke", asy
   return id;
 });
 
-/** Permanent removal — the backend only allows it once the key is revoked. */
+/** Permanent removal - the backend only allows it once the key is revoked. */
 export const deleteApiKey = createApiThunk<string, string>("apikeys/delete", async (id, api) => {
   await apiFetch(`/api-keys/${id}`, { method: "DELETE" });
   api.dispatch(fetchApiKeys());

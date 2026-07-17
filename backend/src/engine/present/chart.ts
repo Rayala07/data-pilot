@@ -1,5 +1,5 @@
 // Deterministic chart selection (D9). Chart choice is a function of result
-// shape — column kinds and row count — so it's a lookup table, not a judgement
+// shape - column kinds and row count - so it's a lookup table, not a judgement
 // call, and never an LLM decision. Free, instant, and it can't hallucinate a
 // chart type the frontend has no renderer for.
 

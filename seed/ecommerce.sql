@@ -1,6 +1,6 @@
 -- DataPilot seed database: a deliberately messy e-commerce schema.
 -- Realistic ugliness on purpose: abbreviated/inconsistent column names,
--- mixed-case status values, and NULLs — this is what the introspection,
+-- mixed-case status values, and NULLs - this is what the introspection,
 -- retrieval, and retry-loop layers are built to survive.
 --
 -- Run against an EMPTY Postgres database (a fresh Supabase project works well).
@@ -75,7 +75,7 @@ CREATE TABLE inventory_snap (
 );
 
 -- ============================================================================
--- Data — generated relative to CURRENT_DATE so "last month" / "last 18 months"
+-- Data - generated relative to CURRENT_DATE so "last month" / "last 18 months"
 -- style benchmark questions stay meaningful no matter when this is loaded.
 -- ============================================================================
 
@@ -136,11 +136,11 @@ FROM generate_series(1, 5000) AS g;
 -- NOTE on a subtle Postgres pitfall: a `CROSS JOIN LATERAL (subquery)` whose
 -- subquery does NOT reference any outer column is not actually correlated,
 -- and Postgres is free to evaluate it once for the whole query rather than
--- once per outer row — silently giving every row the same "random" value.
+-- once per outer row - silently giving every row the same "random" value.
 -- (Confirmed empirically while building this script: every ord_line row came
 -- out with an identical prod_id/qty/disc_pct.) Random-per-row values must
 -- come from a plain SELECT list over real rows, never from an uncorrelated
--- LATERAL subquery — hence the two-step CTE below.
+-- LATERAL subquery - hence the two-step CTE below.
 WITH line_counts AS (
   SELECT ord_id, (floor(random() * 3) + 1)::int AS n_lines
   FROM ord_hdr
@@ -225,7 +225,7 @@ FROM products p
 CROSS JOIN generate_series(0, 17) AS m;
 
 -- ============================================================================
--- Read-only role — DataPilot connects as this role, not as a superuser.
+-- Read-only role - DataPilot connects as this role, not as a superuser.
 -- The session-level `default_transaction_read_only` flag (set by the backend)
 -- is defense in depth on top of this; the credential itself cannot write
 -- independent of that flag.

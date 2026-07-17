@@ -1,5 +1,5 @@
 // The public, versioned, machine-to-machine API. Every route here is a thin
-// adapter over the SAME services the web app uses — no pipeline logic is
+// adapter over the SAME services the web app uses - no pipeline logic is
 // duplicated. The only differences from the web routes are the auth (API key
 // instead of JWT), the per-key rate limits, and the uniform error envelope.
 
@@ -20,7 +20,7 @@ export const apiV1Router = Router();
 apiV1Router.use(requireApiKey);
 apiV1Router.use(rateLimitPerMinute);
 
-// Wraps an async handler so any thrown error becomes a clean 500 — no stack, no
+// Wraps an async handler so any thrown error becomes a clean 500 - no stack, no
 // internal message ever reaches an API consumer.
 function handle(fn: (req: Request, res: Response) => Promise<void>) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -28,7 +28,7 @@ function handle(fn: (req: Request, res: Response) => Promise<void>) {
   };
 }
 
-// POST /v1/connections — register + introspect a database.
+// POST /v1/connections - register + introspect a database.
 apiV1Router.post(
   "/connections",
   handle(async (req, res) => {
@@ -52,7 +52,7 @@ apiV1Router.post(
   })
 );
 
-// GET /v1/connections — list the key owner's connections.
+// GET /v1/connections - list the key owner's connections.
 apiV1Router.get(
   "/connections",
   handle(async (req, res) => {
@@ -68,7 +68,7 @@ apiV1Router.get(
   })
 );
 
-// DELETE /v1/connections/:id — remove a connection (cascades to profile + logs).
+// DELETE /v1/connections/:id - remove a connection (cascades to profile + logs).
 apiV1Router.delete(
   "/connections/:id",
   handle(async (req, res) => {
@@ -81,7 +81,7 @@ apiV1Router.delete(
   })
 );
 
-// POST /v1/query — the full pipeline: retrieve -> generate -> validate ->
+// POST /v1/query - the full pipeline: retrieve -> generate -> validate ->
 // execute -> retry loop -> present. Same answer the web app renders.
 apiV1Router.post(
   "/query",
@@ -134,7 +134,7 @@ apiV1Router.post(
   })
 );
 
-// Any error escaping a handler lands here as a generic 500 — never leaking
+// Any error escaping a handler lands here as a generic 500 - never leaking
 // the underlying message or stack to the caller.
 apiV1Router.use((_err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (res.headersSent) return;

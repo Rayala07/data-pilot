@@ -14,7 +14,7 @@ export const makeStore = () =>
       query: queryReducer,
       apikeys: apiKeysReducer,
     },
-    // configureStore installs redux-thunk by default — that's the middleware
+    // configureStore installs redux-thunk by default - that's the middleware
     // every createApiThunk here runs on.
   });
 

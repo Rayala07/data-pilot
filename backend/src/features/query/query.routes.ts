@@ -6,7 +6,7 @@ import { runQuery } from "./query.service";
 import { validateAsk } from "./query.validation";
 
 // Demo sandboxes burn real LLM credits per query, so they get an hourly cap.
-// The ledger is QueryLog itself — every attempt is already recorded for the
+// The ledger is QueryLog itself - every attempt is already recorded for the
 // benchmark, so this is a count over existing data, not new bookkeeping.
 const DEMO_QUERY_LIMIT_PER_HOUR = Number(process.env.DEMO_QUERY_LIMIT_PER_HOUR ?? 30);
 
@@ -31,7 +31,7 @@ queryRouter.post("/", async (req, res) => {
     const lastHour = await countQueryLogsSince(req.userId!, new Date(Date.now() - 60 * 60 * 1000));
     if (lastHour >= DEMO_QUERY_LIMIT_PER_HOUR) {
       res.status(429).json({
-        error: "Demo limit reached for this hour — sign up for unlimited queries.",
+        error: "Demo limit reached for this hour - sign up for unlimited queries.",
       });
       return;
     }
@@ -46,6 +46,6 @@ queryRouter.post("/", async (req, res) => {
   }
 
   // A query that ran but failed validation/execution is a normal outcome, not a
-  // server error — return 200 with the failure + attempts so the UI can show them.
+  // server error - return 200 with the failure + attempts so the UI can show them.
   res.json(result);
 });

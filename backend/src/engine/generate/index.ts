@@ -1,6 +1,6 @@
 // Generate: builds the prompt from a focused schema context and asks the LLM
 // for a single PostgreSQL SELECT, then extracts the SQL from the response.
-// Framework-free — depends only on the LLMProvider interface.
+// Framework-free - depends only on the LLMProvider interface.
 
 import type { LLMProvider, Result, TableProfile } from "../types";
 
@@ -19,15 +19,15 @@ const SYSTEM_PROMPT = [
   "- Use ONLY the tables and columns listed in the schema. Never invent identifiers.",
   "- It MUST be a single read-only SELECT. Never INSERT/UPDATE/DELETE/DDL, and never multiple statements.",
   "- Use PostgreSQL syntax: EXTRACT(YEAR FROM col) not YEAR(col); ILIKE for case-insensitive matching; :: for casts.",
-  "- The schema uses abbreviated column names — map the question's business terms onto them.",
+  "- The schema uses abbreviated column names - map the question's business terms onto them.",
   "- Prefer explicit JOINs using the foreign keys provided.",
   // Chart selection keys off a real date-typed column. Splitting a period into
   // separate year/month integers yields three numeric columns and no time axis,
   // so a time series would silently degrade to a plain table.
-  "- When grouping by time, return the period as ONE date column, e.g. date_trunc('month', ord_dt)::date AS month — never separate year and month integer columns. Order time series ascending by that column.",
+  "- When grouping by time, return the period as ONE date column, e.g. date_trunc('month', ord_dt)::date AS month - never separate year and month integer columns. Order time series ascending by that column.",
   // A surrogate id is a numeric column that isn't a measure; selecting it turns
   // a "label + measure" result into two numerics and suppresses the bar chart.
-  "- Select only the columns needed to answer the question. Do not include surrogate id / primary-key columns unless the question asks for them — prefer the human-readable name column.",
+  "- Select only the columns needed to answer the question. Do not include surrogate id / primary-key columns unless the question asks for them - prefer the human-readable name column.",
 ].join("\n");
 
 function buildSchemaContext(tables: TableProfile[]): string {
@@ -38,7 +38,7 @@ function buildSchemaContext(tables: TableProfile[]): string {
       const fks = t.foreignKeys.length
         ? `\n  foreign keys: ${t.foreignKeys.map((fk) => `${fk.column} -> ${fk.refTable}.${fk.refColumn}`).join(", ")}`
         : "";
-      const desc = t.description ? ` — ${t.description}` : "";
+      const desc = t.description ? ` - ${t.description}` : "";
       return `Table ${t.schema}.${t.name}${desc}\n  columns: ${cols}${pk}${fks}`;
     })
     .join("\n\n");

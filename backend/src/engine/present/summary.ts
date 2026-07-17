@@ -1,7 +1,7 @@
 // Business-language summary of a connected database.
 //
 // The target user is non-technical: `ord_hdr → usr (FK: usr_id)` is noise to
-// them. This module translates a SchemaProfile into "📦 Orders — 4,800" plus
+// them. This module translates a SchemaProfile into "📦 Orders - 4,800" plus
 // four questions worth asking, so the post-connect screen proves the connection
 // worked, proves DataPilot understood the business, and answers the blank page.
 //
@@ -223,7 +223,7 @@ export interface DateRangeTarget {
 
 /**
  * Picks at most one column to ask MIN/MAX of: the most prominent date column of
- * the largest table that has one. Returns null when there is no clean choice —
+ * the largest table that has one. Returns null when there is no clean choice -
  * the UI simply omits the line rather than us building scan infrastructure.
  */
 export function pickDateRangeTarget(profile: SchemaProfile): DateRangeTarget | null {

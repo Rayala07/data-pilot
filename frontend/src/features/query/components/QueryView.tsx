@@ -16,7 +16,7 @@ const EXAMPLES = [
 ];
 
 function formatCell(value: unknown, kind: FieldMeta["kind"]): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "-";
   if (kind === "date") {
     const d = new Date(String(value));
     if (!Number.isNaN(d.getTime())) return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
@@ -162,7 +162,7 @@ export function QueryView({ connectionId }: { connectionId: string }) {
         </div>
       )}
 
-      {/* Transport/auth failure — the request never produced a result. */}
+      {/* Transport/auth failure - the request never produced a result. */}
       {request.error && <Alert title="Request failed">{request.error}</Alert>}
 
       {/* The engine ran but couldn't answer. A result, not a request error. */}
@@ -195,7 +195,7 @@ export function QueryView({ connectionId }: { connectionId: string }) {
 
           <ResultChart chart={result.answer.chart} rows={result.answer.rows} />
 
-          {/* The raw table is always present — it is also the relief for chart
+          {/* The raw table is always present - it is also the relief for chart
               hues that fall below 3:1 contrast on the light surface. */}
           <ResultTable fields={result.answer.fields} rows={result.answer.rows} />
 
@@ -204,7 +204,7 @@ export function QueryView({ connectionId }: { connectionId: string }) {
             {result.attempts[0] && ` · ${result.attempts[0].latencyMs} ms · retrieved: ${result.attempts[0].retrievedTables.join(", ")}`}
           </p>
 
-          <Disclosure summary={`SQL${result.answer.sqlDescription ? ` — ${result.answer.sqlDescription}` : ""}`}>
+          <Disclosure summary={`SQL${result.answer.sqlDescription ? ` - ${result.answer.sqlDescription}` : ""}`}>
             <CodeBlock>{result.answer.sql}</CodeBlock>
           </Disclosure>
 

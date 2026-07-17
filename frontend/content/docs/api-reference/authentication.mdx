@@ -3,7 +3,7 @@ title: Authentication
 description: Get an API key and call the /v1 API from any backend.
 ---
 
-The public API lives under `/v1` and is authenticated by **API key** — separate
+The public API lives under `/v1` and is authenticated by **API key** - separate
 from the web app's login sessions, so your servers never handle a user password
 or manage a session.
 
@@ -17,13 +17,13 @@ Base URL   https://datapilot.example.com
 <Step>
 ### Sign in to the app and open API keys
 
-Keys are created by a signed-in user. The key inherits that user's access — it
+Keys are created by a signed-in user. The key inherits that user's access - it
 can see exactly the connections that user owns, and nothing else.
 </Step>
 <Step>
 ### Create a key and copy it
 
-The raw key (`dp_live_…`) is shown **once**. Copy it then — it's stored only as a
+The raw key (`dp_live_…`) is shown **once**. Copy it then - it's stored only as a
 hash and can never be retrieved again. If you lose it, revoke it and create
 another.
 </Step>
@@ -47,7 +47,7 @@ curl https://datapilot.example.com/v1/connections \
 <TypeTable
   type={{
     Authorization: {
-      description: "Bearer dp_live_… — your API key. Required on every /v1 request.",
+      description: "Bearer dp_live_… - your API key. Required on every /v1 request.",
       type: "header",
       required: true,
     },
@@ -57,12 +57,12 @@ curl https://datapilot.example.com/v1/connections \
 ## Revoke and delete
 
 Revoke a key from the same page and it stops working immediately. A revoked key
-can then be deleted to remove it from your list — deletion is only allowed
+can then be deleted to remove it from your list - deletion is only allowed
 *after* revocation, so a key that's actively serving traffic can't vanish out
 from under whatever is using it.
 
 <Callout type="info">
-  A missing, malformed, unknown, or revoked key all return the same **401** — the
+  A missing, malformed, unknown, or revoked key all return the same **401** - the
   API never reveals which, so a probe can't distinguish a real key from a fake
   one.
 </Callout>

@@ -3,7 +3,7 @@ import { createMDX } from "fumadocs-mdx/next";
 
 const nextConfig: NextConfig = {
   // output: "standalone" is only needed for Docker deployments.
-  // Vercel handles Next.js natively — do not set this here.
+  // Vercel handles Next.js natively - do not set this here.
 };
 
 

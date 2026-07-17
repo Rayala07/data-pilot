@@ -17,7 +17,7 @@ import {
 import { Card } from "@/components/ui";
 import type { ChartSpec } from "@/lib/types";
 
-// Fixed slot order — a series keeps its hue regardless of rank or sibling
+// Fixed slot order - a series keeps its hue regardless of rank or sibling
 // count. Never cycled: past 8 series the selector falls back to a table.
 const SERIES = [
   "var(--series-1)",
@@ -30,7 +30,7 @@ const SERIES = [
   "var(--series-8)",
 ];
 
-/** Postgres numeric/int8 arrive as JS strings — coerce before plotting. */
+/** Postgres numeric/int8 arrive as JS strings - coerce before plotting. */
 function toNum(v: unknown): number | null {
   if (v === null || v === undefined || v === "") return null;
   const n = Number(v);
@@ -106,7 +106,7 @@ export function ResultChart({ chart, rows }: { chart: ChartSpec; rows: Record<st
       <LineChart data={data} margin={{ top: 8, right: 16, bottom: 4, left: 8 }}>
         <Grid />
         <XAxis dataKey={xField} {...axisProps} />
-        {/* One axis. Never a second y-scale — differing magnitudes stay honest. */}
+        {/* One axis. Never a second y-scale - differing magnitudes stay honest. */}
         <YAxis {...axisProps} tickFormatter={formatTick} width={56} />
         <Tooltip {...tooltipProps} />
         {/* A legend whenever identity can't rest on a single named series. */}

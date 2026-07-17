@@ -19,7 +19,7 @@ apiKeysRouter.post("/", async (req, res) => {
     res.status(400).json({ error: parsed.error });
     return;
   }
-  // The response carries the raw key — the only time it is ever returned.
+  // The response carries the raw key - the only time it is ever returned.
   const created = await createKey(req.userId!, parsed.value.name);
   res.status(201).json(created);
 });
@@ -31,7 +31,7 @@ apiKeysRouter.get("/", async (req, res) => {
 apiKeysRouter.post("/:id/revoke", async (req, res) => {
   const revoked = await revokeKey(req.userId!, req.params.id);
   if (!revoked) {
-    // Unknown id, not owned, or already revoked — 404 either way (don't leak existence).
+    // Unknown id, not owned, or already revoked - 404 either way (don't leak existence).
     res.status(404).json({ error: "API key not found" });
     return;
   }

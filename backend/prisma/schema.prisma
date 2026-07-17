@@ -1,4 +1,4 @@
-// DataPilot app DB schema — Prisma only ever touches this database.
+// DataPilot app DB schema - Prisma only ever touches this database.
 // The user's target database is never modeled here; see backend/src/userdb.
 
 generator client {
@@ -25,7 +25,7 @@ model User {
 }
 
 // Machine-to-machine credentials for the public /v1 API. The raw key is shown
-// once at creation and never stored — only its SHA-256 hash. keyPrefix is the
+// once at creation and never stored - only its SHA-256 hash. keyPrefix is the
 // non-secret leading slice, kept for display so a user can recognise a key.
 model ApiKey {
   id         String    @id @default(uuid())
@@ -54,7 +54,7 @@ model Connection {
   lastScannedAt           DateTime?
   // Whether the supplied credential can actually modify data, probed at
   // connect/rescan. null = never probed (row predates the check, or the probe
-  // failed). Informational only — the read-only session flag and AST validation
+  // failed). Informational only - the read-only session flag and AST validation
   // still apply regardless.
   credentialCanWrite      Boolean?
   schemaProfile           SchemaProfile?
@@ -68,7 +68,7 @@ model SchemaProfile {
   connectionId String     @unique
   connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
   scannedAt    DateTime   @default(now())
-  // TableProfile[] as defined in engine/types.ts, stored whole — introspection re-scans replace it entirely.
+  // TableProfile[] as defined in engine/types.ts, stored whole - introspection re-scans replace it entirely.
   tables       Json
   // Cached business-language summary (ConnectionSummary in engine/types.ts).
   // Costs an LLM call to build, so it is generated once on first request and

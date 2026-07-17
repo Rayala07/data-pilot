@@ -1,4 +1,4 @@
-// Presentation layer: turns a successful result set into what the UI renders —
+// Presentation layer: turns a successful result set into what the UI renders -
 // a deterministically chosen chart, a plain-English explanation, and a one-line
 // description of the SQL. Chart selection is pure and always succeeds; the LLM
 // is used only where the problem is genuinely fuzzy (the prose).

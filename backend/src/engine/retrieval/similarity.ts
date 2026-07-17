@@ -1,4 +1,4 @@
-// Cosine similarity, implemented directly (decision D2 — no vector DB, and the
+// Cosine similarity, implemented directly (decision D2 - no vector DB, and the
 // math is understood, not abstracted away). Cosine = dot(a, b) / (|a| |b|).
 // We normalize each vector once, then similarity is just a dot product.
 

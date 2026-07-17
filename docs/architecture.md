@@ -1,4 +1,4 @@
-# DataPilot — Architecture
+# DataPilot - Architecture
 
 ## The two-database rule (most important concept in the system)
 
@@ -17,7 +17,7 @@ Nothing in `userdb/` imports Prisma. Nothing in `db/` opens user connections.
 ## Authentication & multi-tenancy
 
 - **Auth:** email/password. Passwords hashed with bcrypt (cost 10+). Login issues a JWT (secret from env, 7-day expiry) sent as a Bearer token. An Express `requireAuth` middleware verifies the token and attaches `req.userId`; every route except `POST /auth/signup` and `POST /auth/login` sits behind it.
-- **Tenancy model:** row-level scoping by `userId`. `User` is a first-class Prisma model; `Connection` and `QueryLog` each carry a required `userId` foreign key. **Every** Prisma query on these tables includes the `userId` filter — never fetch by `id` alone. Ownership checks happen in one place: a `getOwnedConnection(userId, connectionId)` helper that all routes use; a miss returns 404 (not 403, to avoid leaking existence).
+- **Tenancy model:** row-level scoping by `userId`. `User` is a first-class Prisma model; `Connection` and `QueryLog` each carry a required `userId` foreign key. **Every** Prisma query on these tables includes the `userId` filter - never fetch by `id` alone. Ownership checks happen in one place: a `getOwnedConnection(userId, connectionId)` helper that all routes use; a miss returns 404 (not 403, to avoid leaking existence).
 - **Deliberately out of scope:** organizations/teams, roles, invites, OAuth. Tenancy here means strict per-user data isolation, nothing more.
 
 ## Components
@@ -41,7 +41,7 @@ Express API (backend/)
         └── providers/     ── OpenAI-compatible LLM + embedding clients
 ```
 
-## Flow 1 — Connect & introspect (Day 1)
+## Flow 1 - Connect & introspect (Day 1)
 
 1. `POST /connections` with `{ connectionString, name }`.
 2. Backend opens a `pg` connection, sets `default_transaction_read_only = on`, runs `SELECT 1` to validate. Failure → structured error (bad credentials / unreachable host / not postgres), returned gracefully.
@@ -82,7 +82,7 @@ interface ColumnProfile {
 
 The `description` field matters: embeddings of "name + columns + description + sample values" retrieve far better than embeddings of bare table names like `usr_txn_v2`.
 
-## Flow 2 — Ask a question (Days 2–4)
+## Flow 2 - Ask a question (Days 2-4)
 
 `POST /query` with `{ connectionId, question }` → the **loop** orchestrator:
 
@@ -106,11 +106,11 @@ question
   │            └─ success  → rows + fields
   ▼
 on hallucination/validation/execution fail: attempt++ ; if attempt ≤ 3 → back to [generate] with structured failure feedback
-on security fail: STOP immediately — never retried, never executed (see D7a)
+on security fail: STOP immediately - never retried, never executed (see D7a)
 on success or attempts exhausted → [present]
 ```
 
-An empty result set is a valid answer, not a failure — it is never retried.
+An empty result set is a valid answer, not a failure - it is never retried.
 
 Every attempt (successful or not) is written to `QueryLog` in the app DB. This log IS the benchmark data source.
 
@@ -124,21 +124,21 @@ Detail: column "usr_name" does not exist on table "users". Available columns: id
 Fix the query. Return only SQL.
 ```
 
-Naming the available columns on hallucination failures is what makes retries actually converge — this detail is worth calling out in interviews.
+Naming the available columns on hallucination failures is what makes retries actually converge - this detail is worth calling out in interviews.
 
-## Flow 3 — Presentation (Day 5)
+## Flow 3 - Presentation (Day 5)
 
 `present/` receives `{ rows, fields, sql, question }` and produces:
 
-1. **Chart selection** — deterministic rules, not LLM:
+1. **Chart selection** - deterministic rules, not LLM:
    - 1 row × 1 numeric column → stat card.
    - date/timestamp column + numeric column(s) → line chart (time ascending).
    - 1 text/categorical column + 1 numeric column, ≤ 30 rows → bar chart.
    - 2 numeric columns, > 30 rows → scatter.
    - anything else → table only.
    Always render the raw table beneath the chart.
-2. **NL explanation** — one LLM call: given the question, the SQL, and up to the first 50 rows (values truncated), write 2–4 sentences explaining what the data shows. Result rows are untrusted input: they are wrapped in a delimited data block in the prompt with an instruction that content inside is data, never instructions.
-3. **SQL display** — the executed SQL plus a one-line English description of what it does, shown collapsed under the answer.
+2. **NL explanation** - one LLM call: given the question, the SQL, and up to the first 50 rows (values truncated), write 2-4 sentences explaining what the data shows. Result rows are untrusted input: they are wrapped in a delimited data block in the prompt with an instruction that content inside is data, never instructions.
+3. **SQL display** - the executed SQL plus a one-line English description of what it does, shown collapsed under the answer.
 
 ## API contract (all endpoints)
 
@@ -146,34 +146,34 @@ Naming the available columns on hallucination failures is what makes retries act
 |---|---|---|---|
 | POST | /auth/signup | `{ email, password }` | `{ token }` |
 | POST | /auth/login | `{ email, password }` | `{ token }` |
-| POST | /auth/demo | — | `{ token, connectionId }` — ephemeral sandbox tenant (2h token) with the template connection cloned in; rate-limited per IP, swept after 24h |
-| GET | /auth/me | — | `{ id, email, createdAt, connectionCount, queryCount }` (never `passwordHash`) |
+| POST | /auth/demo | - | `{ token, connectionId }` - ephemeral sandbox tenant (2h token) with the template connection cloned in; rate-limited per IP, swept after 24h |
+| GET | /auth/me | - | `{ id, email, createdAt, connectionCount, queryCount }` (never `passwordHash`) |
 | POST | /connections | `{ name, connectionString }` | `{ id, name, tableCount }` or structured error |
-| GET | /connections | — | list (id, name, tableCount, scannedAt, canWrite) — `canWrite` is probed at connect/rescan: true = credential can modify data, false = verified read-only, null = not probed |
-| GET | /connections | — | list (id, name, tableCount, scannedAt) |
-| GET | /connections/:id/schema | — | SchemaProfile (without connection string) |
-| GET | /connections/:id/summary | — | `{ headline, entities[], dateRange, suggestedQuestions[] }` — business-language overview, cached; regenerated only on rescan |
-| POST | /connections/:id/rescan | — | refreshed SchemaProfile |
+| GET | /connections | - | list (id, name, tableCount, scannedAt, canWrite) - `canWrite` is probed at connect/rescan: true = credential can modify data, false = verified read-only, null = not probed |
+| GET | /connections | - | list (id, name, tableCount, scannedAt) |
+| GET | /connections/:id/schema | - | SchemaProfile (without connection string) |
+| GET | /connections/:id/summary | - | `{ headline, entities[], dateRange, suggestedQuestions[] }` - business-language overview, cached; regenerated only on rescan |
+| POST | /connections/:id/rescan | - | refreshed SchemaProfile |
 | POST | /query | `{ connectionId, question, explain? }` | `{ ok, answer: { explanation, sqlDescription, chart, rows, fields, rowCount, sql }, attempts: QueryAttempt[] }` |
-| GET | /logs?connectionId= | — | query logs (for the benchmark page) |
+| GET | /logs?connectionId= | - | query logs (for the benchmark page) |
 
 All routes except the two `/auth` endpoints require `Authorization: Bearer <jwt>` and are scoped to the authenticated user's data; requesting another user's connection returns 404.
 
 `attempts` is returned to the frontend on purpose: the UI can show "self-corrected after 1 retry", which demos the loop visibly.
 
-`explain` defaults to `true`. Setting it `false` skips the NL-explanation LLM call and returns the chart + rows only — the Day 6 benchmark uses this so 35 questions × 2 runs don't pay for prose nobody reads. A failed query returns `{ ok: false, failureType, detail, sql?, attempts }`.
+`explain` defaults to `true`. Setting it `false` skips the NL-explanation LLM call and returns the chart + rows only - the Day 6 benchmark uses this so 35 questions × 2 runs don't pay for prose nobody reads. A failed query returns `{ ok: false, failureType, detail, sql?, attempts }`.
 
 `fields` are `{ name, kind }` where `kind` is derived from the Postgres type OID, not from the value: node-pg returns `numeric` and `int8` (`COUNT(*)`, `SUM(...)`) as JavaScript **strings**, so value-based inference would label every measure as text and no chart would ever be chosen.
 
-## Security layers (defense in depth — interview answer, verbatim)
+## Security layers (defense in depth - interview answer, verbatim)
 
-1. **DB-level:** read-only role + `default_transaction_read_only = on`. Even a validation bypass cannot write. The supplied credential is also *probed* at connect time (`has_table_privilege` / `has_schema_privilege` — pure catalog reads, no writes); if it can write, the UI warns without blocking, so layer 1 is verified rather than merely requested.
+1. **DB-level:** read-only role + `default_transaction_read_only = on`. Even a validation bypass cannot write. The supplied credential is also *probed* at connect time (`has_table_privilege` / `has_schema_privilege` - pure catalog reads, no writes); if it can write, the UI warns without blocking, so layer 1 is verified rather than merely requested.
 2. **App-level:** AST parse; only a single pure SELECT survives. Regex is explicitly forbidden (trivially bypassable: comments, casing, nesting).
 3. **Execution-level:** `statement_timeout` 15s, row limit 1000, per-connection pool caps so one user DB can't exhaust the server.
 4. **LLM-level:** result values re-entering prompts are truncated and fenced as data (prompt-injection mitigation).
-5. **Tenant isolation:** JWT auth on every route; all app-DB reads/writes filtered by `userId` via a single ownership helper — cross-tenant requests 404.
+5. **Tenant isolation:** JWT auth on every route; all app-DB reads/writes filtered by `userId` via a single ownership helper - cross-tenant requests 404.
 6. **Secrets:** connection strings encrypted at rest, never logged, never re-sent to clients; password hashes via bcrypt, JWT secret from env.
 
 ## Error handling philosophy
 
-Every failure the user can cause has a friendly, specific message: unreachable host, wrong password, not a Postgres server, empty database, question retrieved zero relevant tables ("I couldn't find tables related to that — here's what this database contains…"), all retries exhausted (show the last SQL + last error honestly, never fake an answer).
+Every failure the user can cause has a friendly, specific message: unreachable host, wrong password, not a Postgres server, empty database, question retrieved zero relevant tables ("I couldn't find tables related to that - here's what this database contains…"), all retries exhausted (show the last SQL + last error honestly, never fake an answer).

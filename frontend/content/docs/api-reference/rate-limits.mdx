@@ -1,6 +1,6 @@
 ---
 title: Rate limits
-description: Two windows per key — a per-minute cap on all calls, and a daily cap on queries.
+description: Two windows per key - a per-minute cap on all calls, and a daily cap on queries.
 ---
 
 Every API key has two independent limits. Both are enforced per key, in fixed
@@ -53,7 +53,7 @@ batch or cache answers where the underlying data hasn't changed.
 <Step>
 ### Handle 429 explicitly
 
-Read `retryAfterSeconds`, wait, and retry once — rather than hammering and
+Read `retryAfterSeconds`, wait, and retry once - rather than hammering and
 compounding the backoff.
 </Step>
 </Steps>

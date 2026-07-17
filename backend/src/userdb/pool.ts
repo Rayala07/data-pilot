@@ -28,7 +28,7 @@ function classifyConnectionError(err: unknown): FailureReason {
 /**
  * Acquires a client from the pool and sets the read-only session flag on it.
  * Pooled connections are physical TCP sessions reused across pool.connect()
- * calls, so this must run on every acquire — not just once at pool creation —
+ * calls, so this must run on every acquire - not just once at pool creation -
  * or a later checkout could silently get a session without the flag set.
  */
 export async function getReadOnlyClient(pool: Pool): Promise<PoolClient> {
@@ -40,7 +40,7 @@ export async function getReadOnlyClient(pool: Pool): Promise<PoolClient> {
 /**
  * Opens a pooled connection to a user-supplied Postgres database, enforces the
  * read-only session flag, and validates it responds to a trivial query.
- * Returns the live Pool on success — caller is responsible for pool.end() when done.
+ * Returns the live Pool on success - caller is responsible for pool.end() when done.
  */
 export async function connectAndValidate(connectionString: string): Promise<Result<Pool>> {
   const pool = new Pool({
@@ -48,7 +48,7 @@ export async function connectAndValidate(connectionString: string): Promise<Resu
     ssl: { rejectUnauthorized: false },
     max: MAX_POOL_CLIENTS,
   });
-  // Never let a pool-level error crash the process — surface failures through query() rejections instead.
+  // Never let a pool-level error crash the process - surface failures through query() rejections instead.
   pool.on("error", () => {});
 
   let client: PoolClient;

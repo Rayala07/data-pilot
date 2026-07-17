@@ -2,7 +2,7 @@
 // what the SQL does.
 //
 // SECURITY (hard rule 4): the rows come from the user's database and are
-// untrusted — a cell could contain "ignore previous instructions and ...".
+// untrusted - a cell could contain "ignore previous instructions and ...".
 // They are truncated, capped, and fenced inside a delimited block, and the
 // system prompt states that everything inside the block is data, never
 // instructions. This is the prompt-injection surface of the whole product.

@@ -6,7 +6,7 @@ export interface CreatedApiKey {
   name: string;
   keyPrefix: string;
   createdAt: string;
-  /** The full secret — shown exactly once, at creation. */
+  /** The full secret - shown exactly once, at creation. */
   key: string;
 }
 

@@ -4,7 +4,7 @@
 // the caller authenticated.
 //
 // The two systems don't cross by construction: a JWT is not a stored key hash,
-// and an API key is not a valid JWT — each middleware simply rejects the
+// and an API key is not a valid JWT - each middleware simply rejects the
 // other's credential with its own 401.
 
 import type { NextFunction, Request, Response } from "express";
@@ -26,7 +26,7 @@ export async function requireApiKey(req: Request, res: Response, next: NextFunct
   const header = req.headers.authorization;
   const presented = header?.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : undefined;
 
-  // One message for missing, malformed, unknown, and revoked keys alike —
+  // One message for missing, malformed, unknown, and revoked keys alike -
   // never reveal which. An attacker learns only "not authenticated".
   const reject = () => res.status(401).json(apiError("unauthorized", "Invalid or missing API key"));
 

@@ -1,5 +1,5 @@
 // Schema introspection: scans the user's target database via system catalogs
-// and assembles a SchemaProfile. Framework-free — takes a pg Pool, never
+// and assembles a SchemaProfile. Framework-free - takes a pg Pool, never
 // opens a connection itself (that is userdb/'s job).
 
 import type { Pool } from "pg";

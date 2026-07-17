@@ -1,6 +1,6 @@
 // Orchestrates the connect → validate → encrypt → introspect → persist flow.
 // Talks to the userdb pool and the (framework-free) engine, but never to
-// Express or Prisma directly — Prisma access goes through the repository.
+// Express or Prisma directly - Prisma access goes through the repository.
 
 import type { Connection } from "@prisma/client";
 import type { Pool } from "pg";
@@ -27,12 +27,12 @@ import * as repo from "./connections.repository";
 import type { CreateConnectionInput, CreateConnectionResult } from "./connections.types";
 
 // Introspects on an already-validated pool, enriches for retrieval, and
-// persists the result. Always closes the pool — Day 1/2 scan once at
+// persists the result. Always closes the pool - Day 1/2 scan once at
 // connect/rescan time; no long-lived pool is kept between requests yet.
 async function introspectAndPersist(pool: Pool, connectionId: string): Promise<Result<SchemaProfile>> {
   try {
     // Verify hard rule 1 rather than merely asking for it: does this credential
-    // actually lack write access? Informational, and never fatal — a probe that
+    // actually lack write access? Informational, and never fatal - a probe that
     // can't answer records null and the UI simply says nothing.
     await repo.setCredentialWriteAccess(connectionId, await probeWriteAccess(pool));
 
@@ -43,12 +43,12 @@ async function introspectAndPersist(pool: Pool, connectionId: string): Promise<R
 
     // Enrich with LLM descriptions + embeddings for retrieval (Day 2). Non-fatal:
     // if the provider is misconfigured or fails, we still persist the introspected
-    // profile so the schema view works — retrieval just has no vectors until a
+    // profile so the schema view works - retrieval just has no vectors until a
     // successful rescan.
     try {
       await enrichSchemaProfile(profile, getLLMProvider(), getEmbeddingProvider());
     } catch {
-      // swallow — enrichment is best-effort at ingest
+      // swallow - enrichment is best-effort at ingest
     }
 
     await repo.saveSchemaProfile(connectionId, profile.scannedAt, profile.tables as object);
@@ -89,7 +89,7 @@ export async function rescan(connection: Connection): Promise<Result<SchemaProfi
  *
  * Cache-first: generated once (an LLM call) and served from the SchemaProfile
  * row afterwards. `saveSchemaProfile` nulls it on rescan, so a changed schema
- * regenerates. The user's database is never rescanned here — at most ONE cheap
+ * regenerates. The user's database is never rescanned here - at most ONE cheap
  * MIN/MAX query runs, through the same read-only/timeout/row-cap path as every
  * other user-DB read.
  *
@@ -104,7 +104,7 @@ export async function getConnectionSummary(
     return { ok: false, reason: "not_scanned", detail: "This connection hasn't been scanned yet." };
   }
 
-  // Cache hit — no LLM call, no user-DB query.
+  // Cache hit - no LLM call, no user-DB query.
   if (stored.summary) {
     return { ok: true, value: stored.summary as unknown as ConnectionSummary };
   }
@@ -120,7 +120,7 @@ export async function getConnectionSummary(
     const generated = await generateSummary(profile, getLLMProvider());
     summary = generated.ok ? generated.value : fallbackSummary(profile);
   } catch {
-    // Provider misconfigured (e.g. missing key) — construction throws.
+    // Provider misconfigured (e.g. missing key) - construction throws.
     summary = fallbackSummary(profile);
   }
 
@@ -132,7 +132,7 @@ export async function getConnectionSummary(
 
 /**
  * At most one query against the user's database. Any failure yields null and
- * the UI omits the line — we don't build scanning infrastructure for a caption.
+ * the UI omits the line - we don't build scanning infrastructure for a caption.
  */
 async function readDateRange(
   connection: Connection,

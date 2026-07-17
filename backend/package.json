@@ -2,7 +2,7 @@
   "name": "datapilot-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "DataPilot Express API — engine logic, auth, and app-DB access via Prisma",
+  "description": "DataPilot Express API - engine logic, auth, and app-DB access via Prisma",
   "main": "dist/index.js",
   "engines": {
     "node": ">=20"

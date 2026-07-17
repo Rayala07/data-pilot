@@ -3,10 +3,10 @@ import type { CorsOptions } from "cors";
 /**
  * Origin policy.
  *
- * `cors({ origin: "http://localhost:3000" })` does NOT validate the caller — it
+ * `cors({ origin: "http://localhost:3000" })` does NOT validate the caller - it
  * writes that string into Access-Control-Allow-Origin unconditionally. So a
  * browser on any other origin (Next falling back to :3001 when :3000 is taken,
- * or the user typing 127.0.0.1 instead of localhost — a different origin) gets
+ * or the user typing 127.0.0.1 instead of localhost - a different origin) gets
  * back a header that doesn't match itself, and blocks the request. That reads
  * as "a CORS error" but is really a misconfigured allowlist.
  *

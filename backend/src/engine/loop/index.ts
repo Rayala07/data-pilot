@@ -1,4 +1,4 @@
-// The self-correction loop — the centerpiece of the engine — modelled as an
+// The self-correction loop - the centerpiece of the engine - modelled as an
 // explicit LangGraph state machine:
 //
 //        START ──▶ generate ──▶ validate ──▶ execute ──▶ END (success)
@@ -26,7 +26,7 @@ import { validateSql } from "../validate";
 const MAX_ATTEMPTS = 3;
 const NODES_PER_ATTEMPT = 3;
 
-/** Full detail of one attempt — richer than QueryAttempt, for QueryLog persistence. */
+/** Full detail of one attempt - richer than QueryAttempt, for QueryLog persistence. */
 export interface LoopAttemptRecord {
   attemptNumber: number;
   sql: string | null;
@@ -39,7 +39,7 @@ export interface LoopAttemptRecord {
 
 export interface LoopOptions {
   question: string;
-  /** Full profile — validation checks against this, so feedback names real identifiers. */
+  /** Full profile - validation checks against this, so feedback names real identifiers. */
   profile: SchemaProfile;
   /** Only the retrieved tables go into the prompt (focused context). */
   focusedTables: TableProfile[];
@@ -82,7 +82,7 @@ interface Success {
 const overwrite = <T,>(_prev: T, next: T): T => next;
 
 // Channels carry only what flows between nodes. The providers and callbacks
-// stay in closures rather than in state — they aren't data, and state that
+// stay in closures rather than in state - they aren't data, and state that
 // can't be inspected or serialized is state you can't debug.
 const LoopState = Annotation.Root({
   attemptNumber: Annotation<number>({ reducer: overwrite, default: () => 0 }),
@@ -202,7 +202,7 @@ export async function runLoop(opts: LoopOptions): Promise<LoopOutcome> {
       };
     }
 
-    // An empty result set is a valid answer, not a failure — never retried.
+    // An empty result set is a valid answer, not a failure - never retried.
     const attempt = await record(
       {
         attemptNumber: state.attemptNumber,
@@ -259,7 +259,7 @@ export async function runLoop(opts: LoopOptions): Promise<LoopOutcome> {
     return { ok: true, sql, rows, fields, rowCount, attempts: final.attempts };
   }
 
-  // Attempts exhausted (or denied) — report the last failure honestly rather
+  // Attempts exhausted (or denied) - report the last failure honestly rather
   // than faking an answer.
   return {
     ok: false,

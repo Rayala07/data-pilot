@@ -6,7 +6,7 @@ import { CodeBlock, CopyButton, Disclosure } from "@/components/ui";
 const ROLE = "datapilot_readonly";
 
 /**
- * There is no universal no-code way to create a least-privilege Postgres role —
+ * There is no universal no-code way to create a least-privilege Postgres role -
  * it is a privileged operation by definition. The lowest-friction path that
  * works everywhere is: copy this, paste it into your provider's browser SQL
  * editor, press Run. No terminal, no psql, nothing to install.
@@ -25,7 +25,7 @@ function generatePassword(): string {
 
 // Deliberately no `GRANT CONNECT`: PUBLIC already holds it by default on every
 // managed Postgres, and the only correct way to name the current database in a
-// GRANT is a DO block with format(%I) — noise for a beginner-facing snippet.
+// GRANT is a DO block with format(%I) - noise for a beginner-facing snippet.
 // The rare hardened case is covered by the footnote below instead.
 function sqlFor(password: string): string {
   return [
@@ -69,7 +69,7 @@ export function ReadOnlyGuide() {
     <Disclosure summary="How do I get a read-only connection string?">
       <div className="space-y-5">
         <p className="text-sm text-fg-muted">
-          No terminal needed. Most hosts give you a SQL editor in the browser — Supabase and Neon both call it{" "}
+          No terminal needed. Most hosts give you a SQL editor in the browser - Supabase and Neon both call it{" "}
           <span className="text-fg">SQL Editor</span>. Paste, press Run, done.
         </p>
 
@@ -81,7 +81,7 @@ export function ReadOnlyGuide() {
             <CopyButton value={sql} label="Copy SQL" />
           </div>
           <p className="text-xs text-fg-subtle">
-            The password is generated in your browser — it is not sent anywhere until you submit the connection string
+            The password is generated in your browser - it is not sent anywhere until you submit the connection string
             above, which we encrypt at rest.
           </p>
         </Step>
@@ -101,7 +101,7 @@ export function ReadOnlyGuide() {
 
         <div className="space-y-1.5 rounded-lg border border-line bg-surface-2 p-3">
           <p className="text-xs text-fg-muted">
-            <span className="font-medium text-fg">Not the person who manages the database?</span> Send them step 1 —
+            <span className="font-medium text-fg">Not the person who manages the database?</span> Send them step 1 -
             they only need to run it once and give you back the string from step 2.
           </p>
           <p className="text-xs text-fg-muted">

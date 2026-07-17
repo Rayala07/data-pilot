@@ -63,7 +63,7 @@ function AddConnectionForm() {
             {submitting ? "Connecting & scanning…" : "Connect"}
           </Button>
           {submitting && (
-            <span className="text-xs text-fg-muted">Introspecting schema and building embeddings — up to ~30s.</span>
+            <span className="text-xs text-fg-muted">Introspecting schema and building embeddings - up to ~30s.</span>
           )}
         </div>
       </form>
