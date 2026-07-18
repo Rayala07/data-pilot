@@ -1,2 +1,7 @@
 .env
 node_modules
+dist
+
+# benchmark run state (resumable). The whole benchmark harness is development
+# only and is ignored from the repo root too.
+.benchmark-results*.json

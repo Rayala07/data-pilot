@@ -5,3 +5,10 @@ dist/
 .next/
 *.log
 .DS_Store
+
+# Benchmark harness - development only, never shipped.
+# The questions, the runner and the generated report all stay local.
+seed/benchmark.json
+docs/benchmark.md
+backend/scripts/benchmark.ts
+backend/.benchmark-results*.json
