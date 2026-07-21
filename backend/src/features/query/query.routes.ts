@@ -51,6 +51,7 @@ queryRouter.post("/", async (req, res) => {
 
   const result = await runQuery(req.userId!, connection, parsed.value.question, {
     explain: parsed.value.explain,
+    maxAttempts: parsed.value.maxAttempts,
   });
   if (!result.ok && result.failureType === "not_scanned") {
     res.status(404).json({ error: result.detail });

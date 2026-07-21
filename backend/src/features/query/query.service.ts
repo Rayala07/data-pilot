@@ -49,7 +49,7 @@ export async function runQuery(
   userId: string,
   connection: Connection,
   question: string,
-  opts: { explain?: boolean } = {}
+  opts: { explain?: boolean; maxAttempts?: number } = {}
 ): Promise<QueryOutcome> {
   const stored = await getSchemaProfile(connection.id);
   if (!stored) {
@@ -106,6 +106,8 @@ export async function runQuery(
       retrievedTableNames: retrievedNames,
       llm,
       execute,
+      // undefined leaves the engine's default (3) in force.
+      maxAttempts: opts.maxAttempts,
       onAttempt: (record) =>
         writeQueryLog({
           userId,
