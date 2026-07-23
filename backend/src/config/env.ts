@@ -1,10 +1,10 @@
 // Fail fast on a misconfigured environment.
 //
-// Every secret is read lazily at the point of use (getLLMProvider, signToken,
-// encrypt), which means a service with no secrets at all still boots, answers
-// /health with 200, and gets marked live by the platform - then 500s the first
-// time someone signs up or connects a database. Checking at startup turns a
-// silent bad deploy into a loud one.
+// Every secret is read lazily at the point of use (getLLMProvider, encrypt),
+// which means a service with no secrets at all still boots, answers /health
+// with 200, and gets marked live by the platform - then 500s the first time
+// someone connects a database. Checking at startup turns a silent bad deploy
+// into a loud one.
 //
 // Only names are ever printed. Never a value.
 
@@ -33,15 +33,14 @@ export function validateEnv(env: Env = process.env): string[] {
   // runtime, only `prisma migrate deploy` does (verified).
 
   // --- secrets ---
-  required("JWT_SECRET");
-  if (present(env.JWT_SECRET) && env.JWT_SECRET.length < 32) {
-    problems.push("JWT_SECRET must be at least 32 characters");
-  }
-
   required("ENCRYPTION_KEY");
   if (present(env.ENCRYPTION_KEY) && !HEX_64.test(env.ENCRYPTION_KEY)) {
     problems.push("ENCRYPTION_KEY must be 64 hex characters (32 bytes) - generate with: openssl rand -hex 32");
   }
+
+  // --- Supabase ---
+  required("SUPABASE_URL", "your project URL from the Supabase dashboard");
+  required("SUPABASE_SERVICE_ROLE_KEY", "service role key from the Supabase dashboard (keep secret)");
 
   // --- providers ---
   required("LLM_BASE_URL");

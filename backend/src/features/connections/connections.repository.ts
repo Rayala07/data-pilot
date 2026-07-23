@@ -21,15 +21,6 @@ export async function deleteOwnedConnection(userId: string, connectionId: string
   return result.count;
 }
 
-/**
- * Unscoped by design - the ONLY permitted caller is the demo-template lookup,
- * where the id comes from operator configuration (DEMO_TEMPLATE_CONNECTION_ID),
- * never from a request. Every request-driven read goes through
- * getOwnedConnection above.
- */
-export function getConnectionByIdInternal(connectionId: string): Promise<Connection | null> {
-  return prisma.connection.findUnique({ where: { id: connectionId } });
-}
 
 export function createConnection(userId: string, name: string, enc: EncryptedPayload) {
   return prisma.connection.create({
@@ -91,38 +82,3 @@ export async function setCredentialWriteAccess(connectionId: string, canWrite: b
   });
 }
 
-/**
- * Clones a fully-scanned connection into another user's tenant - pure row
- * copies, no LLM calls, no scan of the target database. The expensive
- * artifacts (embeddings inside `tables`, the cached `summary`) already exist,
- * which is what makes demo-sandbox creation sub-second. The encrypted
- * connection string is copied verbatim: same ENCRYPTION_KEY, same ciphertext.
- */
-export async function cloneConnectionForUser(templateConnectionId: string, newUserId: string): Promise<string | null> {
-  const template = await prisma.connection.findUnique({
-    where: { id: templateConnectionId },
-    include: { schemaProfile: true },
-  });
-  // An unscanned template would clone into a broken first impression - refuse.
-  if (!template || !template.schemaProfile) return null;
-
-  const clone = await prisma.connection.create({
-    data: {
-      userId: newUserId,
-      name: template.name,
-      connectionStringCipher: template.connectionStringCipher,
-      connectionStringIv: template.connectionStringIv,
-      connectionStringTag: template.connectionStringTag,
-      credentialCanWrite: template.credentialCanWrite,
-      lastScannedAt: template.lastScannedAt,
-      schemaProfile: {
-        create: {
-          scannedAt: template.schemaProfile.scannedAt,
-          tables: template.schemaProfile.tables as Prisma.InputJsonValue,
-          summary: (template.schemaProfile.summary ?? Prisma.DbNull) as Prisma.InputJsonValue,
-        },
-      },
-    },
-  });
-  return clone.id;
-}

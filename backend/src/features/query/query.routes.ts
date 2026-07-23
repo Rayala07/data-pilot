@@ -1,15 +1,8 @@
 import { Router } from "express";
 import { requireAuth } from "../auth/auth.middleware";
 import { getOwnedConnection } from "../connections/connections.repository";
-import { recordDemoEvent } from "../demo/demo.repository";
-import { countQueryLogsSince } from "./query.repository";
 import { runQuery } from "./query.service";
 import { validateAsk } from "./query.validation";
-
-// Demo sandboxes burn real LLM credits per query, so they get an hourly cap.
-// The ledger is QueryLog itself - every attempt is already recorded for the
-// benchmark, so this is a count over existing data, not new bookkeeping.
-const DEMO_QUERY_LIMIT_PER_HOUR = Number(process.env.DEMO_QUERY_LIMIT_PER_HOUR ?? 30);
 
 export const queryRouter = Router();
 queryRouter.use(requireAuth);
@@ -26,27 +19,6 @@ queryRouter.post("/", async (req, res) => {
   if (!connection) {
     res.status(404).json({ error: "Connection not found" });
     return;
-  }
-
-  if (req.isDemo) {
-    const lastHour = await countQueryLogsSince(req.userId!, new Date(Date.now() - 60 * 60 * 1000));
-    if (lastHour >= DEMO_QUERY_LIMIT_PER_HOUR) {
-      res.status(429).json({
-        error: "Demo limit reached for this hour - sign up for unlimited queries.",
-      });
-      return;
-    }
-  }
-
-  // Recorded before running: what the visitor ASKED is the interesting part,
-  // and it survives the 24h sweep that will take QueryLog with it.
-  if (req.isDemo) {
-    recordDemoEvent({
-      sessionId: req.userId!,
-      ref: req.demoRef,
-      event: "question_asked",
-      detail: parsed.value.question,
-    });
   }
 
   const result = await runQuery(req.userId!, connection, parsed.value.question, {

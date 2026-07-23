@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { HomeNavActions, HomeHeroCta, HomeCtaActions } from "./HomeActions";
 import "./home.css";
 
 export const metadata: Metadata = {
@@ -267,10 +268,7 @@ export default function HomePage() {
             <a href="#api" className="dp-nav__link">API</a>
             <Link href="/docs" className="dp-nav__link">Docs</Link>
           </nav>
-          <div className="dp-nav__actions">
-            <Link href="/login" className="dp-btn dp-btn--ghost">Sign in</Link>
-            <Link href="/signup" className="dp-btn dp-btn--primary">Get started</Link>
-          </div>
+          <HomeNavActions />
         </div>
       </header>
 
@@ -295,15 +293,7 @@ export default function HomePage() {
               and renders the result as a chart - in seconds.
             </p>
 
-            <div className="dp-hero__cta">
-              <Link href="/signup" className="dp-btn dp-btn--primary dp-btn--lg">
-                Connect your database
-                <IconArrow />
-              </Link>
-              <Link href="/login" className="dp-btn dp-btn--ghost dp-btn--lg">
-                Sign in
-              </Link>
-            </div>
+            <HomeHeroCta />
 
             <div className="dp-hero__trust">
               <span className="dp-trust-item"><IconCheck /><span>No SQL knowledge needed</span></span>
@@ -583,15 +573,7 @@ export default function HomePage() {
             <p className="dp-cta__sub">
               DataPilot just helps you ask the questions.
             </p>
-            <div className="dp-cta__actions">
-              <Link href="/signup" className="dp-btn dp-btn--primary dp-btn--lg dp-btn--light">
-                Get started - it&apos;s free
-                <IconArrow />
-              </Link>
-              <Link href="/login" className="dp-btn dp-btn--ghost-light dp-btn--lg">
-                Sign in
-              </Link>
-            </div>
+            <HomeCtaActions />
             <p className="dp-cta__footnote">No SQL knowledge required. No credit card needed.</p>
           </div>
         </section>

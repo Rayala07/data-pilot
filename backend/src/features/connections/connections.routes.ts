@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { SchemaProfile } from "../../engine/types";
 import { requireAuth } from "../auth/auth.middleware";
-import { recordDemoEvent } from "../demo/demo.repository";
+
 import { friendlyConnectionError } from "./connections.errors";
 import * as repo from "./connections.repository";
 import * as service from "./connections.service";
@@ -25,17 +25,6 @@ connectionsRouter.post("/", async (req, res) => {
       ...(result.connectionId ? { id: result.connectionId } : {}),
     });
     return;
-  }
-
-  // The signal that matters for a demo: the visitor attached a database of
-  // their own, rather than only poking at the cloned sample. Fire-and-forget.
-  if (req.isDemo) {
-    recordDemoEvent({
-      sessionId: req.userId!,
-      ref: req.demoRef,
-      event: "connection_added",
-      detail: `${result.connection.tableCount} tables`,
-    });
   }
 
   res.status(201).json(result.connection);

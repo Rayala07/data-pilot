@@ -1,55 +1,72 @@
 import { apiFetch, clearToken, setToken } from "@/lib/api";
 import type { UserProfile } from "@/lib/types";
 import { createApiThunk } from "@/store/createApiThunk";
+import { supabase } from "@/lib/supabase";
 
 export interface Credentials {
   email: string;
   password: string;
+  name?: string;
 }
 
-async function authenticate(path: string, body: Credentials): Promise<string> {
-  const { token } = await apiFetch<{ token: string }>(path, {
-    method: "POST",
-    body: JSON.stringify(body),
+export const signup = createApiThunk<{ status: "check-email"; email: string }, Credentials>(
+  "auth/signup",
+  async (creds) => {
+    const { error } = await supabase.auth.signUp({
+      email: creds.email,
+      password: creds.password,
+      options: {
+        data: { name: creds.name },
+        // No emailRedirectTo — OTP mode: user types the code, no link click needed
+      },
+    });
+    if (error) throw error;
+    return { status: "check-email", email: creds.email };
+  }
+);
+
+export const verifyOtp = createApiThunk<string, { email: string; token: string }>(
+  "auth/verifyOtp",
+  async ({ email, token }) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "signup",
+    });
+    if (error) throw error;
+    if (!data.session) throw new Error("Verification succeeded but no session was returned.");
+    const accessToken = data.session.access_token;
+    setToken(accessToken);
+    return accessToken;
+  }
+);
+
+export const resendOtp = createApiThunk<void, string>(
+  "auth/resendOtp",
+  async (email) => {
+    const { error } = await supabase.auth.resend({ email, type: "signup" });
+    if (error) throw error;
+  }
+);
+
+export const login = createApiThunk<string, Credentials>("auth/login", async (creds) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: creds.email,
+    password: creds.password,
   });
-  // Persist here rather than in the reducer: reducers must stay pure.
+  if (error) throw error;
+  if (!data.session) throw new Error("No session returned");
+
+  const token = data.session.access_token;
   setToken(token);
   return token;
-}
-
-export const signup = createApiThunk<string, Credentials>("auth/signup", (creds) =>
-  authenticate("/auth/signup", creds)
-);
-
-export const login = createApiThunk<string, Credentials>("auth/login", (creds) =>
-  authenticate("/auth/login", creds)
-);
+});
 
 export const logout = createApiThunk<void>("auth/logout", async () => {
+  await supabase.auth.signOut();
   clearToken();
 });
 
 export const fetchProfile = createApiThunk<UserProfile>("auth/fetchProfile", () =>
   apiFetch<UserProfile>("/auth/me")
 );
-
-export interface DemoSession {
-  token: string;
-  /** The cloned seed connection - the page lands the visitor directly on it. */
-  connectionId: string;
-}
-
-/**
- * One click from a portfolio to a live, isolated sandbox.
- *
- * `ref` is the /demo?ref=... tag identifying who the link was sent to. It is
- * telemetry only - the server sanitizes it and it grants nothing.
- */
-export const demoLogin = createApiThunk<DemoSession, string | undefined>("auth/demo", async (ref) => {
-  const session = await apiFetch<DemoSession>("/auth/demo", {
-    method: "POST",
-    body: JSON.stringify(ref ? { ref } : {}),
-  });
-  setToken(session.token);
-  return session;
-});

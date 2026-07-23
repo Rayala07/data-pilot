@@ -14,10 +14,8 @@ datasource db {
 model User {
   id           String       @id @default(uuid())
   email        String       @unique
-  passwordHash String
-  // Ephemeral demo tenants (created by POST /auth/demo). Swept after 24h;
-  // deleting the user cascades through Connection -> SchemaProfile/QueryLog.
-  isDemo       Boolean      @default(false)
+  name         String?
+  supabaseId   String?      @unique
   createdAt    DateTime     @default(now())
   connections  Connection[]
   queryLogs    QueryLog[]
@@ -39,30 +37,6 @@ model ApiKey {
   revokedAt  DateTime?
 
   @@index([userId])
-}
-
-// Append-only record of what a demo visitor actually did.
-//
-// Deliberately has NO relation to User. Demo tenants are swept after 24h and
-// cascade through Connection -> SchemaProfile/QueryLog, which would take the
-// evidence with them - so this table would be empty exactly when it matters.
-// `sessionId` is the demo user's id at the time, kept as a plain string so the
-// sweep cannot reach it. Nothing secret is ever written here: no connection
-// string, no token.
-model DemoEvent {
-  id        String   @id @default(uuid())
-  sessionId String
-  /** Tag from /demo?ref=... - identifies who the link was sent to. */
-  ref       String?
-  /** session_started | connection_added | question_asked */
-  event     String
-  /** Human context: the question text, or a connection's table count. */
-  detail    String?
-  createdAt DateTime @default(now())
-
-  @@index([ref])
-  @@index([sessionId])
-  @@index([createdAt])
 }
 
 model Connection {

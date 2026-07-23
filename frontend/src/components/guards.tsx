@@ -36,7 +36,11 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     if (hydrated && !token) router.replace("/login");
   }, [hydrated, token, router]);
 
-  if (!hydrated || !token) return <Pending />;
+  // Don't render children until we know the auth state AND the user is signed in.
+  // Rendering children before hydration would fire data-fetching effects with no token.
+  // Rendering children when there's no token (but pre-redirect) would flash the page.
+  if (!hydrated) return <Pending />;
+  if (!token) return <Pending />; // redirect is queued, suppress content flash
   return <>{children}</>;
 }
 
@@ -49,6 +53,7 @@ export function RequireGuest({ children }: { children: ReactNode }) {
     if (hydrated && token) router.replace("/connections");
   }, [hydrated, token, router]);
 
-  if (!hydrated || token) return <Pending />;
+  if (!hydrated) return <Pending />;
+  if (token) return <Pending />; // redirect is queued, suppress login flash
   return <>{children}</>;
 }

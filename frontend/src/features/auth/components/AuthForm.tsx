@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Alert, Button, Card, Field, Input } from "@/components/ui";
 import { isLoading } from "@/store/asyncState";
@@ -17,11 +18,15 @@ import { login, signup } from "../auth.thunks";
  * which wraps this route group - navigates away. Redirect logic lives in one place.
  */
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { request } = useAppSelector((s) => s.auth);
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [localError, setLocalError] = useState("");
 
   const isSignup = mode === "signup";
   const submitting = isLoading(request);
@@ -29,12 +34,29 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   // Don't carry an error from one screen to the other.
   useEffect(() => {
     dispatch(clearError());
+    setLocalError("");
   }, [dispatch, mode]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const action = isSignup ? signup : login;
-    await dispatch(action({ email, password }));
+    setLocalError("");
+
+    if (isSignup && password !== confirmPassword) {
+      setLocalError("Passwords do not match");
+      return;
+    }
+
+    try {
+      if (isSignup) {
+        await dispatch(signup({ email, password, name })).unwrap();
+        router.push("/verify-email");
+      } else {
+        await dispatch(login({ email, password })).unwrap();
+        // login success → token set in slice → RequireGuest redirects to /connections
+      }
+    } catch {
+      // Error stored in redux slice, shown via request.error
+    }
   }
 
   return (
@@ -50,6 +72,20 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
         </div>
 
         {request.error && <Alert>{request.error}</Alert>}
+        {localError && <Alert>{localError}</Alert>}
+
+        {isSignup && (
+          <Field label="Name">
+            <Input
+              type="text"
+              required
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Jane Doe"
+            />
+          </Field>
+        )}
 
         <Field label="Email">
           <Input
@@ -74,7 +110,21 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           />
         </Field>
 
-        <Button type="submit" className="w-full" loading={submitting} disabled={!email || !password}>
+        {isSignup && (
+          <Field label="Confirm Password">
+            <Input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </Field>
+        )}
+
+        <Button type="submit" className="w-full" loading={submitting} disabled={!email || !password || (isSignup && (!name || !confirmPassword))}>
           {isSignup ? "Create account" : "Sign in"}
         </Button>
 
