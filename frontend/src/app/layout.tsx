@@ -19,7 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full">
+      <body className="min-h-full" suppressHydrationWarning>
         {/*
           RootProvider lives at the root (not the docs layout) so next-themes'
           inline theme script is server-rendered once and persists across
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           which is vacuously true for an empty array, so every keypress would
           open the dialog.
         */}
-        <RootProvider search={{ enabled: false }}>
+        <RootProvider search={{ enabled: false }} theme={{ nonce: "" }}>
           <StoreProvider>{children}</StoreProvider>
         </RootProvider>
       </body>

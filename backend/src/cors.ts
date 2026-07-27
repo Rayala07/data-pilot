@@ -21,7 +21,7 @@ const LOOPBACK = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 export function corsOptions(): CorsOptions {
   const allowlist = (process.env.FRONTEND_URL ?? "http://localhost:3000")
     .split(",")
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/\/+$/, ""))
     .filter(Boolean);
 
   const isProduction = process.env.NODE_ENV === "production";
