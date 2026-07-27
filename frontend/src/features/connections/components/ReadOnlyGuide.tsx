@@ -8,8 +8,8 @@ const ROLE = "datapilot_readonly";
 /**
  * There is no universal no-code way to create a least-privilege Postgres role -
  * it is a privileged operation by definition. The lowest-friction path that
- * works everywhere is: copy this, paste it into your provider's browser SQL
- * editor, press Run. No terminal, no psql, nothing to install.
+ * works everywhere is: copy this, paste it into your database's browser SQL
+ * editor, press Run.
  *
  * We generate the password here so the SQL and the connection string come out
  * already matching; the user only fills in host and database. It's generated in
@@ -26,10 +26,10 @@ function generatePassword(): string {
 // Deliberately no `GRANT CONNECT`: PUBLIC already holds it by default on every
 // managed Postgres, and the only correct way to name the current database in a
 // GRANT is a DO block with format(%I) - noise for a beginner-facing snippet.
-// The rare hardened case is covered by the footnote below instead.
+// The rare hardened case is covered by the troubleshooting note below instead.
 function sqlFor(password: string): string {
   return [
-    `-- Creates a role that can read your data and nothing else.`,
+    `-- Creates a login that can read your data and nothing else.`,
     `CREATE ROLE ${ROLE} WITH LOGIN PASSWORD '${password}';`,
     ``,
     `GRANT USAGE ON SCHEMA public TO ${ROLE};`,
@@ -69,11 +69,15 @@ export function ReadOnlyGuide() {
     <Disclosure summary="How do I get a read-only connection string?">
       <div className="space-y-5">
         <p className="text-sm text-fg-muted">
-          No terminal needed. Most managed Postgres hosts give you a SQL editor (or query console) in the browser -
-          paste, press Run, done. Any Postgres also works over <span className="text-fg">psql</span>.
+          DataPilot only ever reads your data, so connect it with a login that can read but not change anything.
+          Two copy-pastes and you&apos;re done.
         </p>
 
-        <Step n={1} title="Run this once, as an admin, on the database you want to connect">
+        <Step n={1} title="Make a read-only login">
+          <p className="text-xs text-fg-subtle">
+            Paste this into your database&apos;s SQL editor and run it (it also works in{" "}
+            <span className="text-fg">psql</span>). You&apos;ll need admin access to the database.
+          </p>
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <CodeBlock>{sql}</CodeBlock>
@@ -81,54 +85,47 @@ export function ReadOnlyGuide() {
             <CopyButton value={sql} label="Copy SQL" />
           </div>
           <p className="text-xs text-fg-subtle">
-            The password is generated in your browser - it is not sent anywhere until you submit the connection string
-            above, which we encrypt at rest.
+            The password is made in your browser and isn&apos;t sent anywhere until you connect.
           </p>
         </Step>
 
-        <Step n={2} title="Point it at your database, then paste it into the field above">
+        <Step n={2} title="Put it in a connection string">
+          <p className="text-xs text-fg-subtle">
+            Replace <span className="text-fg">HOST</span> and <span className="text-fg">DATABASE</span> with yours.
+            Already have a connection string from your provider? Keep it exactly as is and just change the username and
+            password to the ones below.
+          </p>
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <CodeBlock>{connectionString}</CodeBlock>
             </div>
             <CopyButton value={connectionString} label="Copy" />
           </div>
-          <p className="text-xs text-fg-subtle">
-            Fill in <span className="text-fg">HOST</span> and <span className="text-fg">DATABASE</span>, or take the
-            string your provider already gives you and just swap in the username and password above - keeping its host,
-            database, and any <code className="font-mono text-fg">?sslmode=...</code> parameters.
-          </p>
-          <p className="text-xs text-fg-subtle">
-            Use a <span className="text-fg">direct</span> (session-mode) connection, not a{" "}
-            <span className="text-fg">transaction pooler</span>: DataPilot applies a read-only setting to your session
-            and runs several queries on it, and a pooler can route them to different connections and drop it. A string
-            is pooled if its host or parameters contain <code className="font-mono text-fg">pooler</code>,{" "}
-            <code className="font-mono text-fg">pgbouncer</code>, or <code className="font-mono text-fg">pool</code>, or
-            it uses a pooling-only port such as <code className="font-mono text-fg">6543</code>. If your provider lists
-            two strings, pick the one labelled <span className="text-fg">Direct</span> or{" "}
-            <span className="text-fg">Session</span>.
-          </p>
+          <p className="text-xs text-fg-subtle">Then paste the finished string into the field above.</p>
         </Step>
 
-        <div className="space-y-1.5 rounded-lg border border-line bg-surface-2 p-3">
+        <div className="space-y-2 rounded-lg border border-line bg-surface-2 p-3">
+          <p className="text-xs font-medium text-fg">If something goes wrong</p>
           <p className="text-xs text-fg-muted">
-            <span className="font-medium text-fg">Not the person who manages the database?</span> Send them step 1 -
-            they only need to run it once and give you back the string from step 2.
+            <span className="text-fg">It won&apos;t connect or times out.</span> Use your provider&apos;s{" "}
+            <span className="text-fg">Direct</span> or <span className="text-fg">Session</span> connection string, not a{" "}
+            <span className="text-fg">Pooled</span> or <span className="text-fg">Transaction</span> one. (Pooled strings
+            usually have <code className="font-mono text-fg">pooler</code> or{" "}
+            <code className="font-mono text-fg">pgbouncer</code> in the address, or use port{" "}
+            <code className="font-mono text-fg">6543</code>.)
           </p>
           <p className="text-xs text-fg-muted">
-            <span className="font-medium text-fg">Prefer zero SQL?</span> Some providers offer a read-only replica
-            endpoint - point DataPilot at that and skip step 1 entirely. Writes are rejected by the endpoint itself.
-          </p>
-          <p className="text-xs text-fg-muted">
-            <span className="font-medium text-fg">Step 1 says it can&apos;t connect?</span> Your admin has revoked the
-            default CONNECT grant. Also run{" "}
+            <span className="text-fg">&quot;permission denied for database&quot;.</span> Run this once too:{" "}
             <code className="font-mono text-fg">GRANT CONNECT ON DATABASE your_db TO {ROLE};</code>
+          </p>
+          <p className="text-xs text-fg-muted">
+            <span className="text-fg">You don&apos;t manage this database.</span> Send step 1 to whoever does, and have
+            them give you back the string from step 2.
           </p>
         </div>
 
         <p className="text-xs text-fg-subtle">
-          DataPilot checks this for you: after connecting, it verifies the credential really cannot write, and warns you
-          if it can.
+          After you connect, DataPilot double-checks that the login really can&apos;t write.
         </p>
       </div>
     </Disclosure>
