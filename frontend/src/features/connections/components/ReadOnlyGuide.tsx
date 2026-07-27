@@ -69,8 +69,8 @@ export function ReadOnlyGuide() {
     <Disclosure summary="How do I get a read-only connection string?">
       <div className="space-y-5">
         <p className="text-sm text-fg-muted">
-          No terminal needed. Most hosts give you a SQL editor in the browser - Supabase and Neon both call it{" "}
-          <span className="text-fg">SQL Editor</span>. Paste, press Run, done.
+          No terminal needed. Most managed Postgres hosts give you a SQL editor (or query console) in the browser -
+          paste, press Run, done. Any Postgres also works over <span className="text-fg">psql</span>.
         </p>
 
         <Step n={1} title="Run this once, as an admin, on the database you want to connect">
@@ -86,7 +86,7 @@ export function ReadOnlyGuide() {
           </p>
         </Step>
 
-        <Step n={2} title="Replace HOST and DATABASE, then paste it into the field above">
+        <Step n={2} title="Point it at your database, then paste it into the field above">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <CodeBlock>{connectionString}</CodeBlock>
@@ -94,8 +94,19 @@ export function ReadOnlyGuide() {
             <CopyButton value={connectionString} label="Copy" />
           </div>
           <p className="text-xs text-fg-subtle">
-            Use the <span className="text-fg">direct</span> connection (usually port 5432), not a transaction pooler
-            (often 6543). DataPilot sets a session-level read-only flag that poolers don&apos;t preserve.
+            Fill in <span className="text-fg">HOST</span> and <span className="text-fg">DATABASE</span>, or take the
+            string your provider already gives you and just swap in the username and password above - keeping its host,
+            database, and any <code className="font-mono text-fg">?sslmode=...</code> parameters.
+          </p>
+          <p className="text-xs text-fg-subtle">
+            Use a <span className="text-fg">direct</span> (session-mode) connection, not a{" "}
+            <span className="text-fg">transaction pooler</span>: DataPilot applies a read-only setting to your session
+            and runs several queries on it, and a pooler can route them to different connections and drop it. A string
+            is pooled if its host or parameters contain <code className="font-mono text-fg">pooler</code>,{" "}
+            <code className="font-mono text-fg">pgbouncer</code>, or <code className="font-mono text-fg">pool</code>, or
+            it uses a pooling-only port such as <code className="font-mono text-fg">6543</code>. If your provider lists
+            two strings, pick the one labelled <span className="text-fg">Direct</span> or{" "}
+            <span className="text-fg">Session</span>.
           </p>
         </Step>
 
@@ -105,8 +116,8 @@ export function ReadOnlyGuide() {
             they only need to run it once and give you back the string from step 2.
           </p>
           <p className="text-xs text-fg-muted">
-            <span className="font-medium text-fg">On Neon, zero SQL:</span> create a read replica branch and use its
-            connection string. Writes are rejected by the endpoint itself.
+            <span className="font-medium text-fg">Prefer zero SQL?</span> Some providers offer a read-only replica
+            endpoint - point DataPilot at that and skip step 1 entirely. Writes are rejected by the endpoint itself.
           </p>
           <p className="text-xs text-fg-muted">
             <span className="font-medium text-fg">Step 1 says it can&apos;t connect?</span> Your admin has revoked the
