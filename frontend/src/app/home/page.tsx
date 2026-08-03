@@ -1,333 +1,307 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Space_Grotesk } from "next/font/google";
 import { HomeNavActions, HomeHeroCta, HomeCtaActions } from "./HomeActions";
+import { HomeDemo } from "./HomeDemo";
+import { HomeSchemaMap } from "./HomeSchemaMap";
+import { HomeCommandMenu } from "./HomeCommandMenu";
 import "./home.css";
 
+const display = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "DataPilot - Ask Your Database Anything",
+  title: "DataPilot — Ask Your Database Anything",
   description:
-    "Connect your PostgreSQL database and ask questions in plain English. DataPilot translates your question into verified SQL, executes it safely, and renders the result as a chart - all in seconds.",
+    "Connect your PostgreSQL database and ask questions in plain English. DataPilot translates your question into verified SQL, executes it safely, and renders the result as a chart — all in seconds.",
 };
 
-/* ── Inline SVG icons ─────────────────────────────────────────────────────── */
-function IconDatabase() {
+/* ── Icons ────────────────────────────────────────────────────────────────────
+   One stroke voice throughout: 24px box, 1.6 stroke, round caps and joins.
+--------------------------------------------------------------------------- */
+function Icon({ size = 18, children }: { size?: number; children: React.ReactNode }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
-      <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {children}
     </svg>
   );
 }
 
-function IconSparkle() {
+const IconMark = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <path d="M12 2.5l8.23 4.75v9.5L12 21.5 3.77 16.75v-9.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M12 8.2l4.1 2.37v4.74L12 17.68l-4.1-2.37v-4.74z" fill="currentColor" />
+  </svg>
+);
+
+const IconDatabase = () => (
+  <Icon>
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+    <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+  </Icon>
+);
+
+const IconSparkle = () => (
+  <Icon>
+    <path d="M12 3l1.88 5.63L19.5 10l-5.62 1.37L12 17l-1.88-5.63L4.5 10l5.62-1.37z" />
+    <path d="M5 3l.94 2.81L8.75 7l-2.81.69L5 10l-.94-2.81L1.25 7l2.81-.69z" />
+  </Icon>
+);
+
+const IconShield = () => (
+  <Icon>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </Icon>
+);
+
+const IconChart = () => (
+  <Icon>
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+  </Icon>
+);
+
+const IconRefresh = () => (
+  <Icon>
+    <polyline points="23 4 23 10 17 10" />
+    <polyline points="1 20 1 14 7 14" />
+    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+  </Icon>
+);
+
+const IconLock = () => (
+  <Icon>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0110 0v4" />
+  </Icon>
+);
+
+const IconCheck = () => (
+  <Icon size={14}>
+    <polyline points="20 6 9 17 4 12" />
+  </Icon>
+);
+
+/* ── What the API hands back ──────────────────────────────────────────────────
+   Deliberately not a curl snippet. A request/response listing shows the
+   *mechanism*, and the mechanism is not what this section is selling — every
+   REST API on earth takes a POST. What it sells is the **transfer**: one plain
+   sentence leaves your product, and four things you would otherwise have to
+   build yourself come back. So the visual is the exchange, not the syntax.
+
+   Every field shown is real: rows, chart, sql are the actual response keys, and
+   the engine stages are the actual pipeline. The curl is one click away in the
+   API reference for readers who want it.
+--------------------------------------------------------------------------- */
+const ENGINE = [
+  "Retrieve the right tables",
+  "Generate SQL",
+  "Validate against your schema",
+  "Self-correct on failure",
+  "Execute read-only",
+];
+
+const RETURNS = [
+  { label: "Rows", sample: "Aurora Lamp — 48,210.00", note: "Typed JSON, ready to render" },
+  { label: "Chart spec", sample: "bar · x product · y revenue", note: "Chosen from the result's shape" },
+  { label: "Explanation", sample: "“Aurora Lamp is the top product by revenue.”", note: "Written per answer, not templated" },
+  { label: "SQL", sample: "SELECT p.prod_title AS product …", note: "The exact query that ran" },
+];
+
+/* ── Footer index ─────────────────────────────────────────────────────────────
+   Runs as inline text, not stacked columns. Four columns of link lists is the
+   most-recognised footer fingerprint on the web and reads as filler however real
+   the destinations are; set as running lines against a mono term, the same links
+   read as a colophon — denser, deliberate, and specific to a technical product.
+   Every href resolves to a route or an MDX page that exists.
+--------------------------------------------------------------------------- */
+const FOOT_INDEX = [
+  {
+    term: "Product",
+    links: [
+      { label: "How it works", href: "#how-it-works" },
+      { label: "The engine", href: "#engine" },
+      { label: "Features", href: "#features" },
+      { label: "Security", href: "#security" },
+      { label: "The API", href: "#api" },
+    ],
+  },
+  {
+    term: "Docs",
+    links: [
+      { label: "Quickstart", href: "/docs/quickstart" },
+      { label: "Concepts", href: "/docs/concepts/how-it-works" },
+      { label: "Security model", href: "/docs/concepts/security" },
+      { label: "All docs", href: "/docs" },
+    ],
+  },
+  {
+    term: "Reference",
+    links: [
+      { label: "Authentication", href: "/docs/api-reference/authentication" },
+      { label: "Query", href: "/docs/api-reference/query" },
+      { label: "Connections", href: "/docs/api-reference/connections" },
+      { label: "Errors", href: "/docs/api-reference/errors" },
+      { label: "Rate limits", href: "/docs/api-reference/rate-limits" },
+    ],
+  },
+  {
+    term: "Account",
+    links: [
+      { label: "Sign in", href: "/login" },
+      { label: "Sign up", href: "/signup" },
+    ],
+  },
+];
+
+function ApiExchange() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 3l1.88 5.63L19.5 10l-5.62 1.37L12 17l-1.88-5.63L4.5 10l5.62-1.37z" />
-      <path d="M5 3l.94 2.81L8.75 7l-2.81.69L5 10l-.94-2.81L1.25 7l2.81-.69z" />
-      <path d="M19 17l.94 2.81 2.81.69-2.81.69L19 24l-.94-2.81-2.81-.69 2.81-.69z" />
-    </svg>
-  );
-}
-
-function IconShield() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  );
-}
-
-function IconChart() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="18" y1="20" x2="18" y2="10" />
-      <line x1="12" y1="20" x2="12" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="14" />
-    </svg>
-  );
-}
-
-function IconRefresh() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="23 4 23 10 17 10" />
-      <polyline points="1 20 1 14 7 14" />
-      <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-    </svg>
-  );
-}
-
-function IconLock() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0110 0v4" />
-    </svg>
-  );
-}
-
-function IconArrow() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-/* ── Product preview mock ─────────────────────────────────────────────────── */
-function ProductMockup() {
-  return (
-    <div className="dp-mockup" role="img" aria-label="DataPilot product preview">
-      {/* Sidebar */}
-      <div className="dp-mockup__body">
-        <aside className="dp-sidebar">
-          <div className="dp-sidebar__label">Connections</div>
-          <div className="dp-sidebar__item dp-sidebar__item--active">
-            <IconDatabase />
-            <span>prod-ecommerce</span>
-          </div>
-          <div className="dp-sidebar__item">
-            <IconDatabase />
-            <span>analytics-db</span>
-          </div>
-        </aside>
-
-        {/* Main panel */}
-        <main className="dp-main">
-          {/* Query bar */}
-          <div className="dp-query-bar">
-            <div className="dp-query-input">
-              <span className="dp-query-label">Ask</span>
-              <span className="dp-query-text">monthly revenue for the last 6 months</span>
-            </div>
-            <button className="dp-run-btn" tabIndex={-1} aria-hidden="true">Run</button>
-          </div>
-
-          {/* Answer explanation */}
-          <p className="dp-explanation">
-            Revenue grew steadily from Jan to May, peaking at <strong>$184k</strong> in May before a slight dip in June.
-          </p>
-
-          {/* Bar chart */}
-          <div className="dp-chart">
-            <div className="dp-chart__bars">
-              {[
-                { label: "Jan", h: 55, val: "$98k" },
-                { label: "Feb", h: 68, val: "$122k" },
-                { label: "Mar", h: 78, val: "$140k" },
-                { label: "Apr", h: 88, val: "$158k" },
-                { label: "May", h: 100, val: "$184k" },
-                { label: "Jun", h: 90, val: "$162k" },
-              ].map((bar) => (
-                <div key={bar.label} className="dp-chart__col">
-                  <span className="dp-chart__val">{bar.val}</span>
-                  <div className="dp-chart__bar" style={{ height: `${bar.h}%` }} />
-                  <span className="dp-chart__label">{bar.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* SQL disclosure */}
-          <div className="dp-sql-pill">
-            <span className="dp-sql-pill__icon">{"<>"}</span>
-            <span>SELECT month, SUM(amount) FROM orders GROUP BY month ORDER BY month</span>
-          </div>
-
-          {/* Attempt trail badge */}
-          <div className="dp-badge dp-badge--success">
-            ✓ Answered in 1.2 s &nbsp;·&nbsp; 6 rows &nbsp;·&nbsp; retrieved: orders, products
-          </div>
-        </main>
+    <figure
+      className="dp-api"
+      role="img"
+      aria-label="One question leaves your product, DataPilot retrieves tables, generates and validates SQL, self-corrects and executes it read-only, and returns four things: rows, a chart spec, a plain-English explanation, and the exact SQL."
+    >
+      <div className="dp-api__block">
+        <span className="dp-label">Your product sends</span>
+        <p className="dp-api__ask">“top 5 products by revenue”</p>
+        <p className="dp-api__aside">One sentence and a connection id. That&apos;s the whole request.</p>
       </div>
-    </div>
-  );
-}
 
-/* ── Self-correction trail mockup ─────────────────────────────────────────── */
-function LoopMockup() {
-  const steps = [
-    {
-      attempt: 1,
-      status: "fail",
-      label: "hallucination",
-      sql: "SELECT * FROM revenue_summary ...",
-      note: "Table 'revenue_summary' does not exist",
-    },
-    {
-      attempt: 2,
-      status: "fail",
-      label: "validation",
-      sql: "SELECT month, revenue FROM ord_hdr ...",
-      note: "Column 'revenue' not in schema",
-    },
-    {
-      attempt: 3,
-      status: "ok",
-      label: "succeeded",
-      sql: "SELECT DATE_TRUNC('month', created_at) AS month, SUM(total) FROM orders GROUP BY 1",
-      note: "6 rows returned",
-    },
-  ];
+      <div className="dp-api__flow" aria-hidden="true">
+        <span className="dp-api__wire" />
+        <span className="dp-api__verb">POST /v1/query</span>
+        <span className="dp-api__wire" />
+      </div>
 
-  return (
-    <div className="dp-loop">
-      {steps.map((s, i) => (
-        <div key={s.attempt} className="dp-loop__step">
-          <div className="dp-loop__connector">
-            <div className={`dp-loop__dot dp-loop__dot--${s.status}`} />
-            {i < steps.length - 1 && <div className="dp-loop__line" />}
-          </div>
-          <div className="dp-loop__content">
-            <div className="dp-loop__header">
-              <span className="dp-loop__attempt">Attempt {s.attempt}</span>
-              <span className={`dp-loop__badge dp-loop__badge--${s.status}`}>{s.label}</span>
-            </div>
-            <code className="dp-loop__sql">{s.sql}</code>
-            <p className="dp-loop__note">{s.note}</p>
-          </div>
-        </div>
-      ))}
-    </div>
+      <div className="dp-api__block dp-api__block--engine">
+        <span className="dp-label dp-api__engineLabel">
+          DataPilot does the part you&apos;d otherwise build
+        </span>
+        <ul className="dp-api__steps">
+          {ENGINE.map((s) => (
+            <li key={s}>{s}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="dp-api__flow" aria-hidden="true">
+        <span className="dp-api__wire" />
+        <span className="dp-api__verb dp-api__verb--ok">200 OK</span>
+        <span className="dp-api__wire" />
+      </div>
+
+      <div className="dp-api__block">
+        <span className="dp-label">Your product gets back</span>
+        <ul className="dp-api__returns">
+          {RETURNS.map((r) => (
+            <li key={r.label} className="dp-api__return">
+              <span className="dp-api__returnLabel">{r.label}</span>
+              <code className="dp-api__returnSample">{r.sample}</code>
+              <span className="dp-api__returnNote">{r.note}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </figure>
   );
 }
 
 /* ── Page ─────────────────────────────────────────────────────────────────── */
-/**
- * The public API, shown the way a developer meets it: a request and what comes
- * back. Kept in step with the quickstart in content/docs/quickstart.mdx — the
- * Content-Type header is not decoration, express.json() ignores the body
- * without it.
- */
-function ApiMockup() {
-  return (
-    <div className="dp-mockup" role="img" aria-label="An example DataPilot API request and its JSON response">
-      <div className="dp-mockup__bar">
-        <span className="dp-dot dp-dot--red" />
-        <span className="dp-dot dp-dot--yellow" />
-        <span className="dp-dot dp-dot--green" />
-        <span className="dp-mockup__title">your-backend</span>
-      </div>
-      <pre className="dp-api-code">
-        <code>
-          <span className="dp-api-code__cmd">curl</span>
-          {" $DATAPILOT_URL/v1/query \\\n  "}
-          <span className="dp-api-code__flag">-H</span>
-          {" "}
-          <span className="dp-api-code__str">{'"Authorization: Bearer $DP_KEY"'}</span>
-          {" \\\n  "}
-          <span className="dp-api-code__flag">-H</span>
-          {" "}
-          <span className="dp-api-code__str">{'"Content-Type: application/json"'}</span>
-          {" \\\n  "}
-          <span className="dp-api-code__flag">-d</span>
-          {" "}
-          <span className="dp-api-code__str">
-            {'\'{ "connectionId": "4f9a1c72...", "question": "top 5 products by revenue" }\''}
-          </span>
-          {"\n\n"}
-          <span className="dp-api-code__muted">{"# 200 OK"}</span>
-          {"\n"}
-          {`{
-  "rows":  [{ "product": "Aurora Lamp", "revenue": "48210.00" }],
-  "chart": { "type": "bar", "xField": "product", "yField": "revenue" },
-  "sql":   "SELECT p.prod_title AS product, SUM(ol.line_total) ...",
-  "usage": { "attemptsUsed": 1 }
-}`}
-        </code>
-      </pre>
-    </div>
-  );
-}
-
 export default function HomePage() {
   return (
-    <div className="dp-page">
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+    <div className={`dp-page ${display.variable}`}>
+      {/* Two fixed blooms behind everything. Not animated, not mesh, not aurora —
+          they exist so the canvas has depth instead of being flat charcoal. */}
+      <div className="dp-canvas" aria-hidden="true" />
+
       <header className="dp-nav">
         <div className="dp-nav__inner">
           {/* /home, not "/": "/" bounces a signed-out visitor straight back here. */}
-          <Link href="/home" className="dp-logo" aria-label="DataPilot home">
-            <span className="dp-logo__icon" aria-hidden="true">⬡</span>
-            <span className="dp-logo__text">DataPilot</span>
+          <Link href="/home" className="dp-brand" aria-label="DataPilot home">
+            <span className="dp-brand__mark"><IconMark /></span>
+            <span className="dp-brand__text">DataPilot</span>
           </Link>
-          <nav className="dp-nav__links" aria-label="Primary navigation">
-            <a href="#how-it-works" className="dp-nav__link">How it works</a>
-            <a href="#features" className="dp-nav__link">Features</a>
-            <a href="#security" className="dp-nav__link">Security</a>
-            <a href="#api" className="dp-nav__link">API</a>
+
+          <div className="dp-nav__mid">
+            <HomeCommandMenu />
+          </div>
+
+          <div className="dp-nav__end">
             <Link href="/docs" className="dp-nav__link">Docs</Link>
-          </nav>
-          <HomeNavActions />
+            <HomeNavActions />
+          </div>
         </div>
       </header>
 
       <main id="main-content">
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
+        {/* ── Hero · the product in motion is the sale ──────────────────── */}
         <section className="dp-hero" aria-labelledby="hero-heading">
-          <div className="dp-hero__inner">
-            <div className="dp-hero__badge">
-              <IconSparkle />
-              <span>AI-powered · Self-correcting · Read-only safe</span>
-            </div>
+          <div className="dp-shell dp-hero__head">
+            <p className="dp-hero__meta dp-enter" style={{ "--i": 0 } as React.CSSProperties}>
+              <span className="dp-label">PostgreSQL</span>
+              <span className="dp-dot" aria-hidden="true" />
+              <span className="dp-label">Read-only</span>
+              <span className="dp-dot" aria-hidden="true" />
+              <span className="dp-label">Self-correcting</span>
+            </p>
 
-            <h1 id="hero-heading" className="dp-hero__headline">
-              Ask your database
-              <br />
-              <span className="dp-hero__gradient">anything.</span>
+            <h1
+              id="hero-heading"
+              className="dp-hero__title dp-enter"
+              style={{ "--i": 1 } as React.CSSProperties}
+            >
+              Ask your database <span className="dp-hero__accent">anything.</span>
             </h1>
 
-            <p className="dp-hero__sub">
-              Connect a PostgreSQL database. Type a question in plain English.
-              DataPilot translates it into verified SQL, executes it safely,
-              and renders the result as a chart - in seconds.
+            <p className="dp-hero__lede dp-enter" style={{ "--i": 2 } as React.CSSProperties}>
+              Type a question in plain English. DataPilot finds the right tables, writes the SQL,
+              fixes its own mistakes, and charts the answer — read-only, every time.
             </p>
 
             <HomeHeroCta />
-
-            <div className="dp-hero__trust">
-              <span className="dp-trust-item"><IconCheck /><span>No SQL knowledge needed</span></span>
-              <span className="dp-trust-item"><IconCheck /><span>Read-only by design</span></span>
-              <span className="dp-trust-item"><IconCheck /><span>Credentials encrypted at rest</span></span>
-            </div>
           </div>
 
-          {/* Product mockup */}
-          <div className="dp-hero__preview">
-            <ProductMockup />
+          {/* The demonstration. Not a screenshot — it runs. */}
+          <div className="dp-shell dp-hero__stage dp-enter" style={{ "--i": 4 } as React.CSSProperties}>
+            <HomeDemo />
           </div>
         </section>
 
-        {/* ── Divider ───────────────────────────────────────────────────── */}
-        <div className="dp-divider" aria-hidden="true" />
-
-        {/* ── Problem → Solution ────────────────────────────────────────── */}
-        <section className="dp-section dp-section--alt" id="how-it-works" aria-labelledby="problem-heading">
-          <div className="dp-container">
-            <div className="dp-section__header">
-              <span className="dp-eyebrow">The problem</span>
-              <h2 id="problem-heading" className="dp-section__title">
+        {/* ── The problem ──────────────────────────────────────────────── */}
+        <section className="dp-section" aria-labelledby="problem-heading">
+          <div className="dp-shell">
+            <div className="dp-head">
+              <h2 id="problem-heading" className="dp-head__title">
                 Your data is locked behind SQL.
               </h2>
-              <p className="dp-section__sub">
-                Every time a non-technical stakeholder needs a number, they open a Slack thread. Every time a developer needs a quick answer, they context-switch to a SQL editor. The bottleneck isn't the database - it's the language barrier.
+              <p className="dp-head__lede">
+                Every time a non-technical stakeholder needs a number, they open a Slack thread.
+                Every time a developer needs a quick answer, they context-switch to a SQL editor.
+                The bottleneck isn’t the database — it’s the language barrier.
               </p>
             </div>
 
-            <div className="dp-compare">
-              <div className="dp-compare__side">
-                <div className="dp-compare__label dp-compare__label--before">Without DataPilot</div>
-                <ul className="dp-compare__list dp-compare__list--before">
+            <div className="dp-ledger">
+              <div className="dp-ledger__col">
+                <span className="dp-label dp-ledger__label">Without DataPilot</span>
+                <ul className="dp-ledger__list">
                   <li>Write SQL manually or ask a developer</li>
                   <li>Wait hours for a simple metric</li>
                   <li>Copy-paste data into Excel to chart it</li>
@@ -335,9 +309,9 @@ export default function HomePage() {
                   <li>Credentials shared in Slack threads</li>
                 </ul>
               </div>
-              <div className="dp-compare__side">
-                <div className="dp-compare__label dp-compare__label--after">With DataPilot</div>
-                <ul className="dp-compare__list dp-compare__list--after">
+              <div className="dp-ledger__col dp-ledger__col--after">
+                <span className="dp-label dp-ledger__label">With DataPilot</span>
+                <ul className="dp-ledger__list">
                   <li>Type a question, get an answer</li>
                   <li>Results in under 2 seconds</li>
                   <li>Charts rendered automatically</li>
@@ -349,252 +323,239 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── How it works ──────────────────────────────────────────────── */}
-        <section className="dp-section" aria-labelledby="flow-heading">
-          <div className="dp-container">
-            <div className="dp-section__header">
-              <span className="dp-eyebrow">How it works</span>
-              <h2 id="flow-heading" className="dp-section__title">From question to insight in four steps.</h2>
+        {/* ── How it works ─────────────────────────────────────────────── */}
+        <section className="dp-section" id="how-it-works" aria-labelledby="flow-heading">
+          <div className="dp-shell">
+            <div className="dp-head">
+              <h2 id="flow-heading" className="dp-head__title">
+                From question to insight in four steps.
+              </h2>
             </div>
 
-            <ol className="dp-flow" aria-label="Product workflow">
+            <ol className="dp-steps">
               {[
-                {
-                  n: "01",
-                  title: "Connect your database",
-                  desc: "Paste your PostgreSQL string. We automatically scan your schema and build a semantic map of every table.",
-                  icon: <IconDatabase />,
-                },
-                {
-                  n: "02",
-                  title: "Ask in plain English",
-                  desc: "Type any question about your data in plain English. No SQL or complicated filters required.",
-                  icon: <IconSparkle />,
-                },
-                {
-                  n: "03",
-                  title: "AI generates and self-corrects",
-                  desc: "The engine generates and validates SQL against your schema. If it fails, it auto-corrects up to 3 times.",
-                  icon: <IconRefresh />,
-                },
-                {
-                  n: "04",
-                  title: "Results as charts, instantly",
-                  desc: "Answers are instantly rendered as the optimal chart based on data shape. Raw tables are always available.",
-                  icon: <IconChart />,
-                },
-              ].map((step) => (
-                <li key={step.n} className="dp-flow__step">
-                  <div className="dp-flow__num" aria-hidden="true">{step.n}</div>
-                  <div className="dp-flow__icon">{step.icon}</div>
-                  <h3 className="dp-flow__title">{step.title}</h3>
-                  <p className="dp-flow__desc">{step.desc}</p>
+                { n: "01", title: "Connect your database", desc: "Paste your PostgreSQL string. We scan your schema and build a semantic map of every table.", icon: <IconDatabase /> },
+                { n: "02", title: "Ask in plain English", desc: "Type any question about your data. No SQL, no filters, no query builder.", icon: <IconSparkle /> },
+                { n: "03", title: "The engine writes and checks the SQL", desc: "It generates a query, validates it against your schema, and auto-corrects up to three times if it fails.", icon: <IconRefresh /> },
+                { n: "04", title: "Results arrive as charts", desc: "The chart type follows the shape of the result. The raw table is always one click away.", icon: <IconChart /> },
+              ].map((s) => (
+                <li key={s.n} className="dp-step">
+                  <span className="dp-step__ico">{s.icon}</span>
+                  <span className="dp-step__n" aria-hidden="true">{s.n}</span>
+                  <h3 className="dp-step__title">{s.title}</h3>
+                  <p className="dp-step__desc">{s.desc}</p>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        {/* ── Self-correction deep dive ──────────────────────────────────── */}
-        <section className="dp-section dp-section--alt" aria-labelledby="loop-heading">
-          <div className="dp-container dp-container--split">
+        {/* ── The engine · retrieval ───────────────────────────────────── */}
+        <section className="dp-section" id="engine" aria-labelledby="engine-heading">
+          <div className="dp-shell dp-split">
             <div className="dp-split__text">
-              <span className="dp-eyebrow">The engine</span>
-              <h2 id="loop-heading" className="dp-section__title dp-section__title--left">
-                It doesn't give up on the first try.
+              <h2 id="engine-heading" className="dp-head__title">
+                It finds the three tables that matter out of forty-seven.
               </h2>
-              <p className="dp-section__sub dp-section__sub--left">
-                Most AI SQL tools hallucinate a query and silently fail. DataPilot runs a structured self-correction loop - each failed attempt feeds back into the next with the exact error, the real column list, and the schema context. The result: answers, not apologies.
+              <p className="dp-head__lede">
+                Most AI SQL tools paste your whole schema into a prompt and hope. DataPilot embeds
+                every table and retrieves only the ones your question is actually about — which is
+                why it works on databases where the tables are called{" "}
+                <code className="dp-inline">ord_hdr</code> and{" "}
+                <code className="dp-inline">prod_attr</code>, not just on tidy demos.
               </p>
-              <ul className="dp-feature-list">
+              <ul className="dp-checks">
                 <li><IconCheck /><span>Detects hallucinated table and column names</span></li>
                 <li><IconCheck /><span>Validates SQL against the real schema before execution</span></li>
-                <li><IconCheck /><span>Blocks all non-SELECT queries at the security layer</span></li>
-                <li><IconCheck /><span>Full attempt audit trail - you see every retry</span></li>
+                <li><IconCheck /><span>Blocks every non-SELECT query at the security layer</span></li>
+                <li><IconCheck /><span>Keeps the full attempt trail — you see every retry</span></li>
               </ul>
             </div>
             <div className="dp-split__visual">
-              <LoopMockup />
+              <HomeSchemaMap />
             </div>
           </div>
         </section>
 
-        {/* ── Features ──────────────────────────────────────────────────── */}
+        {/* ── Features ─────────────────────────────────────────────────── */}
         <section className="dp-section" id="features" aria-labelledby="features-heading">
-          <div className="dp-container">
-            <div className="dp-section__header">
-              <span className="dp-eyebrow">Features</span>
-              <h2 id="features-heading" className="dp-section__title">Built for the way data teams actually work.</h2>
+          <div className="dp-shell">
+            <div className="dp-head">
+              <h2 id="features-heading" className="dp-head__title">
+                Built for the way data teams actually work.
+              </h2>
             </div>
 
-            <div className="dp-features-grid">
+            <div className="dp-cards">
+              <article className="dp-card dp-card--lead">
+                <span className="dp-card__ico"><IconSparkle /></span>
+                <h3 className="dp-card__title">Semantic table retrieval</h3>
+                <p className="dp-card__desc">
+                  Embeddings find the exact tables your question is about — even in a database with
+                  dozens of tables and cryptic names nobody has documented since 2019.
+                </p>
+              </article>
+
               {[
-                {
-                  icon: <IconSparkle />,
-                  title: "Semantic table retrieval",
-                  desc: "Uses embeddings to find the exact tables relevant to your question - even across databases with dozens of tables and cryptic names.",
-                },
-                {
-                  icon: <IconChart />,
-                  title: "Auto-chart selection",
-                  desc: "Chart type is determined by result shape - deterministically. A bar chart when comparing categories. A line when trending over time. Never a random guess.",
-                },
-                {
-                  icon: <IconRefresh />,
-                  title: "Self-correcting loop",
-                  desc: "Three-attempt correction loop with structured feedback. Each retry gets the actual error, the real schema, and a smarter prompt.",
-                },
-                {
-                  icon: <IconDatabase />,
-                  title: "Business-language schema summary",
-                  desc: "Connect a database and DataPilot tells you what it's about in plain English - entities, row counts, date ranges, and suggested questions.",
-                },
-                {
-                  icon: <IconShield />,
-                  title: "Read-only enforcement",
-                  desc: "Every query goes through a security layer that rejects anything that isn't a SELECT. Even if the model hallucinates a DROP TABLE, it never executes.",
-                },
-                {
-                  icon: <IconLock />,
-                  title: "Encrypted credentials",
-                  desc: "Connection strings are AES-256 encrypted at rest. The plaintext is never stored or logged - decrypted only in memory, only when needed.",
-                },
+                { icon: <IconChart />, title: "Deterministic chart choice", desc: "Chart type follows result shape, not a guess. Bar for categories, line for time. The same result always draws the same chart." },
+                { icon: <IconRefresh />, title: "Self-correcting loop", desc: "Three attempts with structured feedback. Each retry gets the actual error, the real schema, and a sharper prompt." },
+                { icon: <IconDatabase />, title: "Schema summary in business language", desc: "Connect a database and DataPilot tells you what it is about — entities, row counts, date ranges, and questions worth asking." },
+                { icon: <IconShield />, title: "Read-only enforcement", desc: "Every query passes a security layer that rejects anything that is not a SELECT. A hallucinated DROP TABLE never executes." },
+                { icon: <IconLock />, title: "Encrypted credentials", desc: "Connection strings are AES-256 encrypted at rest. The plaintext is never stored or logged — decrypted in memory, only when needed." },
               ].map((f) => (
-                <article key={f.title} className="dp-feature-card">
-                  <div className="dp-feature-card__icon">{f.icon}</div>
-                  <h3 className="dp-feature-card__title">{f.title}</h3>
-                  <p className="dp-feature-card__desc">{f.desc}</p>
+                <article key={f.title} className="dp-card">
+                  <span className="dp-card__ico">{f.icon}</span>
+                  <h3 className="dp-card__title">{f.title}</h3>
+                  <p className="dp-card__desc">{f.desc}</p>
                 </article>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── Security ──────────────────────────────────────────────────── */}
-        <section className="dp-section dp-section--alt" id="security" aria-labelledby="security-heading">
-          <div className="dp-container">
-            <div className="dp-section__header">
-              <span className="dp-eyebrow">Security</span>
-              <h2 id="security-heading" className="dp-section__title">We take your data seriously.</h2>
-              <p className="dp-section__sub">
-                DataPilot was designed from day one with the assumption that your database contains sensitive production data.
-              </p>
-            </div>
+        {/* ── Security ─────────────────────────────────────────────────── */}
+        <section className="dp-section" id="security" aria-labelledby="security-heading">
+          <div className="dp-shell">
+            <div className="dp-vault">
+              <div className="dp-vault__head">
+                <span className="dp-vault__ico"><IconShield /></span>
+                <h2 id="security-heading" className="dp-head__title">
+                  A question can never write.
+                </h2>
+                <p className="dp-head__lede">
+                  DataPilot was designed from day one on the assumption that your database holds
+                  sensitive production data. Four guarantees, enforced in code rather than promised
+                  in a prompt.
+                </p>
+              </div>
 
-            <div className="dp-security-grid">
-              {[
-                { title: "AES-256 encryption", desc: "Connection strings encrypted at rest. Decrypted in memory only during query execution." },
-                { title: "Read-only sessions", desc: "Queries run on a read-only session. No INSERT, UPDATE, DELETE, DROP - ever." },
-                { title: "SELECT enforcement", desc: "A security layer validates every generated query before it touches your database." },
-                { title: "Credential verification", desc: "DataPilot checks whether your credential has write access and warns you if it does - and guides you to downgrade it." },
-              ].map((s) => (
-                <div key={s.title} className="dp-security-card">
-                  <div className="dp-security-card__icon"><IconShield /></div>
-                  <h3 className="dp-security-card__title">{s.title}</h3>
-                  <p className="dp-security-card__desc">{s.desc}</p>
-                </div>
-              ))}
+              <dl className="dp-spec">
+                {[
+                  { t: "AES-256 encryption", d: "Connection strings are encrypted at rest and decrypted in memory only for the duration of a query." },
+                  { t: "Read-only sessions", d: "Queries run on a read-only session. No INSERT, UPDATE, DELETE or DROP — ever." },
+                  { t: "SELECT enforcement", d: "A security layer validates every generated query before it reaches your database." },
+                  { t: "Credential verification", d: "DataPilot checks whether your credential has write access, warns you if it does, and walks you through downgrading it." },
+                ].map((s) => (
+                  <div key={s.t} className="dp-spec__row">
+                    <dt className="dp-spec__term">{s.t}</dt>
+                    <dd className="dp-spec__def">{s.d}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
         </section>
 
-
-        {/* ── For developers / public API ───────────────────────────────── */}
+        {/* ── API ──────────────────────────────────────────────────────── */}
         <section className="dp-section" id="api" aria-labelledby="api-heading">
-          <div className="dp-container dp-container--split">
+          <div className="dp-shell dp-split dp-split--flip">
             <div className="dp-split__text">
-              <span className="dp-eyebrow">For developers</span>
-              <h2 id="api-heading" className="dp-section__title dp-section__title--left">
+              <h2 id="api-heading" className="dp-head__title">
                 The same engine, from your own backend.
               </h2>
-              <p className="dp-section__sub dp-section__sub--left">
-                Everything the app does is a REST API. Register a database once, then POST a question and get the rows,
-                a chart spec, a plain-English explanation and the exact SQL back as JSON - retrieval, validation and the
-                self-correction loop included. Build DataPilot into your own product instead of sending people to ours.
+              <p className="dp-head__lede">
+                Everything the app does is a REST API. Register a database once, then POST a
+                question and get the rows, a chart spec, a plain-English explanation and the exact
+                SQL back as JSON — retrieval, validation and the self-correction loop included.
               </p>
-              <ul className="dp-feature-list">
-                <li><IconCheck /><span>Authenticated by API keys - your servers never touch a password or a session</span></li>
-                <li><IconCheck /><span>Keys are hashed at rest, scoped to their owner, and revocable in one click</span></li>
-                <li><IconCheck /><span>One predictable error shape, per-key rate limits, and the full attempt trail</span></li>
-                <li><IconCheck /><span>The same read-only guarantees the app runs on - a question can never write</span></li>
+              <ul className="dp-checks">
+                <li><IconCheck /><span>API keys, not passwords — your servers never touch a session</span></li>
+                <li><IconCheck /><span>Keys hashed at rest, scoped to their owner, revocable in one click</span></li>
+                <li><IconCheck /><span>One predictable error shape, per-key rate limits, the full attempt trail</span></li>
+                <li><IconCheck /><span>The same read-only guarantee the app runs on</span></li>
               </ul>
-              <div className="dp-split__cta">
-                <Link href="/docs/api-reference/authentication" className="dp-btn dp-btn--primary">
+              <div className="dp-actions">
+                <Link href="/docs/api-reference/authentication" className="dp-btn dp-btn--ghost">
                   Read the API reference
-                  <IconArrow />
                 </Link>
-                <Link href="/docs/quickstart" className="dp-btn dp-btn--ghost">
+                <Link href="/docs/quickstart" className="dp-btn dp-btn--quiet">
                   Quickstart
                 </Link>
               </div>
             </div>
             <div className="dp-split__visual">
-              <ApiMockup />
+              <ApiExchange />
             </div>
           </div>
         </section>
 
-        {/* ── User journey ──────────────────────────────────────────────── */}
-        <section className="dp-section dp-section--alt" aria-labelledby="journey-heading">
-          <div className="dp-container">
-            <div className="dp-section__header">
-              <span className="dp-eyebrow">Getting started</span>
-              <h2 id="journey-heading" className="dp-section__title">You're three steps from your first insight.</h2>
-            </div>
-
-            <ol className="dp-journey" aria-label="Getting started steps">
-              <li className="dp-journey__step">
-                <div className="dp-journey__num">1</div>
-                <h3 className="dp-journey__title">Create an account</h3>
-                <p className="dp-journey__desc">Sign up in 30 seconds. No credit card required.</p>
-              </li>
-              <div className="dp-journey__arrow" aria-hidden="true">→</div>
-              <li className="dp-journey__step">
-                <div className="dp-journey__num">2</div>
-                <h3 className="dp-journey__title">Connect your database</h3>
-                <p className="dp-journey__desc">Paste a PostgreSQL connection string. DataPilot scans and summarises your schema.</p>
-              </li>
-              <div className="dp-journey__arrow" aria-hidden="true">→</div>
-              <li className="dp-journey__step">
-                <div className="dp-journey__num">3</div>
-                <h3 className="dp-journey__title">Ask your first question</h3>
-                <p className="dp-journey__desc">Try one of the AI-suggested questions or type your own. Get a chart in seconds.</p>
-              </li>
-            </ol>
-          </div>
-        </section>
-
-        {/* ── Final CTA ─────────────────────────────────────────────────── */}
-        <section className="dp-cta" aria-labelledby="cta-heading">
-          <div className="dp-cta__inner">
-            <h2 id="cta-heading" className="dp-cta__title">
-              Your database is already full of answers.
-            </h2>
-            <p className="dp-cta__sub">
-              DataPilot just helps you ask the questions.
-            </p>
-            <HomeCtaActions />
-            <p className="dp-cta__footnote">No SQL knowledge required. No credit card needed.</p>
-          </div>
-        </section>
       </main>
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className="dp-footer">
-        <div className="dp-footer__inner">
-          <Link href="/home" className="dp-logo dp-logo--footer" aria-label="DataPilot home">
-            <span className="dp-logo__icon" aria-hidden="true">⬡</span>
-            <span className="dp-logo__text">DataPilot</span>
-          </Link>
-          <p className="dp-footer__copy">© {new Date().getFullYear()} DataPilot. Talk to your data.</p>
-          {/* The footer is the one nav that survives every breakpoint, so the
-              docs and API paths live here as well as in the (desktop-only) nav. */}
-          <nav className="dp-footer__links" aria-label="Footer navigation">
-            <Link href="/docs" className="dp-footer__link">Docs</Link>
-            <Link href="/docs/api-reference/authentication" className="dp-footer__link">API reference</Link>
-            <Link href="/login" className="dp-footer__link">Sign in</Link>
-            <Link href="/signup" className="dp-footer__link">Sign up</Link>
-          </nav>
+      {/* ── The close ───────────────────────────────────────────────────────
+          Layout follows the supplied reference: centred CTA over a soft wash,
+          then a footer with the wordmark and a block of copy on the left, link
+          columns on the right, and a hairline into a centred copyright. Both
+          bands are full-bleed — the rounded card the reference sits in is the
+          mockup's presentation frame, not part of the design.
+
+          The closing CTA lives inside <footer> rather than <main> because a
+          repeated site-wide call to action alongside the nav and the copyright
+          is footer content, and it keeps <main> to the argument itself. */}
+      <footer className="dp-end">
+        <section className="dp-end__cta" aria-labelledby="cta-heading">
+          <div className="dp-cta__card">
+            <div className="dp-cta__inner">
+              <h2 id="cta-heading" className="dp-cta__title">
+                Your database is already full of answers.
+              </h2>
+              <p className="dp-cta__lede">DataPilot helps you effortlessly explore them.</p>
+
+              <HomeCtaActions />
+              <p className="dp-cta__note">No SQL knowledge required. No credit card needed.</p>
+
+              {/* Getting started, folded in from its own section — it was the
+                  how-it-works story told a second time. */}
+              <ol className="dp-cta__steps">
+                <li className="dp-cta__step"><b>01</b><span>Create an account</span></li>
+                <li className="dp-cta__step"><b>02</b><span>Paste a connection string</span></li>
+                <li className="dp-cta__step"><b>03</b><span>Ask your first question</span></li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <div className="dp-end__panel">
+          <div className="dp-end__panelInner">
+            <div className="dp-foot">
+              <div className="dp-foot__crown">
+                <Link href="/home" className="dp-foot__mark" aria-label="DataPilot home">
+                  <span className="dp-foot__markGlyph"><IconMark /></span>
+                  <span className="dp-foot__markText">DataPilot</span>
+                </Link>
+                <p className="dp-foot__statement">
+                  Every question is read-only. That isn’t a setting you remember to turn on —
+                  it’s the only thing the engine is able to do.
+                </p>
+              </div>
+
+              <dl className="dp-foot__index">
+                {FOOT_INDEX.map((group) => (
+                  <div key={group.term} className="dp-foot__row">
+                    <dt className="dp-foot__term">{group.term}</dt>
+                    <dd className="dp-foot__links">
+                      {group.links.map((l, i) => (
+                        <span key={l.href} className="dp-foot__item">
+                          {i > 0 && <span className="dp-foot__sep" aria-hidden="true">·</span>}
+                          {/* Same-page jumps stay plain anchors — there's no route
+                              change to hand the router. */}
+                          {l.href.startsWith("#") ? (
+                            <a href={l.href} className="dp-footer__link">{l.label}</a>
+                          ) : (
+                            <Link href={l.href} className="dp-footer__link">{l.label}</Link>
+                          )}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            <p className="dp-foot__baseline">
+              <span>© {new Date().getFullYear()} DataPilot</span>
+              <span>Built for PostgreSQL</span>
+            </p>
+          </div>
         </div>
       </footer>
     </div>

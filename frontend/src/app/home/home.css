@@ -1,1294 +1,1693 @@
-/* ============================================================================
-   DataPilot Landing Page - home.css
-   Scoped with dp- prefix. Zero Tailwind dependencies - pure design-system CSS.
-   References the design tokens defined in globals.css.
-   ============================================================================ */
+/* Hallmark · genre: atmospheric · macrostructure: Workbench · theme: Midnight
+ * tone: technical · anchor hue: 258 · enrichment: E4 floating no-frame app view, animated
+ * nav: N13 inline ⌘K pill · footer: Ft5 statement · hero: product-in-motion
+ * pre-emit critique: P5 H5 E5 S5 R4 V5
+ *
+ * DataPilot landing page. Scoped with dp-, zero Tailwind, zero raw colour values —
+ * every colour and font resolves through tokens.css. Depth is lightness, not
+ * shadow-glow; the canvas carries two fixed blooms; one accent, one hue.
+ */
 
-/* ── Reset / base ──────────────────────────────────────────────────────────── */
+@import "./tokens.css";
+
+html,
+body {
+  overflow-x: clip;
+}
+
 .dp-page {
+  position: relative;
   min-height: 100vh;
-  background: var(--canvas);
-  color: var(--fg);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--dp-paper);
+  color: var(--dp-ink-2);
+  font-family: var(--dp-font-body);
+  font-size: var(--dp-t-base);
+  line-height: var(--dp-lh-body);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ── Reusable buttons ──────────────────────────────────────────────────────── */
-.dp-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-  white-space: nowrap;
-  border: 1px solid transparent;
-  padding: 0.5rem 1rem;
+.dp-page ::selection {
+  background: var(--dp-accent-lo);
+  color: var(--dp-ink);
 }
 
-.dp-btn--primary {
-  background: var(--brand);
-  color: var(--brand-fg);
-  border-color: var(--brand);
-  box-shadow: 0 1px 3px rgba(42, 120, 214, 0.35);
-}
-.dp-btn--primary:hover {
-  background: var(--brand-hover);
-  border-color: var(--brand-hover);
-  box-shadow: 0 4px 12px rgba(42, 120, 214, 0.4);
-  transform: translateY(-1px);
-}
-
-.dp-btn--ghost {
-  background: transparent;
-  color: var(--fg-muted);
-  border-color: var(--line);
-}
-.dp-btn--ghost:hover {
-  background: var(--surface-2);
-  color: var(--fg);
-}
-
-.dp-btn--ghost-light {
-  background: transparent;
-  color: rgba(255,255,255,0.75);
-  border-color: rgba(255,255,255,0.2);
-}
-.dp-btn--ghost-light:hover {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-}
-
-.dp-btn--light {
-  background: #fff;
-  color: #0f172a;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-.dp-btn--light:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  transform: translateY(-1px);
-}
-
-.dp-btn--lg {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
-  border-radius: 0.625rem;
-}
-
-/* ── Nav ───────────────────────────────────────────────────────────────────── */
-.dp-nav {
+/* Two fixed blooms — not mesh, not aurora, not animated. The canvas needs depth
+   so the dark reads as a room rather than a flat swatch. Fixed attachment means
+   the light stays put while the content moves through it. */
+.dp-canvas {
   position: fixed;
-  top: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  width: calc(100% - 3rem);
-  max-width: 1000px;
-  border-radius: 100px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 20, 30, 0.4);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 72% -8%, var(--dp-bloom-1), transparent 70%),
+    radial-gradient(48rem 36rem at 8% 34%, var(--dp-bloom-2), transparent 72%);
 }
 
-.dp-nav__inner {
-  height: 64px;
-  padding: 0 1.5rem 0 1.75rem;
-  display: flex;
-  align-items: center;
-  gap: 2rem;
+/* Lifts page content above .dp-canvas's fixed blooms.
+ *
+ * The nav is excluded deliberately. This selector is (0,2,0); `.dp-nav` is
+ * (0,1,0) — so it was silently overriding the bar's own `position: fixed` with
+ * `relative`, and its `z-index: var(--dp-z-nav)` with `--dp-z-base`. The nav
+ * was sitting in normal flow and scrolling away with the page. The bar carries
+ * its own stacking context, so it never needed this rule. */
+.dp-page > *:not(.dp-canvas, .dp-nav) {
+  position: relative;
+  z-index: var(--dp-z-base);
 }
 
-.dp-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: var(--fg);
-  flex-shrink: 0;
-}
-.dp-logo__icon {
-  font-size: 1.25rem;
-  color: var(--brand);
-  line-height: 1;
-}
-.dp-logo__text {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-.dp-logo--footer .dp-logo__text {
-  color: rgba(255,255,255,0.9);
-}
-.dp-logo--footer .dp-logo__icon {
-  color: rgba(255,255,255,0.7);
-}
+/* ── Primitives ────────────────────────────────────────────────────────────── */
 
-.dp-nav__links {
-  display: flex;
-  align-items: center;
-  gap: 1.75rem;
-  margin-left: auto;
-}
-
-.dp-nav__link {
-  font-size: 0.875rem;
-  color: var(--fg-muted);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-.dp-nav__link:hover {
-  color: var(--fg);
-}
-
-.dp-nav__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ── Layout containers ─────────────────────────────────────────────────────── */
-.dp-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.dp-container--split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5rem;
-  align-items: center;
+.dp-shell {
+  max-width: var(--dp-max);
+  margin-inline: auto;
+  padding-inline: var(--dp-gutter);
 }
 
 .dp-section {
-  padding: 7rem 0;
+  padding-block: var(--dp-s-3xl);
 }
 
-.dp-section--alt {
-  background: var(--surface);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+/* Anchor targets stop short of the fixed bar. Without this a jump parks the
+   section heading underneath the nav — for the ⌘K destinations and equally for
+   the footer's own plain # links, which never went through JS at all. */
+.dp-section[id] {
+  scroll-margin-top: calc(var(--dp-nav-clear) + var(--dp-s-lg));
 }
 
-.dp-divider {
-  height: 1px;
-  background: var(--line);
-}
-
-.dp-section__header {
-  text-align: center;
-  max-width: 640px;
-  margin: 0 auto 4rem;
-}
-
-.dp-eyebrow {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 600;
+.dp-label {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  font-weight: 500;
+  letter-spacing: var(--dp-track-label);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--brand);
-  margin-bottom: 1rem;
-}
-
-.dp-section__title {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  color: var(--fg);
-  margin: 0 0 1rem;
-}
-
-.dp-section__title--left {
-  text-align: left;
-  font-size: clamp(1.5rem, 3vw, 2.125rem);
-}
-
-.dp-section__sub {
-  font-size: 1.0625rem;
-  line-height: 1.75;
-  color: var(--fg-muted);
-  margin: 0;
-}
-
-.dp-section__sub--left {
-  text-align: left;
-}
-
-/* ── Hero ──────────────────────────────────────────────────────────────────── */
-.dp-hero {
-  padding: 10rem 0 5rem;
-  overflow: hidden;
-}
-
-.dp-hero__inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  text-align: center;
-}
-
-.dp-hero__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 100px;
-  padding: 0.375rem 1rem;
-  font-size: 0.8125rem;
-  color: var(--fg-muted);
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-
-.dp-hero__badge svg {
-  color: var(--brand);
-  flex-shrink: 0;
-}
-
-.dp-hero__headline {
-  font-size: clamp(3rem, 8vw, 5.5rem);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-  color: var(--fg);
-  margin: 0 0 1.5rem;
-}
-
-.dp-hero__gradient {
-  background: linear-gradient(135deg, var(--brand) 0%, #1baf7a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.dp-hero__sub {
-  font-size: clamp(1rem, 2vw, 1.1875rem);
-  line-height: 1.7;
-  color: var(--fg-muted);
-  max-width: 580px;
-  margin: 0 auto 2.5rem;
-}
-
-.dp-hero__cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-
-.dp-hero__trust {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 4rem;
-}
-
-.dp-trust-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  color: var(--fg-subtle);
-}
-
-.dp-trust-item svg {
-  color: var(--success);
-  flex-shrink: 0;
-}
-
-/* ── Hero preview ──────────────────────────────────────────────────────────── */
-.dp-hero__preview {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-/* ── Product Mockup ────────────────────────────────────────────────────────── */
-.dp-mockup {
-  border-radius: 0.875rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.04),
-    0 4px 12px rgba(0,0,0,0.06),
-    0 20px 64px rgba(0,0,0,0.1);
-  overflow: hidden;
-}
-
-.dp-mockup__bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--line);
+  color: var(--dp-ink-3);
 }
 
 .dp-dot {
-  width: 12px;
-  height: 12px;
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
+  background: var(--dp-rule-2);
   flex-shrink: 0;
 }
-.dp-dot--red { background: #ff5f57; }
-.dp-dot--yellow { background: #febc2e; }
-.dp-dot--green { background: #28c840; }
 
-.dp-mockup__title {
-  margin-left: 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--fg-subtle);
+.dp-inline {
+  font-family: var(--dp-font-mono);
+  font-size: 0.9em;
+  color: var(--dp-accent);
+  background: var(--dp-accent-lo);
+  border-radius: var(--dp-r-bar);
+  padding: 0.1em 0.35em;
 }
 
-.dp-mockup__body {
-  display: flex;
-  height: 380px;
+.dp-head {
+  max-width: 46rem;
+  margin-bottom: var(--dp-s-xl);
 }
 
-.dp-sidebar {
-  width: 180px;
-  border-right: 1px solid var(--line);
-  padding: 1rem 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex-shrink: 0;
-  background: var(--surface);
-}
-
-.dp-sidebar__label {
-  font-size: 0.6875rem;
+.dp-head__title {
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-xl);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--fg-subtle);
-  padding: 0.25rem 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.dp-sidebar__item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.8125rem;
-  color: var(--fg-muted);
-  cursor: default;
-  transition: background 0.12s;
-}
-.dp-sidebar__item:hover:not(.dp-sidebar__item--active) {
-  background: var(--surface-2);
-}
-.dp-sidebar__item--active {
-  background: color-mix(in srgb, var(--brand) 10%, transparent);
-  color: var(--brand);
-  font-weight: 500;
-}
-
-.dp-main {
-  flex: 1;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  overflow: hidden;
-}
-
-.dp-query-bar {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.dp-query-input {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1.5px solid var(--brand);
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: color-mix(in srgb, var(--brand) 5%, var(--surface));
-  font-size: 0.875rem;
-}
-
-.dp-query-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--brand);
-  flex-shrink: 0;
-}
-
-.dp-query-text {
-  color: var(--fg);
-  font-size: 0.875rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dp-run-btn {
-  background: var(--brand);
-  color: #fff;
-  border: none;
-  border-radius: 0.4rem;
-  padding: 0.5rem 0.875rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: default;
-  flex-shrink: 0;
-}
-
-.dp-explanation {
-  font-size: 0.875rem;
-  color: var(--fg-muted);
-  line-height: 1.5;
-  margin: 0;
-}
-
-.dp-explanation strong {
-  color: var(--fg);
-  font-weight: 600;
-}
-
-/* Bar chart */
-.dp-chart {
-  flex: 1;
-  border: 1px solid var(--line);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  background: var(--canvas);
-  display: flex;
-  align-items: flex-end;
-  min-height: 0;
-}
-
-.dp-chart__bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.5rem;
-  width: 100%;
-  height: 100%;
-}
-
-.dp-chart__col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  height: 100%;
-  justify-content: flex-end;
-}
-
-.dp-chart__val {
-  font-size: 0.625rem;
-  color: var(--fg-subtle);
-  white-space: nowrap;
-}
-
-.dp-chart__bar {
-  width: 100%;
-  background: linear-gradient(180deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 70%, var(--series-2)) 100%);
-  border-radius: 3px 3px 0 0;
-  min-height: 4px;
-  transition: opacity 0.2s;
-}
-
-.dp-chart__label {
-  font-size: 0.625rem;
-  color: var(--fg-subtle);
-}
-
-.dp-sql-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.6875rem;
-  color: var(--fg-muted);
-  font-family: var(--font-geist-mono), monospace;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.dp-sql-pill__icon {
-  color: var(--fg-subtle);
-  flex-shrink: 0;
   font-style: normal;
+  line-height: var(--dp-lh-tight);
+  letter-spacing: var(--dp-track-display);
+  color: var(--dp-ink);
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
-.dp-badge {
+.dp-head__lede {
+  font-size: var(--dp-t-base);
+  line-height: var(--dp-lh-body);
+  color: var(--dp-ink-2);
+  max-width: 62ch;
+  margin: var(--dp-s-md) 0 0;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+
+.dp-btn {
   display: inline-flex;
   align-items: center;
-  font-size: 0.6875rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 100px;
+  gap: var(--dp-s-xs);
+  padding: var(--dp-s-sm) var(--dp-s-md);
+  border: 1px solid transparent;
+  border-radius: var(--dp-r-control);
+  font-family: var(--dp-font-body);
+  font-size: var(--dp-t-sm);
   font-weight: 500;
-}
-.dp-badge--success {
-  background: var(--success-surface);
-  color: var(--success);
-}
-
-/* ── Compare ───────────────────────────────────────────────────────────────── */
-.dp-compare {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
-  align-items: start;
-  max-width: 900px;
-  margin: 0 auto;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dp-dur-micro) var(--dp-ease-out),
+    border-color var(--dp-dur-micro) var(--dp-ease-out),
+    color var(--dp-dur-micro) var(--dp-ease-out),
+    transform var(--dp-dur-micro) var(--dp-ease-out);
 }
 
-.dp-compare__side {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.dp-btn--lg {
+  padding: var(--dp-s-md) var(--dp-s-lg);
+  font-size: var(--dp-t-base);
 }
 
-.dp-compare__label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid;
+.dp-btn--primary {
+  background: var(--dp-accent);
+  border-color: var(--dp-accent);
+  color: var(--dp-accent-ink);
 }
-.dp-compare__label--before {
-  color: var(--fg-subtle);
-  border-color: var(--line);
-}
-.dp-compare__label--after {
-  color: var(--brand);
-  border-color: var(--brand);
+.dp-btn--primary:hover {
+  background: var(--dp-accent-hi);
+  border-color: var(--dp-accent-hi);
 }
 
-.dp-compare__list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.dp-btn--ghost {
+  background: var(--dp-paper-3);
+  border-color: var(--dp-rule-2);
+  color: var(--dp-ink);
+}
+.dp-btn--ghost:hover {
+  background: var(--dp-paper-4);
+  border-color: var(--dp-ink-3);
 }
 
-.dp-compare__list li {
-  font-size: 0.9375rem;
-  line-height: 1.5;
-  padding-left: 1.25rem;
-  position: relative;
+/* Typographic secondary — keeps every action row to one filled control. */
+.dp-btn--quiet {
+  padding-inline: var(--dp-s-2xs);
+  background: none;
+  border-color: transparent;
+  color: var(--dp-ink-2);
+  text-underline-offset: 0.35em;
+  text-decoration: 1px solid underline transparent;
+  transition:
+    color var(--dp-dur-micro) var(--dp-ease-out),
+    text-decoration-color var(--dp-dur-short) var(--dp-ease-out);
+}
+.dp-btn--quiet:hover {
+  color: var(--dp-ink);
+  text-decoration-color: var(--dp-accent);
 }
 
-.dp-compare__list--before li {
-  color: var(--fg-muted);
-}
-.dp-compare__list--before li::before {
-  content: "✕";
-  position: absolute;
-  left: 0;
-  font-size: 0.75rem;
-  color: var(--danger);
-  top: 0.125rem;
-}
+.dp-btn:active { transform: translateY(1px); }
 
-.dp-compare__list--after li {
-  color: var(--fg);
-}
-.dp-compare__list--after li::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  font-size: 0.75rem;
-  color: var(--success);
-  top: 0.125rem;
-}
-
-.dp-compare__divider {
-  font-size: 2rem;
-  color: var(--line-strong);
+.dp-actions {
   display: flex;
   align-items: center;
-  padding-top: 3rem;
-  user-select: none;
+  flex-wrap: wrap;
+  gap: var(--dp-s-sm);
 }
 
-/* ── How it works flow ─────────────────────────────────────────────────────── */
-.dp-flow {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* ── Nav · N13 inline ⌘K pill ──────────────────────────────────────────────── */
+
+/* Detached, content-width, floating clear of the edges — deliberately not a
+   full-bleed bar. Falls back to an opaque fill where backdrop-filter isn't
+   supported, because translucent-without-blur is unreadable. */
+.dp-nav {
+  position: fixed;
+  top: var(--dp-nav-top);
+  left: 50%;
+  translate: -50% 0;
+  z-index: var(--dp-z-nav);
+  width: calc(100% - var(--dp-gutter) * 2);
+  max-width: 62rem;
+  border-radius: var(--dp-r-nav);
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule-2);
+  box-shadow: var(--dp-lift);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .dp-nav {
+    background: var(--dp-glass);
+    border-color: var(--dp-glass-rule);
+    /* Standard property only. Lightning CSS (via @tailwindcss/postcss) already
+       autoprefixes from browserslist; writing -webkit- alongside it made the
+       minifier collapse the pair and keep only the Safari form, which Chromium
+       ignores — so the blur computed to `none` and the bar was merely
+       translucent. Never hand-prefix on top of an autoprefixer. */
+    backdrop-filter: blur(22px) saturate(180%);
+    /* The specular line along the top edge — the detail that separates glass
+       from a blurred panel. Paired with the lift so it still sits on the page. */
+    box-shadow: inset 0 1px 0 var(--dp-glass-sheen), var(--dp-lift);
+  }
+}
+
+/* 1fr auto 1fr, not auto 1fr auto. With auto side tracks the middle column is
+   only centred when the brand and the actions happen to be the same width —
+   which they never are, so the search sat visibly off-axis. Equal fractional
+   sides centre it against the bar regardless of what flanks it. */
+.dp-nav__inner {
+  height: var(--dp-nav-h);
+  /* Symmetric, and wide enough that nothing sits inside the corner arc. */
+  padding-inline: var(--dp-s-md);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--dp-s-md);
 }
 
-.dp-flow__step {
+.dp-brand { justify-self: start; }
+.dp-nav__end { justify-self: end; }
+
+/* Shorter than the page's other buttons: the full-size control left 8px of air
+   above and below inside a 58px bar, which is what made it look wedged in.
+   ~33px leaves it breathing and matches the search pill's 34px. */
+.dp-nav .dp-btn {
+  padding-block: var(--dp-s-xs);
+}
+
+.dp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dp-s-xs);
+  text-decoration: none;
+  color: var(--dp-ink);
+}
+.dp-brand__mark { color: var(--dp-accent); display: block; }
+.dp-brand__text {
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-md);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.dp-nav__mid { display: flex; justify-content: center; min-width: 0; }
+
+.dp-nav__end {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 2rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 0.875rem;
+  align-items: center;
+  gap: var(--dp-s-md);
+}
+
+/* Underline wipes in from the left rather than appearing whole. scaleX on a
+   pseudo-element, so it's a transform — no layout work, and it survives
+   reduced-motion by collapsing to an instant state. */
+.dp-nav__link {
   position: relative;
-  transition: box-shadow 0.2s, transform 0.2s;
+  font-size: var(--dp-t-sm);
+  color: var(--dp-ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+  padding-block: var(--dp-s-2xs);
+  transition: color var(--dp-dur-micro) var(--dp-ease-out);
 }
 
-.dp-flow__step:hover {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-  transform: translateY(-2px);
+.dp-nav__link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--dp-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dp-dur-short) var(--dp-ease-out);
 }
 
-.dp-flow__num {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--brand);
-  letter-spacing: 0.05em;
-  font-family: var(--font-geist-mono), monospace;
-}
+.dp-nav__link:hover,
+.dp-nav__link:focus-visible { color: var(--dp-ink); }
+.dp-nav__link:hover::after,
+.dp-nav__link:focus-visible::after { transform: scaleX(1); }
+.dp-nav__link:active { color: var(--dp-accent-hi); }
 
-.dp-flow__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--brand) 10%, var(--surface));
+.dp-nav__actions { display: flex; align-items: center; gap: var(--dp-s-xs); }
+
+/* ── ⌘K ────────────────────────────────────────────────────────────────────── */
+
+/* Recessed into the glass rather than sitting on it — a darker translucent fill
+   inside the bar's own rim reads as an inset well, which is what makes the bar
+   feel like one object instead of a chip parked on a panel. */
+.dp-cmdk__pill {
   display: flex;
+  align-items: center;
+  gap: var(--dp-s-xs);
+  width: min(19rem, 100%);
+  height: 34px;
+  /* 4px on the right had the chord chip touching the rim. */
+  padding-inline: var(--dp-s-sm) var(--dp-s-xs);
+  background: var(--dp-glass-inset);
+  border: 1px solid var(--dp-glass-rule);
+  border-radius: var(--dp-r-pill);
+  color: var(--dp-ink-3);
+  font-family: var(--dp-font-body);
+  font-size: var(--dp-t-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--dp-dur-short) var(--dp-ease-out),
+    color var(--dp-dur-short) var(--dp-ease-out);
+}
+.dp-cmdk__pill:hover {
+  border-color: var(--dp-accent-dim);
+  color: var(--dp-ink-2);
+}
+
+.dp-cmdk__pillText {
+  flex: 1;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* One chip carrying both keys, rather than two keycaps — ⌘ and K have very
+   different glyph widths, so boxing them separately produced two mismatched
+   rectangles, which is what made the pill look cheap. */
+.dp-cmdk__kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  flex-shrink: 0;
+  padding: var(--dp-s-3xs) var(--dp-s-xs);
+  background: var(--dp-glass-rule);
+  border-radius: var(--dp-r-bar);
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  line-height: 1;
+  color: var(--dp-ink-2);
+}
+.dp-cmdk__kbd kbd {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+/* Keycaps inside the dialog stay individual, but share a min-width so ⌘, ↑, ↓
+   and ↵ all occupy the same box no matter how wide the glyph is. */
+.dp-cmdk__esc,
+.dp-cmdk__foot kbd {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--brand);
+  min-width: 1.5rem;
+  height: 1.3rem;
+  padding-inline: var(--dp-s-2xs);
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  line-height: 1;
+  color: var(--dp-ink-3);
+  background: var(--dp-paper-4);
+  border: 1px solid var(--dp-rule-2);
+  border-radius: var(--dp-r-bar);
 }
 
-.dp-flow__title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--fg);
-  margin: 0;
-  line-height: 1.3;
+/* Lives outside .dp-page (portalled past the nav's backdrop-filter), so it has
+   to restate the things .dp-page sets on itself rather than inherit them. */
+.dp-cmdk {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dp-z-modal);
+  font-family: var(--dp-font-body);
+  font-size: var(--dp-t-base);
+  line-height: var(--dp-lh-body);
+  color: var(--dp-ink-2);
+  -webkit-font-smoothing: antialiased;
 }
 
-.dp-flow__desc {
-  font-size: 0.875rem;
-  line-height: 1.65;
-  color: var(--fg-muted);
-  margin: 0;
+.dp-cmdk__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--dp-scrim);
+  animation: dp-fade var(--dp-dur-short) var(--dp-ease-out) both;
 }
 
-/* ── Split layout ──────────────────────────────────────────────────────────── */
-.dp-split__text {
+.dp-cmdk__panel {
+  position: absolute;
+  top: 12vh;
+  left: 50%;
+  translate: -50% 0;
+  width: min(36rem, calc(100vw - 2rem));
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.dp-feature-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.dp-feature-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  font-size: 0.9375rem;
-  color: var(--fg-muted);
-  line-height: 1.5;
-}
-
-.dp-feature-list svg {
-  color: var(--success);
-  flex-shrink: 0;
-  margin-top: 0.125rem;
-}
-
-/* ── Self-correction loop mockup ───────────────────────────────────────────── */
-.dp-loop {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 0.875rem;
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule-2);
+  border-radius: var(--dp-r-nav);
+  /* Same specular top edge the nav carries, so the two read as one material. */
+  box-shadow: inset 0 1px 0 var(--dp-glass-sheen), var(--dp-lift-hi);
   overflow: hidden;
-  padding: 1.5rem;
-  gap: 0;
+  animation: dp-pop var(--dp-dur-short) var(--dp-ease-out) both;
 }
 
-.dp-loop__step {
-  display: grid;
-  grid-template-columns: 24px 1fr;
-  gap: 1rem;
-  padding-bottom: 1.5rem;
-}
-
-.dp-loop__step:last-child {
-  padding-bottom: 0;
-}
-
-.dp-loop__connector {
+.dp-cmdk__field {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0;
+  gap: var(--dp-s-sm);
+  padding: var(--dp-s-md);
+  border-bottom: 1px solid var(--dp-rule);
+  color: var(--dp-ink-3);
+  /* Matches the panel's top corners so the inset focus ring follows the curve —
+     a square ring inside a rounded panel shows as two clipped corners. */
+  border-radius: var(--dp-r-nav) var(--dp-r-nav) 0 0;
+  transition: box-shadow var(--dp-dur-short) var(--dp-ease-out);
 }
 
-.dp-loop__dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  border: 2px solid;
-}
-
-.dp-loop__dot--fail {
-  border-color: var(--danger);
-  background: var(--danger-surface);
-}
-
-.dp-loop__dot--ok {
-  border-color: var(--success);
-  background: var(--success-surface);
-}
-
-.dp-loop__line {
+.dp-cmdk__input {
   flex: 1;
-  width: 2px;
-  background: var(--line);
-  margin: 0.25rem 0;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  color: var(--dp-ink);
+  font-family: var(--dp-font-body);
+  font-size: var(--dp-t-base);
+}
+.dp-cmdk__input::placeholder { color: var(--dp-ink-3); }
+
+/* The default scrollbar was the single most expensive-looking thing in here — a
+   chunky OS-grey track straight through the middle of a dark panel. Thin,
+   track-less, and the list fades out at the bottom edge so rows stop being
+   guillotined mid-height when the panel overflows. */
+.dp-cmdk__results {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--dp-s-xs) var(--dp-s-xs) var(--dp-s-lg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--dp-rule-2) transparent;
+  /* Unprefixed only — same reason as the nav's backdrop-filter. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent);
 }
 
-.dp-loop__content {
+.dp-cmdk__results::-webkit-scrollbar { width: 6px; }
+.dp-cmdk__results::-webkit-scrollbar-track { background: transparent; }
+.dp-cmdk__results::-webkit-scrollbar-thumb {
+  background: var(--dp-rule-2);
+  border-radius: var(--dp-r-pill);
+}
+.dp-cmdk__results::-webkit-scrollbar-thumb:hover { background: var(--dp-ink-3); }
+
+/* Bound to the group it heads: generous above, tight below. */
+.dp-cmdk__group {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  letter-spacing: var(--dp-track-label);
+  text-transform: uppercase;
+  color: var(--dp-ink-3);
+  margin: var(--dp-s-md) 0 var(--dp-s-3xs);
+  padding-inline: var(--dp-s-sm);
+}
+.dp-cmdk__results > div:first-child .dp-cmdk__group { margin-top: var(--dp-s-2xs); }
+
+.dp-cmdk__item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--dp-s-md);
+  width: 100%;
+  padding: var(--dp-s-xs) var(--dp-s-sm);
+  background: none;
+  border: 0;
+  border-radius: var(--dp-r-control);
+  text-align: start;
+  cursor: pointer;
+  font-family: var(--dp-font-body);
+  /* The panel's 1.62 body leading made every row tall and loose; a list of
+     one-line destinations wants its own, tighter, measure. */
+  line-height: 1.45;
+  color: var(--dp-ink-2);
+  transition: background-color var(--dp-dur-micro) var(--dp-ease-out);
+}
+.dp-cmdk__item[data-active="true"] {
+  background: var(--dp-accent-lo);
+  color: var(--dp-ink);
+}
+
+.dp-cmdk__itemLabel { font-size: var(--dp-t-sm); }
+.dp-cmdk__itemHint {
+  margin-inline-start: auto;
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  color: var(--dp-ink-3);
+  white-space: nowrap;
+}
+
+.dp-cmdk__empty {
+  padding: var(--dp-s-lg) var(--dp-s-sm);
+  margin: 0;
+  font-size: var(--dp-t-sm);
+  color: var(--dp-ink-3);
+}
+
+.dp-cmdk__foot {
+  display: flex;
+  gap: var(--dp-s-lg);
+  padding: var(--dp-s-sm) var(--dp-s-md);
+  border-top: 1px solid var(--dp-rule);
+  background: var(--dp-paper);
+  font-size: var(--dp-t-2xs);
+  color: var(--dp-ink-3);
+}
+.dp-cmdk__foot span { display: inline-flex; align-items: center; gap: var(--dp-s-2xs); }
+
+/* ── Hero ──────────────────────────────────────────────────────────────────── */
+
+.dp-hero {
+  padding-block: calc(var(--dp-nav-clear) + var(--dp-s-2xl)) var(--dp-s-3xl);
+}
+
+.dp-hero__head {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  align-items: center;
+  text-align: center;
+  gap: var(--dp-s-lg);
+  padding-bottom: var(--dp-s-xl);
 }
 
-.dp-loop__header {
+.dp-hero__meta {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--dp-s-xs) var(--dp-s-sm);
+  margin: 0;
 }
 
-.dp-loop__attempt {
-  font-size: 0.8125rem;
+.dp-hero__title {
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-display);
   font-weight: 600;
-  color: var(--fg);
+  font-style: normal;
+  line-height: var(--dp-lh-display);
+  letter-spacing: var(--dp-track-display);
+  color: var(--dp-ink);
+  margin: 0;
+  min-width: 0;
+  max-width: 18ch;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
-.dp-loop__badge {
-  font-size: 0.6875rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 100px;
+/* Emphasis by accent, never by gradient fill. */
+.dp-hero__accent { color: var(--dp-accent); }
+
+.dp-hero__lede {
+  font-size: var(--dp-t-md);
+  line-height: 1.55;
+  color: var(--dp-ink-2);
+  max-width: 52ch;
+  margin: 0;
+}
+
+.dp-hero__stage { min-width: 0; }
+
+/* ── The demo ──────────────────────────────────────────────────────────────── */
+
+/* No drawn browser bar. A mono status rail and a real replay control frame it —
+   the reader's browser is already the browser. */
+.dp-demo {
+  margin: 0;
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule-2);
+  border-radius: var(--dp-r-card);
+  box-shadow: var(--dp-lift);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.dp-demo__rail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dp-s-sm);
+  padding: var(--dp-s-sm) var(--dp-s-md);
+  border-bottom: 1px solid var(--dp-rule);
+  background: var(--dp-paper);
+}
+
+.dp-demo__rail .dp-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dp-s-xs);
+}
+
+/* Fixed width so the rail doesn't shift when the label swaps Pause/Play. */
+.dp-demo__toggle {
+  min-width: 4.5rem;
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  letter-spacing: var(--dp-track-label);
+  text-transform: uppercase;
+  color: var(--dp-ink-3);
+  background: none;
+  border: 1px solid var(--dp-rule-2);
+  border-radius: var(--dp-r-pill);
+  padding: var(--dp-s-2xs) var(--dp-s-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color var(--dp-dur-micro) var(--dp-ease-out),
+    border-color var(--dp-dur-micro) var(--dp-ease-out);
+}
+.dp-demo__toggle:hover {
+  color: var(--dp-accent);
+  border-color: var(--dp-accent-dim);
+}
+.dp-demo__toggle:active { color: var(--dp-accent-hi); }
+
+.dp-demo__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "ask"
+    "trail"
+    "answer";
+  gap: var(--dp-s-md);
+  padding: var(--dp-s-md);
+}
+
+.dp-demo__trail {
+  grid-area: trail;
+  display: grid;
+  gap: var(--dp-s-sm);
+  align-content: start;
+  min-width: 0;
+}
+
+.dp-demo__ask {
+  grid-area: ask;
+  display: flex;
+  align-items: center;
+  gap: var(--dp-s-sm);
+  min-width: 0;
+  padding: var(--dp-s-sm) var(--dp-s-md);
+  border: 1px solid var(--dp-accent-dim);
+  border-radius: var(--dp-r-control);
+  background: var(--dp-accent-lo);
+}
+
+.dp-demo__askLabel {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
   font-weight: 500;
-}
-.dp-loop__badge--fail {
-  background: var(--danger-surface);
-  color: var(--danger);
-}
-.dp-loop__badge--ok {
-  background: var(--success-surface);
-  color: var(--success);
+  letter-spacing: var(--dp-track-label);
+  text-transform: uppercase;
+  color: var(--dp-accent);
+  flex-shrink: 0;
 }
 
-.dp-loop__sql {
-  display: block;
-  font-size: 0.75rem;
-  font-family: var(--font-geist-mono), monospace;
-  color: var(--fg-muted);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.625rem;
+.dp-demo__askText {
+  font-size: var(--dp-t-sm);
+  color: var(--dp-ink);
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.dp-loop__note {
-  font-size: 0.75rem;
-  color: var(--fg-subtle);
-  margin: 0;
+/* Allowed here because it has a job: it marks the character position in a field
+   that is being typed into. A cursor floating beside a static hero would not be. */
+.dp-demo__caret {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-inline-start: 1px;
+  vertical-align: text-bottom;
+  background: var(--dp-accent);
+  animation: dp-blink 1s steps(2, start) infinite;
 }
 
-/* ── Features grid ─────────────────────────────────────────────────────────── */
-.dp-features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+/* Every stage element arrives the same way: opacity + a small rise, gated on a
+   class the component adds when the sequence reaches it. */
+.dp-demo__step,
+.dp-demo__attempt,
+.dp-demo__answer {
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--dp-dur-long) var(--dp-ease-out),
+    transform var(--dp-dur-long) var(--dp-ease-out);
+}
+.dp-demo__step.is-in,
+.dp-demo__attempt.is-in,
+.dp-demo__answer.is-in {
+  opacity: 1;
+  transform: none;
 }
 
-.dp-feature-card {
-  padding: 1.75rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 0.875rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-
-.dp-feature-card:hover {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.07);
-  transform: translateY(-2px);
-}
-
-.dp-feature-card__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 0.5rem;
-  background: color-mix(in srgb, var(--brand) 10%, var(--canvas));
+.dp-demo__step {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--brand);
+  flex-wrap: wrap;
+  gap: var(--dp-s-xs) var(--dp-s-sm);
 }
 
-.dp-feature-card__title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--fg);
+.dp-demo__stepLabel {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  letter-spacing: var(--dp-track-label);
+  text-transform: uppercase;
+  color: var(--dp-ink-3);
+}
+
+.dp-demo__tables { display: flex; flex-wrap: wrap; gap: var(--dp-s-xs); }
+
+.dp-demo__table {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  color: var(--dp-accent);
+  background: var(--dp-accent-lo);
+  border: 1px solid var(--dp-accent-dim);
+  border-radius: var(--dp-r-bar);
+  padding: var(--dp-s-3xs) var(--dp-s-xs);
+}
+
+.dp-demo__attempts {
+  list-style: none;
   margin: 0;
-  line-height: 1.3;
-}
-
-.dp-feature-card__desc {
-  font-size: 0.9rem;
-  line-height: 1.65;
-  color: var(--fg-muted);
-  margin: 0;
-}
-
-/* ── Security grid ─────────────────────────────────────────────────────────── */
-.dp-security-grid {
+  padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  max-width: 800px;
-  margin: 0 auto;
+  gap: var(--dp-s-xs);
 }
 
-.dp-security-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1.5rem;
-  background: var(--canvas);
-  border: 1px solid var(--line);
-  border-radius: 0.75rem;
+.dp-demo__attempt {
+  display: grid;
+  grid-template-columns: 0.75rem minmax(0, 1fr);
+  gap: var(--dp-s-sm);
+  align-items: start;
+  padding: var(--dp-s-sm) var(--dp-s-md);
+  background: var(--dp-paper);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-control);
 }
 
-.dp-security-card__icon {
-  color: var(--brand);
+.dp-demo__mark {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.3em;
+  border-radius: 50%;
+  border: 2px solid;
+  flex-shrink: 0;
 }
+.dp-demo__mark--fail { border-color: var(--dp-warn); background: var(--dp-warn-lo); }
+.dp-demo__mark--ok { border-color: var(--dp-ok); background: var(--dp-ok-lo); }
 
-.dp-security-card__title {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--fg);
+.dp-demo__attemptBody { min-width: 0; }
+
+.dp-demo__sql {
   margin: 0;
-}
-
-.dp-security-card__desc {
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--fg-muted);
-  margin: 0;
-}
-
-/* ── API / developers ──────────────────────────────────────────────────────── */
-/* The terminal body. .dp-mockup__bar/.dp-dot already supply the window chrome,
-   so only the code surface is new here. Matches .dp-loop__sql's treatment:
-   mono token, 0.75rem, --fg-muted on --surface. */
-.dp-api-code {
-  margin: 0;
-  padding: 1.25rem;
-  background: var(--surface);
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 0.75rem;
-  line-height: 1.85;
-  color: var(--fg-muted);
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  line-height: 1.7;
+  color: var(--dp-ink-2);
   white-space: pre;
   overflow-x: auto;
 }
 
-/* Syntax colours reuse the chart palette, so code, charts and brand stay one
-   system (--series-1 is the brand hue by design). */
-.dp-api-code__cmd {
-  color: var(--fg);
-  font-weight: 600;
+.dp-demo__note {
+  margin: var(--dp-s-2xs) 0 0;
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
 }
-.dp-api-code__flag {
-  color: var(--series-1);
-}
-.dp-api-code__str {
-  color: var(--series-2);
-}
-.dp-api-code__muted {
-  color: var(--fg-subtle);
-}
+.dp-demo__note--fail { color: var(--dp-warn); }
+.dp-demo__note--ok { color: var(--dp-ok); }
 
-/* Left-aligned CTA for split sections (.dp-hero__cta centres, so it can't be
-   reused here). Centres itself when the split stacks at <=1024px. */
-.dp-split__cta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 1.75rem;
-}
-
-/* ── Testimonials ──────────────────────────────────────────────────────────── */
-.dp-testimonials {
+.dp-demo__answer {
+  grid-area: answer;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: var(--dp-s-md);
+  align-content: start;
+  padding-top: var(--dp-s-md);
+  border-top: 1px solid var(--dp-rule);
+  min-width: 0;
 }
 
-.dp-testimonial {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 0.875rem;
-  padding: 1.75rem;
+.dp-demo__say {
   margin: 0;
+  font-size: var(--dp-t-base);
+  line-height: 1.55;
+  color: var(--dp-ink-2);
+}
+.dp-demo__say strong { color: var(--dp-ink); font-weight: 600; }
+
+.dp-demo__chart {
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  transition: box-shadow 0.2s;
+  align-items: flex-end;
+  gap: var(--dp-s-xs);
+  height: 150px;
 }
 
-.dp-testimonial:hover {
-  box-shadow: 0 6px 24px rgba(0,0,0,0.07);
-}
-
-.dp-testimonial__quote {
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: var(--fg);
-  margin: 0;
+.dp-demo__col {
   flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--dp-s-2xs);
+  height: 100%;
 }
 
-.dp-testimonial__author {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
+.dp-demo__val,
+.dp-demo__month {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--dp-ink-3);
+  text-align: center;
+  white-space: nowrap;
 }
 
-.dp-testimonial__name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--fg);
+.dp-demo__barTrack { display: flex; align-items: flex-end; min-height: 0; }
+
+/* scaleY, never height — height is a layout property and animating it thrashes
+   the whole column. transform-origin does the growing-from-the-axis reading. */
+.dp-demo__bar {
+  width: 100%;
+  height: var(--h);
+  border-radius: var(--dp-r-bar) var(--dp-r-bar) 0 0;
+  background: var(--dp-accent-dim);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform var(--dp-dur-long) var(--dp-ease-out);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.dp-demo__bar--peak { background: var(--dp-accent); }
+.dp-demo__answer.is-in .dp-demo__bar { transform: scaleY(1); }
+
+/* ── Ledger ────────────────────────────────────────────────────────────────── */
+
+.dp-ledger {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-lg);
 }
 
-.dp-testimonial__role {
-  font-size: 0.8125rem;
-  color: var(--fg-subtle);
+.dp-ledger__col {
+  padding: var(--dp-s-lg);
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-card);
+}
+.dp-ledger__col--after {
+  background: var(--dp-paper-3);
+  border-color: var(--dp-accent-dim);
 }
 
-/* ── User Journey ──────────────────────────────────────────────────────────── */
-.dp-journey {
+.dp-ledger__label { display: block; margin-bottom: var(--dp-s-md); }
+.dp-ledger__col--after .dp-ledger__label { color: var(--dp-accent); }
+
+.dp-ledger__list {
   list-style: none;
+  margin: 0;
   padding: 0;
-  margin: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  display: grid;
+  gap: var(--dp-s-sm);
 }
 
-.dp-journey__step {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 2rem;
-  background: var(--canvas);
-  border: 1px solid var(--line);
-  border-radius: 0.875rem;
-  max-width: 280px;
-  text-align: center;
-  align-items: center;
-}
-
-.dp-journey__num {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--brand);
-  color: var(--brand-fg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.dp-journey__title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--fg);
-  margin: 0;
-}
-
-.dp-journey__desc {
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--fg-muted);
-  margin: 0;
-}
-
-.dp-journey__arrow {
-  font-size: 1.5rem;
-  color: var(--line-strong);
-  display: flex;
-  align-items: center;
-  padding-top: 2rem;
-  user-select: none;
-  flex-shrink: 0;
-}
-
-/* ── CTA ───────────────────────────────────────────────────────────────────── */
-.dp-cta {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f2044 100%);
-  padding: 8rem 1.5rem;
-  text-align: center;
+.dp-ledger__list li {
   position: relative;
-  overflow: hidden;
+  padding-inline-start: var(--dp-s-lg);
+  font-size: var(--dp-t-sm);
+  line-height: 1.5;
+  color: var(--dp-ink-2);
 }
-
-.dp-cta::before {
+.dp-ledger__list li::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(42,120,214,0.15) 0%, transparent 70%);
-  pointer-events: none;
+  inset-inline-start: 0;
+  top: 0.55em;
+  width: 10px;
+  height: 1px;
+  background: var(--dp-rule-2);
+}
+.dp-ledger__col--after .dp-ledger__list li { color: var(--dp-ink); }
+.dp-ledger__col--after .dp-ledger__list li::before {
+  background: var(--dp-accent);
+  width: 14px;
+}
+
+/* ── Steps ─────────────────────────────────────────────────────────────────── */
+
+.dp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-md);
+  counter-reset: step;
+}
+
+.dp-step {
+  position: relative;
+  display: grid;
+  gap: var(--dp-s-sm);
+  padding: var(--dp-s-lg);
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-card);
+  transition:
+    background-color var(--dp-dur-short) var(--dp-ease-out),
+    border-color var(--dp-dur-short) var(--dp-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dp-step:hover { background: var(--dp-paper-3); border-color: var(--dp-rule-2); }
+}
+
+.dp-step__ico { color: var(--dp-accent); }
+
+.dp-step__n {
+  position: absolute;
+  top: var(--dp-s-lg);
+  inset-inline-end: var(--dp-s-lg);
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--dp-track-label);
+  color: var(--dp-ink-3);
+}
+
+.dp-step__title {
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-md);
+  font-weight: 500;
+  line-height: var(--dp-lh-tight);
+  letter-spacing: -0.02em;
+  color: var(--dp-ink);
+  margin: 0;
+  padding-inline-end: var(--dp-s-lg);
+}
+
+.dp-step__desc {
+  font-size: var(--dp-t-sm);
+  line-height: var(--dp-lh-body);
+  color: var(--dp-ink-2);
+  margin: 0;
+}
+
+/* ── Split ─────────────────────────────────────────────────────────────────── */
+
+.dp-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-2xl);
+  align-items: center;
+}
+
+.dp-split__text {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: var(--dp-s-md);
+  min-width: 0;
+}
+
+.dp-split__visual { min-width: 0; }
+
+.dp-checks {
+  list-style: none;
+  margin: var(--dp-s-2xs) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--dp-s-sm);
+}
+
+.dp-checks li {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: var(--dp-s-xs);
+  font-size: var(--dp-t-sm);
+  line-height: 1.5;
+  color: var(--dp-ink-2);
+}
+.dp-checks svg { color: var(--dp-accent); margin-top: 0.2em; }
+
+/* ── Schema map ────────────────────────────────────────────────────────────── */
+
+.dp-schema {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dp-s-xs);
+  padding: var(--dp-s-lg);
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-card);
+  box-shadow: var(--dp-lift);
+}
+
+.dp-schema__t {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  color: var(--dp-ink-3);
+  background: var(--dp-paper);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-bar);
+  padding: var(--dp-s-2xs) var(--dp-s-xs);
+  /* Named properties only — `all` would sweep up the font metrics and make the
+     chips reflow as they light. */
+  transition:
+    color var(--dp-dur-short) var(--dp-ease-out),
+    background-color var(--dp-dur-short) var(--dp-ease-out),
+    border-color var(--dp-dur-short) var(--dp-ease-out);
+}
+
+/* The three the engine actually retrieved. This is the section's entire claim,
+   so it is the one place the accent is allowed to shout. */
+.dp-schema__t--lit {
+  color: var(--dp-accent-ink);
+  background: var(--dp-accent);
+  border-color: var(--dp-accent);
+  font-weight: 500;
+}
+
+/* ── Feature cards ─────────────────────────────────────────────────────────── */
+
+.dp-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-md);
+}
+
+.dp-card {
+  display: grid;
+  gap: var(--dp-s-sm);
+  align-content: start;
+  padding: var(--dp-s-lg);
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-card);
+  min-width: 0;
+  transition:
+    background-color var(--dp-dur-short) var(--dp-ease-out),
+    border-color var(--dp-dur-short) var(--dp-ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dp-card:hover { background: var(--dp-paper-3); border-color: var(--dp-rule-2); }
+}
+
+.dp-card__ico { color: var(--dp-accent); }
+
+.dp-card__title {
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-md);
+  font-weight: 500;
+  line-height: var(--dp-lh-tight);
+  letter-spacing: -0.02em;
+  color: var(--dp-ink);
+  margin: 0;
+}
+
+.dp-card__desc {
+  font-size: var(--dp-t-sm);
+  line-height: var(--dp-lh-body);
+  color: var(--dp-ink-2);
+  margin: 0;
+  max-width: 58ch;
+}
+
+/* The lead feature breaks the grid — it's the differentiator, so it gets the
+   width and the larger setting rather than being one of six identical tiles. */
+.dp-card--lead { background: var(--dp-paper-3); border-color: var(--dp-accent-dim); }
+.dp-card--lead .dp-card__title { font-size: var(--dp-t-lg); }
+.dp-card--lead .dp-card__desc { font-size: var(--dp-t-base); max-width: 62ch; }
+
+/* ── Security vault ────────────────────────────────────────────────────────── */
+
+.dp-vault {
+  padding: var(--dp-s-xl);
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule-2);
+  border-radius: var(--dp-r-card);
+  box-shadow: var(--dp-lift);
+}
+
+.dp-vault__head { max-width: 52rem; margin-bottom: var(--dp-s-xl); }
+.dp-vault__ico {
+  display: inline-flex;
+  color: var(--dp-accent);
+  margin-bottom: var(--dp-s-sm);
+}
+
+.dp-spec {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  border-top: 1px solid var(--dp-rule);
+}
+
+.dp-spec__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-2xs) var(--dp-s-xl);
+  padding: var(--dp-s-md) 0;
+  border-bottom: 1px solid var(--dp-rule);
+}
+
+.dp-spec__term {
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-base);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--dp-ink);
+}
+
+.dp-spec__def {
+  font-size: var(--dp-t-sm);
+  line-height: var(--dp-lh-body);
+  color: var(--dp-ink-2);
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* ── API exchange ──────────────────────────────────────────────────────────────
+   Three blocks and two wires, read top to bottom: what you send, what we do,
+   what you get. The accent appears exactly once — on the middle block, which is
+   the thing being sold. */
+
+.dp-api {
+  margin: 0;
+  display: grid;
+  min-width: 0;
+}
+
+.dp-api__block {
+  display: grid;
+  gap: var(--dp-s-sm);
+  padding: var(--dp-s-lg);
+  background: var(--dp-paper-2);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-card);
+  min-width: 0;
+}
+
+.dp-api__block--engine {
+  background: var(--dp-paper-3);
+  border-color: var(--dp-accent-dim);
+}
+.dp-api__engineLabel { color: var(--dp-accent); }
+
+.dp-api__ask {
+  margin: 0;
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-md);
+  font-weight: 500;
+  line-height: var(--dp-lh-tight);
+  letter-spacing: -0.02em;
+  color: var(--dp-ink);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.dp-api__aside {
+  margin: 0;
+  font-size: var(--dp-t-xs);
+  color: var(--dp-ink-3);
+}
+
+/* The connector. A hairline, a label, a hairline — no arrowheads; the vertical
+   order already says which way it flows. */
+.dp-api__flow {
+  display: grid;
+  justify-items: center;
+  gap: var(--dp-s-2xs);
+  padding-block: var(--dp-s-xs);
+}
+
+.dp-api__wire {
+  width: 1px;
+  height: var(--dp-s-md);
+  background: var(--dp-rule-2);
+}
+
+.dp-api__verb {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  font-weight: 500;
+  letter-spacing: var(--dp-track-label);
+  text-transform: uppercase;
+  color: var(--dp-ink-3);
+  background: var(--dp-paper);
+  border: 1px solid var(--dp-rule-2);
+  border-radius: var(--dp-r-pill);
+  padding: var(--dp-s-3xs) var(--dp-s-sm);
+  white-space: nowrap;
+}
+.dp-api__verb--ok { color: var(--dp-ok); }
+
+.dp-api__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dp-s-xs);
+}
+
+.dp-api__steps li {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  color: var(--dp-ink-2);
+  background: var(--dp-paper);
+  border: 1px solid var(--dp-rule-2);
+  border-radius: var(--dp-r-bar);
+  padding: var(--dp-s-2xs) var(--dp-s-xs);
+}
+
+.dp-api__returns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-sm);
+}
+
+.dp-api__return {
+  display: grid;
+  gap: var(--dp-s-3xs);
+  padding: var(--dp-s-sm) var(--dp-s-md);
+  background: var(--dp-paper);
+  border: 1px solid var(--dp-rule);
+  border-radius: var(--dp-r-control);
+  min-width: 0;
+}
+
+.dp-api__returnLabel {
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-sm);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--dp-ink);
+}
+
+.dp-api__returnSample {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  color: var(--dp-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.dp-api__returnNote {
+  font-size: var(--dp-t-xs);
+  color: var(--dp-ink-3);
+}
+
+/* ── The close ─────────────────────────────────────────────────────────────────
+   What the reference actually supplies is a *layout*: a centred CTA over a soft
+   wash, then a footer that puts the wordmark and a block of copy on the left
+   and several link columns on the right, closing on a hairline with a centred
+   copyright. Both bands are full-bleed — the rounded card in the reference was
+   the mockup's own presentation frame, not part of the design.
+--------------------------------------------------------------------------- */
+
+/* No background treatment of its own — the page's canvas runs straight through,
+   including the fixed blooms, which now read *around* the card instead of
+   competing with it. */
+.dp-end__cta {
+  padding-block: var(--dp-s-3xl);
+}
+
+/* The one inverted surface on the page. It works because it isn't white: the
+   paper carries the canvas's 258 anchor, so the card reads as the page turned
+   over rather than a foreign panel dropped onto it. */
+.dp-cta__card {
+  max-width: 60rem;
+  margin-inline: auto;
+  padding: var(--dp-s-2xl) var(--dp-s-lg);
+  background: var(--dp-invert-paper);
+  border-radius: var(--dp-r-card-lg);
 }
 
 .dp-cta__inner {
-  position: relative;
-  max-width: 680px;
-  margin: 0 auto;
+  max-width: 44rem;
+  margin-inline: auto;
+  padding-inline: var(--dp-gutter);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  text-align: center;
+  gap: var(--dp-s-lg);
 }
 
 .dp-cta__title {
-  font-size: clamp(2rem, 5vw, 3.25rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.04em;
-  color: #fff;
+  font-family: var(--dp-font-display);
+  font-size: var(--dp-t-2xl);
+  font-weight: 600;
+  font-style: normal;
+  line-height: var(--dp-lh-display);
+  letter-spacing: var(--dp-track-display);
+  color: var(--dp-invert-ink);
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
-.dp-cta__sub {
-  font-size: 1.125rem;
-  color: rgba(255,255,255,0.65);
+.dp-cta__lede {
+  font-size: var(--dp-t-md);
+  color: var(--dp-invert-ink-2);
   margin: 0;
-  line-height: 1.6;
+  max-width: 46ch;
+}
+
+/* ── Controls, inverted ────────────────────────────────────────────────────
+   The primary fill is the page's own background colour. That reciprocity is
+   what ties the card to the canvas — the button and the page trade places, so
+   the light surface reads as belonging to the dark one rather than sitting on
+   top of it. The accent stays on the step numerals, where it still signals. */
+.dp-cta__card .dp-btn--primary {
+  background: var(--dp-paper);
+  border-color: var(--dp-paper);
+  color: var(--dp-ink);
+}
+.dp-cta__card .dp-btn--primary:hover {
+  background: var(--dp-paper-3);
+  border-color: var(--dp-paper-3);
+}
+
+.dp-cta__card .dp-btn--ghost {
+  background: transparent;
+  border-color: var(--dp-invert-rule-2);
+  color: var(--dp-invert-ink);
+}
+.dp-cta__card .dp-btn--ghost:hover {
+  background: var(--dp-invert-paper-2);
+  border-color: var(--dp-invert-ink-3);
+}
+
+.dp-cta__card :where(a, button):focus-visible {
+  outline-color: var(--dp-invert-accent);
 }
 
 .dp-cta__actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: center;
+  gap: var(--dp-s-sm);
 }
 
-.dp-cta__footnote {
-  font-size: 0.8125rem;
-  color: rgba(255,255,255,0.4);
+.dp-cta__note {
+  font-size: var(--dp-t-xs);
+  color: var(--dp-invert-ink-3);
   margin: 0;
 }
 
-/* ── Footer ───────────────────────────────────────────────────────────────── */
-.dp-footer {
-  background: #0b0c0f;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  padding: 2rem 1.5rem;
-}
-
-.dp-footer__inner {
-  max-width: 1100px;
-  margin: 0 auto;
+.dp-cta__steps {
+  list-style: none;
   display: flex;
-  align-items: center;
-  gap: 2rem;
   flex-wrap: wrap;
-}
-
-.dp-footer__copy {
-  font-size: 0.8125rem;
-  color: rgba(255,255,255,0.3);
+  justify-content: center;
+  gap: var(--dp-s-xs) var(--dp-s-lg);
   margin: 0;
-  flex: 1;
+  padding: var(--dp-s-md) 0 0;
+  border-top: 1px solid var(--dp-invert-rule);
+  width: 100%;
 }
 
-.dp-footer__links {
-  display: flex;
-  gap: 1.5rem;
+.dp-cta__step {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--dp-s-xs);
+  font-size: var(--dp-t-sm);
+  color: var(--dp-invert-ink-2);
+}
+
+.dp-cta__step b {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--dp-invert-accent);
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────────── */
+
+/* A full-bleed band, one step lighter than the canvas so it separates from the
+   CTA above it without a container. */
+.dp-end__panel {
+  background: var(--dp-paper-2);
+  border-top: 1px solid var(--dp-rule);
+  padding-block: var(--dp-s-xl);
+}
+
+.dp-end__panelInner {
+  max-width: var(--dp-max);
+  margin-inline: auto;
+  padding-inline: var(--dp-gutter);
+}
+
+.dp-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-xl);
+  padding-bottom: var(--dp-s-lg);
+}
+
+.dp-foot__crown {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: var(--dp-s-md);
+  min-width: 0;
+}
+
+/* The wordmark carries the close, so it's set at display scale rather than as a
+   16px logo in a corner. Both children size off this one font-size — the glyph
+   is em-scaled, so the mark and the letters stay locked together at any width. */
+.dp-foot__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dp-s-sm);
+  min-width: 0;
+  text-decoration: none;
+  color: var(--dp-ink);
+  font-size: clamp(2rem, 5.5vw, 3.25rem);
+}
+
+.dp-foot__markGlyph {
+  display: block;
+  width: 0.78em;
+  flex-shrink: 0;
+  color: var(--dp-accent);
+}
+.dp-foot__markGlyph svg { display: block; width: 100%; height: auto; }
+
+.dp-foot__markText {
+  font-family: var(--dp-font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.dp-foot__statement {
+  margin: 0;
+  font-size: var(--dp-t-sm);
+  line-height: 1.65;
+  color: var(--dp-ink-2);
+  max-width: 42ch;
+  text-wrap: pretty;
+}
+
+/* Term left, links as a running line to its right. Rules sit on the top edge
+   only, so the closing hairline is the baseline's — no doubled line where the
+   last row meets it. */
+.dp-foot__index {
+  margin: 0;
+  display: grid;
+  min-width: 0;
+}
+
+.dp-foot__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dp-s-2xs) var(--dp-s-lg);
+  padding: var(--dp-s-sm) 0;
+  border-top: 1px solid var(--dp-rule);
+  min-width: 0;
+}
+
+.dp-foot__term {
+  font-family: var(--dp-font-mono);
+  font-size: var(--dp-t-2xs);
+  font-weight: 500;
+  letter-spacing: var(--dp-track-label);
+  text-transform: uppercase;
+  color: var(--dp-ink-3);
+}
+
+.dp-foot__links {
+  margin: 0;
+  min-width: 0;
+  line-height: 2;
+}
+
+.dp-foot__item { display: inline; }
+
+/* A real element rather than a ::before on the anchor — inside the link it would
+   pick up the hover underline and read as part of the label. */
+.dp-foot__sep {
+  color: var(--dp-ink-3);
+  margin-inline: var(--dp-s-xs);
 }
 
 .dp-footer__link {
-  font-size: 0.8125rem;
-  color: rgba(255,255,255,0.4);
+  font-size: var(--dp-t-sm);
+  color: var(--dp-ink-2);
   text-decoration: none;
-  transition: color 0.15s;
+  /* The line wraps; the label doesn't. A label broken mid-phrase reads as a
+     styling error even inside running text. */
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+  transition:
+    color var(--dp-dur-micro) var(--dp-ease-out),
+    border-color var(--dp-dur-short) var(--dp-ease-out);
 }
-.dp-footer__link:hover {
-  color: rgba(255,255,255,0.8);
-}
+.dp-footer__link:hover { color: var(--dp-ink); border-bottom-color: var(--dp-accent); }
+.dp-footer__link:active { color: var(--dp-accent-hi); }
 
-/* ── Animations ────────────────────────────────────────────────────────────── */
-@keyframes dp-fade-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.dp-hero__badge     { animation: dp-fade-up 0.5s ease both; animation-delay: 0.05s; }
-.dp-hero__headline  { animation: dp-fade-up 0.55s ease both; animation-delay: 0.12s; }
-.dp-hero__sub       { animation: dp-fade-up 0.55s ease both; animation-delay: 0.2s; }
-.dp-hero__cta       { animation: dp-fade-up 0.55s ease both; animation-delay: 0.28s; }
-.dp-hero__trust     { animation: dp-fade-up 0.5s ease both; animation-delay: 0.36s; }
-.dp-hero__preview   { animation: dp-fade-up 0.7s ease both; animation-delay: 0.44s; }
-
-/* ── Responsive ────────────────────────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .dp-flow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .dp-features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .dp-container--split {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-
-  .dp-section__title--left {
-    text-align: center;
-  }
-  .dp-section__sub--left {
-    text-align: center;
-  }
-
-  .dp-split__text {
-    align-items: center;
-    text-align: center;
-  }
-
-  .dp-feature-list li {
-    justify-content: center;
-  }
+.dp-foot__baseline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dp-s-xs) var(--dp-s-lg);
+  margin: 0;
+  padding-top: var(--dp-s-md);
+  border-top: 1px solid var(--dp-rule);
+  font-size: var(--dp-t-xs);
+  color: var(--dp-ink-3);
 }
 
-@media (max-width: 768px) {
-  .dp-nav__links {
-    display: none;
-  }
+/* ── Focus ─────────────────────────────────────────────────────────────────── */
 
-  .dp-flow {
-    grid-template-columns: 1fr;
-  }
+/* Never transitioned — a ring that fades in leaves keyboard users with no
+   indicator for the first 200ms. */
+.dp-page :where(a, button, input, summary):focus-visible,
+.dp-cmdk :where(a, button, input):focus-visible {
+  outline: 2px solid var(--dp-focus);
+  outline-offset: 3px;
+  border-radius: var(--dp-r-control);
+}
+/* A 2px hard outline hugging the field read as a browser default, not a design
+   decision. A soft inset pair — hairline accent, then a wide low-chroma halo —
+   is unmistakably deliberate and still clearly indicates focus. */
+.dp-cmdk__field:focus-within {
+  box-shadow:
+    inset 0 0 0 1px var(--dp-accent-dim),
+    inset 0 0 0 4px var(--dp-accent-lo);
+}
+.dp-cmdk__input:focus-visible { outline: none; }
 
-  .dp-features-grid {
-    grid-template-columns: 1fr;
-  }
+/* ── Motion ────────────────────────────────────────────────────────────────── */
 
-  .dp-compare {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  .dp-compare__divider {
-    display: none;
-  }
+@keyframes dp-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes dp-fade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dp-pop   { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes dp-blink { to { opacity: 0; } }
 
-  .dp-testimonials {
-    grid-template-columns: 1fr;
-  }
-
-  .dp-security-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dp-journey {
-    flex-direction: column;
-    align-items: center;
-  }
-  .dp-journey__arrow {
-    transform: rotate(90deg);
-    padding: 0;
-  }
-
-  .dp-mockup__body {
-    height: auto;
-    flex-direction: column;
-  }
-
-  .dp-sidebar {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--line);
-    padding: 0.5rem;
-  }
-
-  .dp-sidebar__label {
-    width: 100%;
-  }
-
-  .dp-section {
-    padding: 4rem 0;
-  }
-
-  .dp-hero {
-    padding: 3rem 0 0;
-  }
+/* One orchestrated entrance, on the hero only. No scroll reveals anywhere on
+   this page — the rest of it is simply there when you arrive. */
+.dp-enter {
+  opacity: 0;
+  animation: dp-enter var(--dp-dur-long) var(--dp-ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
 }
 
-@media (max-width: 480px) {
-  .dp-hero__headline {
-    font-size: 2.5rem;
+@media (prefers-reduced-motion: reduce) {
+  .dp-page *,
+  .dp-page *::before,
+  .dp-page *::after,
+  .dp-cmdk *,
+  .dp-cmdk *::before,
+  .dp-cmdk *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
   }
-  .dp-cta__title {
-    font-size: 2rem;
+  .dp-enter { opacity: 1; transform: none; }
+  .dp-demo__caret { display: none; }
+  /* The sequence never runs, so every stage must already be arrived. */
+  .dp-demo__step,
+  .dp-demo__attempt,
+  .dp-demo__answer { opacity: 1; transform: none; }
+  .dp-demo__bar { transform: scaleY(1); }
+}
+
+@media (pointer: coarse) {
+  .dp-btn { min-height: 44px; }
+}
+
+/* ── Responsive · mobile-first ─────────────────────────────────────────────── */
+
+@media (min-width: 40rem) {
+  .dp-ledger { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dp-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dp-card--lead { grid-column: 1 / -1; }
+  .dp-spec__row { grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); }
+  .dp-demo__body { padding: var(--dp-s-lg); }
+  .dp-api__returns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Term beside its links rather than stacked above them. */
+  .dp-foot__row { grid-template-columns: minmax(0, 6.5rem) minmax(0, 1fr); align-items: baseline; }
+}
+
+@media (min-width: 60rem) {
+  /* 3xl, not 4xl: doubled up between neighbours that's already ~192px of gap.
+     144 each side read as the page had come apart rather than breathed. */
+  .dp-section { padding-block: var(--dp-s-3xl); }
+  /* Kept tight on purpose: every pixel above the headline is a pixel of the
+     running demo pushed under the fold, and the demo is the argument. */
+  .dp-hero { padding-block: calc(var(--dp-nav-clear) + var(--dp-s-lg)) var(--dp-s-4xl); }
+  .dp-hero__head { padding-bottom: var(--dp-s-lg); }
+  .dp-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Lead takes the full row; the last card takes two, so the six close out a
+     3-column grid without a hole where a seventh card would have gone. */
+  .dp-card--lead { grid-column: 1 / -1; }
+  .dp-card:last-child { grid-column: span 2; }
+  .dp-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: var(--dp-s-3xl); }
+  .dp-split--flip { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+  .dp-split--flip .dp-split__text { order: 2; }
+  .dp-split--flip .dp-split__visual { order: 1; }
+  .dp-vault { padding: var(--dp-s-2xl); }
+  /* Statement block left, link columns right — the reference's footer split. */
+  /* Wordmark and closing line anchor the left; the index runs wider on the
+     right, which is what stops the link rows from breaking every second label. */
+  .dp-foot { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr); gap: var(--dp-s-3xl); }
+
+  /* Question across the top, the failing attempts on the left, the answer on
+     the right. The whole sequence is then readable without scrolling. */
+  .dp-demo__body {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    grid-template-areas:
+      "ask   ask"
+      "trail answer";
+    column-gap: var(--dp-s-lg);
   }
-  .dp-hero__trust {
-    flex-direction: column;
-    gap: 0.5rem;
+  .dp-demo__answer {
+    padding-top: 0;
+    padding-inline-start: var(--dp-s-lg);
+    border-top: 0;
+    border-inline-start: 1px solid var(--dp-rule);
   }
+  .dp-demo__chart { height: 200px; }
+}
+
+@media (max-width: 47.99rem) {
+  /* The pill keeps its icon and chord hint but drops the label, so the bar
+     stays one line. Docs and Sign in go with it — both survive in the footer,
+     and ⌘K still reaches every destination. */
+  .dp-cmdk__pillText { display: none; }
+  .dp-cmdk__pill { width: auto; }
+  .dp-nav__link { display: none; }
+  .dp-nav__end { gap: var(--dp-s-xs); }
+  .dp-nav__inner { padding-inline: var(--dp-s-sm); }
+}
+
+/* At 320px even the wordmark can't share the row with the pill and the CTA. */
+@media (max-width: 23rem) {
+  .dp-brand__text { display: none; }
 }

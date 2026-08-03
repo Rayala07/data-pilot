@@ -1,0 +1,156 @@
+/* ============================================================================
+   Hallmark · tokens · theme: Midnight
+   paper-band: dark · display-style: geometric-sans · accent-hue: cobalt 258
+
+   Page-scoped to .dp-page. globals.css owns the *app's* tokens and is shared by
+   every authenticated route; this file is the landing page's own system and must
+   never leak into it.
+
+   No prefers-color-scheme branch, deliberately. The app follows the reader's
+   theme because it's a tool they live in; the landing page is a composed
+   artefact and it is dark on purpose. A dark canvas that flips to white on half
+   the machines isn't a canvas, it's a compromise.
+
+   Every colour and every font in home.css references a name from this file.
+   ============================================================================ */
+
+/* .dp-cmdk is listed alongside .dp-page because the command palette portals to
+   <body> to escape the nav's backdrop-filter containing block — which also puts
+   it outside .dp-page, where none of these would resolve. Both roots, one
+   definition; do not let them drift apart. */
+.dp-page,
+.dp-cmdk {
+  /* ── Planes · elevation by lightness, never by shadow ───────────────────── */
+  --dp-paper:      oklch(13%   0.018 262);
+  --dp-paper-2:    oklch(16.5% 0.020 262);
+  --dp-paper-3:    oklch(20.5% 0.022 262);
+  --dp-paper-4:    oklch(25%   0.024 262);
+
+  /* ── Ink ────────────────────────────────────────────────────────────────── */
+  --dp-ink:        oklch(97%   0.004 258);
+  --dp-ink-2:      oklch(79%   0.011 256);
+  --dp-ink-3:      oklch(64%   0.013 256);
+
+  /* ── Rules ──────────────────────────────────────────────────────────────── */
+  --dp-rule:       oklch(26%   0.018 262);
+  --dp-rule-2:     oklch(34%   0.020 262);
+
+  /* ── The signal. One hue, DataPilot's own. ──────────────────────────────── */
+  --dp-accent:     oklch(70%   0.165 258);
+  --dp-accent-hi:  oklch(79%   0.145 258);
+  --dp-accent-dim: oklch(46%   0.110 258);
+  --dp-accent-lo:  oklch(27%   0.070 258);
+  --dp-accent-ink: oklch(13%   0.020 262);
+
+  /* The one secondary, for the far bloom only — never on text or controls. */
+  --dp-bloom-1:    oklch(58%   0.180 258 / 0.20);
+  --dp-bloom-2:    oklch(52%   0.150 296 / 0.14);
+
+  /* ── Status · pass/fail in the correction trail, and nowhere else ───────── */
+  --dp-ok:         oklch(78%   0.150 152);
+  --dp-ok-lo:      oklch(27%   0.060 152);
+  --dp-warn:       oklch(76%   0.140 42);
+  --dp-warn-lo:    oklch(27%   0.055 42);
+
+  --dp-focus:      oklch(79%   0.145 258);
+  --dp-scrim:      oklch(4%    0.010 262 / 0.72);
+
+  /* Depth on a dark canvas is lightness; these are for *separation* from the
+     canvas, kept tight and dark so they never read as a coloured halo. */
+  --dp-lift:       0 1px 2px oklch(0% 0 0 / 0.4), 0 12px 32px -12px oklch(0% 0 0 / 0.6);
+  --dp-lift-hi:    0 1px 2px oklch(0% 0 0 / 0.4), 0 20px 48px -16px oklch(0% 0 0 / 0.7);
+
+  /* ── Type · Space Grotesk display · Geist body · Geist Mono outlier ─────── */
+  --dp-font-display: var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
+  --dp-font-body:    var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dp-font-mono:    var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /* Major third (1.25) from a 17px body. Atmospheric licenses a larger display
+     than the light themes — the canvas can carry it. */
+  --dp-t-2xs:     0.6875rem;
+  --dp-t-xs:      0.8125rem;
+  --dp-t-sm:      0.9375rem;
+  --dp-t-base:    1.0625rem;
+  --dp-t-md:      1.25rem;
+  --dp-t-lg:      1.5625rem;
+  --dp-t-xl:      1.9531rem;
+  --dp-t-2xl:     2.4414rem;
+  --dp-t-3xl:     3.0518rem;
+  --dp-t-display: clamp(2.75rem, 5.2vw + 0.75rem, 5rem);
+
+  --dp-lh-display: 1.03;
+  --dp-lh-tight:   1.16;
+  --dp-lh-body:    1.62;
+  --dp-track-display: -0.035em;
+  --dp-track-label:    0.09em;
+
+  /* ── Space · 4-pt scale, named by role ──────────────────────────────────── */
+  --dp-s-3xs: 0.125rem;
+  --dp-s-2xs: 0.25rem;
+  --dp-s-xs:  0.5rem;
+  --dp-s-sm:  0.75rem;
+  --dp-s-md:  1rem;
+  --dp-s-lg:  1.5rem;
+  --dp-s-xl:  2.5rem;
+  --dp-s-2xl: 4rem;
+  --dp-s-3xl: 6rem;
+  --dp-s-4xl: 9rem;
+
+  --dp-gutter:  clamp(1.25rem, 4vw, 2.5rem);
+  --dp-max:     78rem;
+  --dp-nav-h:   58px;
+  --dp-nav-top: 0.875rem;
+  /* What the hero has to clear: the bar plus the gap it floats above. */
+  --dp-nav-clear: calc(var(--dp-nav-h) + var(--dp-nav-top));
+
+  /* ── Glass ───────────────────────────────────────────────────────────────
+     The floating bar only. Three parts make it read as glass rather than as
+     "a blurry div": a translucent fill, a rim a shade lighter than the fill,
+     and a specular line along the top edge. Drop any one and it goes flat. */
+  --dp-glass:       oklch(21% 0.020 260 / 0.62);
+  --dp-glass-rule:  oklch(48% 0.022 260 / 0.34);
+  --dp-glass-sheen: oklch(88% 0.020 258 / 0.10);
+  --dp-glass-inset: oklch(11% 0.014 260 / 0.55);
+
+  /* ── Shape ──────────────────────────────────────────────────────────────── */
+  --dp-r-bar:     3px;
+  --dp-r-control: 8px;
+  /* Not a capsule. At 58px tall a pill radius curves 29px in from each end, so
+     an 8px-radius button parked near the edge has its corners land outside the
+     curve. A rounded rect keeps the floating read and lets the CTA nest. */
+  --dp-r-nav:     18px;
+  --dp-r-card:    14px;
+  --dp-r-card-lg: 24px;
+  --dp-r-pill:    999px;
+
+  /* ── The inverted surface ────────────────────────────────────────────────
+     One light card on a dark page. Every value carries the canvas's own 258
+     anchor, which is what stops it reading as a foreign white rectangle — it's
+     the page turned over, not a different palette. Paper sits at 94% rather
+     than 100% for the same reason the dark end never hits pure black. */
+  --dp-invert-paper:   oklch(94% 0.010 258);
+  --dp-invert-paper-2: oklch(90% 0.012 258);
+  --dp-invert-ink:     oklch(22% 0.020 260);
+  --dp-invert-ink-2:   oklch(42% 0.016 258);
+  --dp-invert-ink-3:   oklch(50% 0.014 256);
+  --dp-invert-rule:    oklch(86% 0.012 258);
+  --dp-invert-rule-2:  oklch(76% 0.014 258);
+  /* The dark-canvas accent is tuned for a dark backdrop and goes washed-out on
+     light; this is the same hue dropped to where it holds 4.5:1 on the card. */
+  --dp-invert-accent:  oklch(50% 0.170 258);
+
+  /* ── Motion ─────────────────────────────────────────────────────────────── */
+  --dp-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --dp-ease-in:     cubic-bezier(0.7, 0, 0.84, 0);
+  --dp-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dp-dur-micro:   120ms;
+  --dp-dur-short:   220ms;
+  --dp-dur-long:    420ms;
+
+  /* ── Depth · six named levels ───────────────────────────────────────────── */
+  --dp-z-base:    1;
+  --dp-z-raised:  10;
+  --dp-z-sticky:  200;
+  --dp-z-nav:     300;
+  --dp-z-modal:   400;
+}

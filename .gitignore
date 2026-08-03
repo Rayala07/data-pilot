@@ -12,3 +12,10 @@ seed/benchmark.json
 docs/benchmark.md
 backend/scripts/benchmark.ts
 backend/.benchmark-results*.json
+
+# Agent
+skills-lock.json
+.agents
+.claude
+design.excalidraw
+.hallmark
