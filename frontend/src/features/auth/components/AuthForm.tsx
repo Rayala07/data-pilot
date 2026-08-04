@@ -47,13 +47,12 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     }
 
     try {
-      if (isSignup) {
-        await dispatch(signup({ email, password, name })).unwrap();
-        router.push("/verify-email");
-      } else {
-        await dispatch(login({ email, password })).unwrap();
-        // login success → token set in slice → RequireGuest redirects to /connections
-      }
+      const thunk = isSignup ? signup({ email, password, name }) : login({ email, password });
+      const res = await dispatch(thunk).unwrap();
+      // Either path can need an OTP: signup always does, and login does when the
+      // account exists but was never confirmed (the thunk mails a fresh code).
+      // Otherwise the token is set in the slice and RequireGuest redirects.
+      if (res.status === "check-email") router.push("/verify-email");
     } catch {
       // Error stored in redux slice, shown via request.error
     }

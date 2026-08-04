@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Provider } from "react-redux";
 import { hydrate } from "@/features/auth/auth.slice";
 import { getToken, setToken, clearToken } from "@/lib/api";
@@ -12,24 +12,30 @@ function isConfirmedSession(session: { user?: { email_confirmed_at?: string | nu
   return Boolean(session?.user?.email_confirmed_at);
 }
 
+/**
+ * Layout effects never run during SSR and React warns if you call one there, so
+ * fall back to useEffect on the server. Only the hook identity varies — render
+ * output is identical either way, so this can't itself cause a mismatch.
+ */
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore | null>(null);
-  if (!storeRef.current) {
-    const store = makeStore();
-    // ── Synchronous pre-hydration ─────────────────────────────────────────────
-    // localStorage is only available in the browser. Reading it here, during the
-    // very first render (before any paint), means guards see the correct
-    // `hydrated: true` state immediately — no async gap, no flash.
-    //
-    // The async `supabase.auth.getSession()` in the effect below will
-    // subsequently verify / refresh the token and may update it, but because
-    // guards already have the right answer from localStorage the UI never
-    // transitions through a wrong state.
-    if (typeof window !== "undefined") {
-      store.dispatch(hydrate(getToken()));
-    }
-    storeRef.current = store;
-  }
+  if (!storeRef.current) storeRef.current = makeStore();
+
+  // ── Pre-paint hydration ────────────────────────────────────────────────────
+  // localStorage exists only in the browser, so reading it *during render* made
+  // the first client render disagree with the server HTML — the server has
+  // `hydrated: false` and guards emit a skeleton, while the client had
+  // `hydrated: true` and emitted the real page. React reported that as a
+  // hydration error and threw away the whole server tree.
+  //
+  // A layout effect runs after hydration commits but *before the browser
+  // paints*: the markup still matches while React hydrates, and the token is in
+  // place by the first paint. Same no-flash result, no mismatch.
+  useIsomorphicLayoutEffect(() => {
+    storeRef.current!.dispatch(hydrate(getToken()));
+  }, []);
 
   useEffect(() => {
     const store = storeRef.current!;

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { asyncHandler } from "../../shared/asyncHandler";
 import { requireAuth } from "../auth/auth.middleware";
 import { getOwnedConnection } from "../connections/connections.repository";
 import { runQuery } from "./query.service";
@@ -7,7 +8,7 @@ import { validateAsk } from "./query.validation";
 export const queryRouter = Router();
 queryRouter.use(requireAuth);
 
-queryRouter.post("/", async (req, res) => {
+queryRouter.post("/", asyncHandler(async (req, res) => {
   const parsed = validateAsk(req.body);
   if (!parsed.ok) {
     res.status(400).json({ error: parsed.error });
@@ -33,4 +34,4 @@ queryRouter.post("/", async (req, res) => {
   // A query that ran but failed validation/execution is a normal outcome, not a
   // server error - return 200 with the failure + attempts so the UI can show them.
   res.json(result);
-});
+}));

@@ -2,7 +2,7 @@ import { createSlice, type Draft, type PayloadAction } from "@reduxjs/toolkit";
 import type { UserProfile } from "@/lib/types";
 import { sessionExpired } from "@/store/actions";
 import { attachAsync, idleRequest, type RequestState } from "@/store/asyncState";
-import { fetchProfile, login, logout, signup, verifyOtp } from "./auth.thunks";
+import { fetchProfile, login, logout, signup, verifyOtp, type AuthResult } from "./auth.thunks";
 
 interface AuthState {
   token: string | null;
@@ -45,13 +45,22 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    attachAsync(builder, signup, (s) => s.request, (s, res: { status: "check-email"; email: string }) => {
-      s.pendingVerification = true;
-      s.pendingEmail = res.email;
-    });
-    attachAsync(builder, login, (s) => s.request, (s, token: string) => {
-      s.token = token;
-    });
+    // Signup and login share a result shape: either a session, or an email
+    // awaiting its OTP. Login lands on "check-email" when the account exists but
+    // was never confirmed.
+    const applyAuthResult = (s: Draft<AuthState>, res: AuthResult) => {
+      if (res.status === "signed-in") {
+        s.token = res.token;
+        s.pendingVerification = false;
+        s.pendingEmail = null;
+      } else {
+        s.pendingVerification = true;
+        s.pendingEmail = res.email;
+      }
+    };
+
+    attachAsync(builder, signup, (s) => s.request, applyAuthResult);
+    attachAsync(builder, login, (s) => s.request, applyAuthResult);
     attachAsync(builder, verifyOtp, (s) => s.request, (s, token: string) => {
       s.token = token;
       s.pendingVerification = false;

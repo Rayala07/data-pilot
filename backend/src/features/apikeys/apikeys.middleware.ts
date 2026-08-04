@@ -8,6 +8,7 @@
 // other's credential with its own 401.
 
 import type { NextFunction, Request, Response } from "express";
+import { asyncHandler } from "../../shared/asyncHandler";
 import { apiError } from "../api/api.errors";
 import { findActiveKeyByHash, touchLastUsed } from "./apikeys.repository";
 import { hashKey } from "./apikeys.service";
@@ -22,7 +23,7 @@ declare global {
   }
 }
 
-export async function requireApiKey(req: Request, res: Response, next: NextFunction): Promise<void> {
+export const requireApiKey = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const header = req.headers.authorization;
   const presented = header?.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : undefined;
 
@@ -49,4 +50,4 @@ export async function requireApiKey(req: Request, res: Response, next: NextFunct
   void touchLastUsed(key.id);
 
   next();
-}
+});

@@ -4,6 +4,7 @@
 // instead of JWT), the per-key rate limits, and the uniform error envelope.
 
 import { Router, type NextFunction, type Request, type Response } from "express";
+import { asyncHandler } from "../../shared/asyncHandler";
 import { requireApiKey } from "../apikeys/apikeys.middleware";
 import { friendlyConnectionError } from "../connections/connections.errors";
 import * as connectionsRepo from "../connections/connections.repository";
@@ -20,18 +21,14 @@ export const apiV1Router = Router();
 apiV1Router.use(requireApiKey);
 apiV1Router.use(rateLimitPerMinute);
 
-// Wraps an async handler so any thrown error becomes a clean 500 - no stack, no
-// internal message ever reaches an API consumer.
-function handle(fn: (req: Request, res: Response) => Promise<void>) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    fn(req, res).catch(next);
-  };
-}
+// asyncHandler routes a rejection to the error middleware at the foot of this
+// file, so it becomes a clean 500 - no stack, no internal message ever reaches
+// an API consumer.
 
 // POST /v1/connections - register + introspect a database.
 apiV1Router.post(
   "/connections",
-  handle(async (req, res) => {
+  asyncHandler(async (req, res) => {
     const parsed = validateCreateConnection(req.body);
     if (!parsed.ok) {
       res.status(400).json(apiError("bad_request", parsed.error));
@@ -55,7 +52,7 @@ apiV1Router.post(
 // GET /v1/connections - list the key owner's connections.
 apiV1Router.get(
   "/connections",
-  handle(async (req, res) => {
+  asyncHandler(async (req, res) => {
     const connections = await connectionsRepo.listConnections(req.userId!);
     res.json(
       connections.map((c) => ({
@@ -71,7 +68,7 @@ apiV1Router.get(
 // DELETE /v1/connections/:id - remove a connection (cascades to profile + logs).
 apiV1Router.delete(
   "/connections/:id",
-  handle(async (req, res) => {
+  asyncHandler(async (req, res) => {
     const deleted = await connectionsRepo.deleteOwnedConnection(req.userId!, req.params.id);
     if (deleted === 0) {
       res.status(404).json(apiError("not_found", "Connection not found"));
@@ -86,7 +83,7 @@ apiV1Router.delete(
 apiV1Router.post(
   "/query",
   rateLimitQueriesPerDay,
-  handle(async (req, res) => {
+  asyncHandler(async (req, res) => {
     const parsed = validateAsk(req.body);
     if (!parsed.ok) {
       res.status(400).json(apiError("bad_request", parsed.error));

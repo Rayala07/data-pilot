@@ -1,5 +1,5 @@
 import cors from "cors";
-import express from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import { corsOptions } from "./cors";
 import { apiV1Router } from "./features/api/api.routes";
 import { apiKeysRouter } from "./features/apikeys/apikeys.routes";
@@ -31,6 +31,18 @@ export function createApp() {
 
   app.get("/health", (_req, res) => {
     res.json({ ok: true });
+  });
+
+  // Anything passed to next(err) lands here. Express 4's built-in handler would
+  // answer with an HTML page (and the stack outside production), which no caller
+  // of this API can read — and it must stay last, after every route.
+  app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+    if (res.headersSent) {
+      next(err);
+      return;
+    }
+    console.error("Unhandled error:", err);
+    res.status(500).json({ error: "Internal server error" });
   });
 
   return app;

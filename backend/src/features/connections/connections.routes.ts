@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { SchemaProfile } from "../../engine/types";
+import { asyncHandler } from "../../shared/asyncHandler";
 import { requireAuth } from "../auth/auth.middleware";
 
 import { friendlyConnectionError } from "./connections.errors";
@@ -11,7 +12,7 @@ import { validateCreateConnection } from "./connections.validation";
 export const connectionsRouter = Router();
 connectionsRouter.use(requireAuth);
 
-connectionsRouter.post("/", async (req, res) => {
+connectionsRouter.post("/", asyncHandler(async (req, res) => {
   const parsed = validateCreateConnection(req.body);
   if (!parsed.ok) {
     res.status(400).json({ error: parsed.error });
@@ -28,9 +29,9 @@ connectionsRouter.post("/", async (req, res) => {
   }
 
   res.status(201).json(result.connection);
-});
+}));
 
-connectionsRouter.get("/", async (req, res) => {
+connectionsRouter.get("/", asyncHandler(async (req, res) => {
   const connections = await repo.listConnections(req.userId!);
   const summaries: ConnectionListItem[] = connections.map((c) => ({
     id: c.id,
@@ -40,9 +41,9 @@ connectionsRouter.get("/", async (req, res) => {
     canWrite: c.credentialCanWrite,
   }));
   res.json(summaries);
-});
+}));
 
-connectionsRouter.get("/:id/schema", async (req, res) => {
+connectionsRouter.get("/:id/schema", asyncHandler(async (req, res) => {
   const connection = await repo.getOwnedConnection(req.userId!, req.params.id);
   if (!connection) {
     res.status(404).json({ error: "Connection not found" });
@@ -64,11 +65,11 @@ connectionsRouter.get("/:id/schema", async (req, res) => {
     tables,
   };
   res.json(profile);
-});
+}));
 
 // Business-language overview of the connection: the default post-connect view.
 // Served from cache after the first call; never rescans the user's database.
-connectionsRouter.get("/:id/summary", async (req, res) => {
+connectionsRouter.get("/:id/summary", asyncHandler(async (req, res) => {
   const connection = await repo.getOwnedConnection(req.userId!, req.params.id);
   if (!connection) {
     res.status(404).json({ error: "Connection not found" });
@@ -82,9 +83,9 @@ connectionsRouter.get("/:id/summary", async (req, res) => {
   }
 
   res.json(result.value);
-});
+}));
 
-connectionsRouter.post("/:id/rescan", async (req, res) => {
+connectionsRouter.post("/:id/rescan", asyncHandler(async (req, res) => {
   const connection = await repo.getOwnedConnection(req.userId!, req.params.id);
   if (!connection) {
     res.status(404).json({ error: "Connection not found" });
@@ -98,4 +99,4 @@ connectionsRouter.post("/:id/rescan", async (req, res) => {
   }
 
   res.json(result.value);
-});
+}));

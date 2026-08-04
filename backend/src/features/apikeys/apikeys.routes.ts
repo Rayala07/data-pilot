@@ -6,6 +6,7 @@
 // is a web route). The /v1 API has its own { error: { code, message } } shape.
 
 import { Router } from "express";
+import { asyncHandler } from "../../shared/asyncHandler";
 import { requireAuth } from "../auth/auth.middleware";
 import { createKey, deleteKey, listKeys, revokeKey } from "./apikeys.service";
 import { validateKeyName } from "./apikeys.validation";
@@ -13,7 +14,7 @@ import { validateKeyName } from "./apikeys.validation";
 export const apiKeysRouter = Router();
 apiKeysRouter.use(requireAuth);
 
-apiKeysRouter.post("/", async (req, res) => {
+apiKeysRouter.post("/", asyncHandler(async (req, res) => {
   const parsed = validateKeyName(req.body);
   if (!parsed.ok) {
     res.status(400).json({ error: parsed.error });
@@ -22,13 +23,13 @@ apiKeysRouter.post("/", async (req, res) => {
   // The response carries the raw key - the only time it is ever returned.
   const created = await createKey(req.userId!, parsed.value.name);
   res.status(201).json(created);
-});
+}));
 
-apiKeysRouter.get("/", async (req, res) => {
+apiKeysRouter.get("/", asyncHandler(async (req, res) => {
   res.json(await listKeys(req.userId!));
-});
+}));
 
-apiKeysRouter.post("/:id/revoke", async (req, res) => {
+apiKeysRouter.post("/:id/revoke", asyncHandler(async (req, res) => {
   const revoked = await revokeKey(req.userId!, req.params.id);
   if (!revoked) {
     // Unknown id, not owned, or already revoked - 404 either way (don't leak existence).
@@ -36,10 +37,10 @@ apiKeysRouter.post("/:id/revoke", async (req, res) => {
     return;
   }
   res.json({ ok: true });
-});
+}));
 
 // Permanent removal, allowed only after revocation.
-apiKeysRouter.delete("/:id", async (req, res) => {
+apiKeysRouter.delete("/:id", asyncHandler(async (req, res) => {
   const result = await deleteKey(req.userId!, req.params.id);
   if (result === "not_found") {
     res.status(404).json({ error: "API key not found" });
@@ -50,4 +51,4 @@ apiKeysRouter.delete("/:id", async (req, res) => {
     return;
   }
   res.json({ ok: true });
-});
+}));
